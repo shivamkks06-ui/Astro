@@ -1,0 +1,51 @@
+@import url("https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Playfair+Display:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+    :root {
+        --background: 222 39% 7%;
+        --foreground: 210 40% 98%;
+        --card: 225 39% 12%;
+        --card-foreground: 210 40% 98%;
+        --popover: 225 39% 12%;
+        --popover-foreground: 210 40% 98%;
+        --primary: 44 79% 52%;
+        --primary-foreground: 222 39% 7%;
+        --secondary: 225 36% 17%;
+        --secondary-foreground: 210 40% 98%;
+        --muted: 225 36% 17%;
+        --muted-foreground: 215 20% 65%;
+        --accent: 225 36% 17%;
+        --accent-foreground: 44 79% 60%;
+        --destructive: 0 72% 51%;
+        --destructive-foreground: 210 40% 98%;
+        --border: 223 33% 25%;
+        --input: 223 33% 25%;
+        --ring: 44 79% 52%;
+        --radius: 0.75rem;
+    }
+}
+
+@layer base {
+    * { @apply border-border; }
+    body {
+        @apply bg-background text-foreground;
+        font-family: "Plus Jakarta Sans", sans-serif;
+        -webkit-font-smoothing: antialiased;
+    }
+    h1, h2, h3, .font-serif { font-family: "Playfair Display", serif; letter-spacing: -0.01em; }
+    ::selection { background: rgba(230, 179, 37, 0.35); }
+}
+
+.font-display { font-family: "Cinzel", serif; }
+.font-mono { font-family: "JetBrains Mono", monospace; }
+.overline { @apply text-xs uppercase font-medium text-amber-400/90; letter-spacing: 0.2em; }
+.glass { background: rgba(19, 25, 43, 0.72); backdrop-filter: blur(18px); border: 1px solid rgba(230, 179, 37, 0.16); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37); }
+.gold-border { position: relative; }
+.gold-border::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: linear-gradient(135deg, rgba(230,179,37,.7), rgba(245,158,11,.05) 40%, rgba(230,179,37,.4)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
+.starfield { background-image: radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.5), transparent), radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,.35), transparent), radial-gradient(1.5px 1.5px at 40% 60%, rgba(230,179,37,.5), transparent), radial-gradient(1px 1px at 85% 20%, rgba(255,255,255,.4), transparent); background-size: 340px 340px; }
+.fade-up { animation: fadeUp .6s ease both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .fade-up { animation: none; } }

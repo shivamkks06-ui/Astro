@@ -1,0 +1,183 @@
+{
+  "project_name": "NakshatraVeda - Verified Vedic Astrology Marketplace",
+  "archetype": "ARCHETYPE 5: LUXURY & CELESTIAL SACRED (Vedic Celestial + Trust Architecture)",
+  "theme_strategy": {
+    "default_mode": "dark",
+    "theme_toggle": true,
+    "dark_theme": {
+      "background": "#0B0F19",
+      "surface_card": "#13192B",
+      "surface_elevated": "#1C243B",
+      "border": "#2A3654",
+      "text_primary": "#F8FAFC",
+      "text_secondary": "#94A3B8",
+      "accent_gold": "#E6B325",
+      "accent_gold_glow": "rgba(230, 179, 37, 0.25)",
+      "accent_saffron": "#F59E0B",
+      "accent_emerald_verified": "#10B981"
+    },
+    "light_theme": {
+      "background": "#FDFBF7",
+      "surface_card": "#FFFFFF",
+      "surface_elevated": "#F4EFE6",
+      "border": "#E2D9CC",
+      "text_primary": "#1E1B18",
+      "text_secondary": "#645D55",
+      "accent_gold": "#D49B00",
+      "accent_gold_glow": "rgba(212, 155, 0, 0.15)",
+      "accent_saffron": "#D97706",
+      "accent_emerald_verified": "#059669"
+    }
+  },
+  "typography": {
+    "heading_font": "Playfair Display, serif",
+    "display_font": "Cinzel, serif",
+    "body_font": "Plus Jakarta Sans, sans-serif",
+    "mono_font": "JetBrains Mono, monospace",
+    "rules": {
+      "headings": "DO NOT use Inter or Space Grotesk for Headings. Use Playfair Display or Cinzel with tight tracking (tracking-tight).",
+      "body": "Plus Jakarta Sans for high legibility in dense data and consultation forms.",
+      "h1_max_size": "text-4xl sm:text-5xl lg:text-6xl (Ceiling is text-6xl, never use text-8xl or text-9xl)",
+      "overlines": "Uppercase + text-xs + tracking-[0.2em] font-medium text-amber-400/90",
+      "hierarchy_gap": "Jump between heading and subheading must not exceed 2 Tailwind scale steps."
+    }
+  },
+  "color_palette": {
+    "primary_cosmic_navy": "#0B0F19",
+    "surface_deep_indigo": "#13192B",
+    "sacred_gold": "#E6B325",
+    "saffron_glow": "#F59E0B",
+    "emerald_trust": "#10B981",
+    "parchment_light": "#FDFBF7",
+    "forbidden_colors": [
+      "#7351B7 (Banned for AI landing pages)",
+      "#1B93A4 (Teal green/blue banned for dashboards)",
+      "Pure #000000 (Always tint neutrals with blue/amber)"
+    ]
+  },
+  "spacing_and_layout": {
+    "philosophy": "Generous spacing philosophy (2-3x typical paddings). Containers with borders MUST have internal padding p-6 or p-8.",
+    "bento_grid_modes": {
+      "marketing_discovery": "MODE A: TETRIS GRID (col-span-full md:col-span-8 for hero, col-span-4 for featured verified astrologer, gap-8)",
+      "dashboards": "MODE B: HIGH DENSITY GRID (col-span-1 for stats, col-span-2 row-span-2 for chart/earnings ledger, gap-4 to gap-6)"
+    },
+    "header": "Fixed/Sticky Header with backdrop-blur-xl bg-[#0B0F19]/80 border-b border-amber-500/10 z-50. Must include Brand logo, 4 key nav links, role switch (Customer/Astrologer/Admin), and CTA button."
+  },
+  "surface_styles": {
+    "glassmorphism": "bg-[#13192B]/70 backdrop-blur-xl border border-amber-500/20 shadow-[0_8px_32px_rgba(0,0,0,0.37)]",
+    "tracing_beam": "Glowing golden gradient border highlight on active/featured astrologer cards",
+    "grid_borders": "Subtle 1px border-[#2A3654] dividers between grid cells for admin dashboard tables"
+  },
+  "components_strategy": {
+    "landing_and_marketing": "Custom HTML + Tailwind CSS with rich cosmic visuals, gradient borders, micro-animations, starfield overlays.",
+    "interactive_forms_and_widgets": "Shadcn UI components heavily customized with golden/cosmic theme.",
+    "dates_and_selects": "Use Shadcn Popover + Calendar for birth chart (Kundli) & slot pickers. Use Shadcn Select for language & expertise filters.",
+    "toasts": "Sonner toast system located at /app/src/components/ui/sonner.js",
+    "data_tables": "Shadcn Table with custom dense layout for Admin Verification Queue, Commission Reconciliation, Audit Logs, and Earnings Ledger."
+  },
+  "motion_and_effects": {
+    "animations": "Framer Motion micro-interactions, subtle float for zodiac elements, smooth tab switching, entrance staggers for astrologer cards.",
+    "reduced_motion": "Respect prefers-reduced-motion media query. Add aria-hidden='true' to decorative star particles.",
+    "transitions": "Explicit property transitions like transition-all duration-300 or transition-[opacity,transform]."
+  },
+  "trust_and_compliance": {
+    "disclaimer": "Mandatory banner & footer statement: 'Astrology services are offered as interpretive guidance and spiritual insights, not guaranteed outcomes or legally binding predictions.'",
+    "verification_badges": "Distinct 'Identity Verified' (Government ID) vs 'Credential Verified' (Jyotish Acharya / Degree) badges with emerald #10B981 hover tooltip.",
+    "refund_policy": "Explicit terms snapshot in booking drawer: Full refund if cancelled > 2 hours prior or astrologer no-show."
+  },
+  "key_user_roles_and_flows": {
+    "customer": [
+      "Registration & Login (Mobile / Email)",
+      "Birth Chart (Kundli) profile creation: Name, Date, Time of Birth, Place of Birth with auto-lat/long preview",
+      "Discover Astrologers Grid: Filter by Language (Hindi, Tamil, Telugu, English, etc.), Expertise (Vedic, KP, Nadi, Numerology, Tarot, Vastu), Price (₹/min), Experience (Years), Verified Badges",
+      "Astrologer Profile Detail: Bio, Credentials, Verified Badges, Consultation Modes (Chat ₹15/min, Audio ₹25/min, Video ₹40/min), User Reviews, Availability Calendar",
+      "Booking & Payment Flow: Time Slot selection, Birth Profile selection, Payment Gateway simulation with Wallet / UPI, Booking Receipt",
+      "Consultation Active Room (Chat Screen with mock timer, audio/video toggle, message history)",
+      "Customer Dashboard: Booking History, Wallet Balance, Saved Astrologers, Report/Block Astrologer, Account Settings & Account Deletion"
+    ],
+    "astrologer": [
+      "Astrologer Onboarding & KYC: Profile bio, languages, expertise, experience, document upload (ID proof & Jyotish Certificate)",
+      "Listing Subscription Plan Selection: Monthly ₹299 vs Quarterly ₹799 (with benefits highlight)",
+      "Rates & Availability Manager: Set per-minute rates for Chat/Audio/Video, toggle online status, configure weekly slot schedule",
+      "Booking Requests & Acceptance Flow",
+      "Astrologer Dashboard: Earnings Ledger (Gross, Commission deduction, Net Payout), Completed Sessions, Payout Request, Review Responses"
+    ],
+    "admin": [
+      "Admin Overview Dashboard: Total GMV, Active Consultations, Platform Commission (15-20%), Pending Verification Count",
+      "Verification Queue: Dual-stage approval (Identity Document approval + Astrologer Credential verification with document viewer modal)",
+      "Listing Plans Manager: Manage ₹299/monthly & ₹799/quarterly active subscriptions",
+      "Bookings & Financial Reconciliation: Transaction logs, Commission splits, Payout release button, Refund/Dispute resolution drawer",
+      "Reports & System Settings: Analytics, Commission percentage control, Terms configuration",
+      "Audit Logs Table: Immutable log of admin actions (approvals, refunds, rate changes)"
+    ]
+  },
+  "image_urls": {
+    "hero_cosmic_bg": "https://images.unsplash.com/photo-1528722828814-77b9b83aafb2?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "starry_night_overlay": "https://images.unsplash.com/photo-1609079332268-5950bcf4d1cf?crop=entropy&cs=srgb&fm=jpg&q=85",
+    "astrologers": [
+      {
+        "id": "astro-1",
+        "name": "Acharya Pandit Ramnath Sharma",
+        "url": "https://images.unsplash.com/photo-1543934776-32d1cc654abb?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "title": "Vedic & Prashna Kundli Specialist",
+        "experience": "22+ Years",
+        "rating": 4.9,
+        "verified_identity": true,
+        "verified_credentials": true
+      },
+      {
+        "id": "astro-2",
+        "name": "Guruji Anand Maharaj",
+        "url": "https://images.unsplash.com/photo-1686464907521-a8855aa3a75c?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "title": "Nadi & KP Astrology Master",
+        "experience": "18+ Years",
+        "rating": 4.8,
+        "verified_identity": true,
+        "verified_credentials": true
+      },
+      {
+        "id": "astro-3",
+        "name": "Swamini Devika Shastri",
+        "url": "https://images.pexels.com/photos/17946770/pexels-photo-17946770.jpeg?auto=compress&cs=tinysrgb&w=940",
+        "title": "Vastu Shastra & Gemstone Expert",
+        "experience": "15+ Years",
+        "rating": 4.95,
+        "verified_identity": true,
+        "verified_credentials": true
+      },
+      {
+        "id": "astro-4",
+        "name": "Vidwan Subhashish Shastri",
+        "url": "https://images.unsplash.com/photo-1763046198599-9d0100f0970c?crop=entropy&cs=srgb&fm=jpg&q=85",
+        "title": "Numerology & Planetary Remedies",
+        "experience": "12+ Years",
+        "rating": 4.7,
+        "verified_identity": true,
+        "verified_credentials": false
+      }
+    ]
+  },
+  "testing_guidelines": {
+    "rule": "Every interactive element (buttons, tabs, inputs, cards, status badges, modals) MUST include a kebab-case data-testid attribute.",
+    "examples": [
+      "data-testid='header-login-button'",
+      "data-testid='astrologer-filter-language-select'",
+      "data-testid='astrologer-card-astro-1'",
+      "data-testid='book-consultation-submit-button'",
+      "data-testid='birth-chart-time-input'",
+      "data-testid='admin-verification-approve-button'",
+      "data-testid='astrologer-plan-monthly-radio'",
+      "data-testid='wallet-recharge-button'",
+      "data-testid='chat-send-message-button'"
+    ]
+  },
+  "UNIVERSAL GUIDELINES FOR MAIN AGENT": [
+    "Ensure dark mode is default with warm celestial gold accents, but support light mode toggle seamlessly.",
+    "Do NOT center align .App or global containers. Follow structured, left-aligned standard visual rhythm.",
+    "All interactive elements must have micro-hover effects (shadow lift, border glow, text transition).",
+    "Strictly avoid emoji-only icons (🤖🧠💭💡🔮🎯); use Lucide or Phosphor React icons exclusively.",
+    "Ensure data-testid is attached to all buttons, links, inputs, tables, dropdowns, and status badges.",
+    "Support clear distinction between Customer View, Astrologer Portal, and Admin Console via role switcher or top navigation tabs for easy manual/automated testing.",
+    "All monetary amounts should be formatted in Indian Rupees (₹)."
+  ]
+}
