@@ -26,7 +26,7 @@ api.interceptors.response.use(
   async (err) => {
     const cfg = err.config;
     // flaky mobile networks: retry idempotent GETs with backoff
-    if (!err.response && cfg && cfg.method === "get" && (cfg._netRetry || 0) < 2) {
+    if (!err.response && err.code === "ERR_NETWORK" && cfg && cfg.method === "get" && (cfg._netRetry || 0) < 2) {
       cfg._netRetry = (cfg._netRetry || 0) + 1;
       await sleep(800 * 2 ** cfg._netRetry);
       return api(cfg);

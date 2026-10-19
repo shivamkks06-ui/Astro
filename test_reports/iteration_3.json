@@ -1,0 +1,37 @@
+{
+  "summary": "Iteration 3 (Capacitor/Android native-shell additions, tested through the web behaviour shared with the WebView). Backend: new tests/test_native_auth.py 8/8 passed. Regression: test_marketplace_e2e 27/27, test_chat_extras + test_iteration2_changes 11/11. The first run of the 2nd command hit 429 on register (10/IP/hour limit), which is test-environment only; after clearing rate_limits register:* everything passed. Checks: (1) Native login with X-Client: native returns refresh_token in the body; web login does not, and sets httpOnly cookies. Body-based /auth/refresh with no cookie returns a working access_token. Garbage, missing and access-token-as-refresh all return 401. Origin https://localhost is allowed (ACAO echoed) and https://evil.example gets 403. Cookie session survives access-token expiry via refresh, and logout works. call-token on an in_progress audio booking returns 503 'not yet operational'. Frontend: offline-banner appears on context.set_offline(True) (on /account and /discover). network-restored-banner appears on reconnect and hides after about 3s. app:reconnect re-fetches page data (/me/bookings; /public/config and /astrologers), and pages work afterwards. On audio and video in_progress bookings, Join call opens media-permission-dialog with the correct titles ('Allow microphone?' / 'Allow microphone and camera?'). With permissions granted, Allow access calls getUserMedia, closes the dialog, POSTs call-token -> 503, and the toast 'Audio/video calling is not yet operational...' appears. Denied (NotAllowedError simulated with an init script, because Playwright can't set the 'denied' state) shows media-permission-denied with the web instruction text and a 'Try again' button. The UI web flow works: login, remove access cookie, reload /account (refresh), still logged in, logout, redirect to login, protected route blocked. Android config verified: the manifest has INTERNET, ACCESS_NETWORK_STATE, RECORD_AUDIO, MODIFY_AUDIO_SETTINGS and CAMERA (camera/mic uses-feature required=false). capacitor.config.json has appId in.nakshatraveda.app, webDir build and androidScheme https. The APK was not built (ARM64 container). BUG FOUND: after a granted permission, opening the call dialog again shows 'Access allowed.' with no Allow button, so the user can't retry joining the call without reloading the page.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/auth/refresh", "issue": "The native refresh_token is not rotated (the response has no new refresh_token), so native users are forced to log in again every 7 days even when active. Logout doesn't revoke it either (stateless JWT), so a leaked refresh token stays valid for 7 days. This matters more now that tokens sit in unencrypted Preferences (already noted in ANDROID.md)."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "MediaPermissionDialog / BookingPage CallBox", "issue": "On grant, CallBox calls setPerm(false) directly. Radix only calls onOpenChange for user-initiated closes, so setState('ask') never runs and the state stays 'granted'. When the user clicks 'Join call' again, the dialog shows 'Access allowed.' with no Allow button and only 'Not now', and call-token is never requested again. Fix: reset state with useEffect on `open` (e.g. if (open) setState('ask')), or pass a reset callback. Clicking 'Not now' also bypasses the reset (it calls onOpenChange(false) from the parent prop, so it works only because the wrapper isn't involved). Make it reset as well.", "selector": "[data-testid=media-permission-allow]", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Booking page", "issues": ["The call-token 503 error toast appears top-center over the header nav (cosmetic, same as the earlier PayPage note)"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_native_auth.py", "/app/backend/tests/test_marketplace_e2e.py", "/app/backend/tests/test_chat_extras.py", "/app/backend/tests/test_iteration2_changes.py", "/app/test_reports/pytest/iteration3_native.xml", "/app/test_reports/pytest/iteration3_regression.xml"],
+  "action_items": [
+    "Fix MediaPermissionDialog so it resets its state each time it opens; right now a second 'Join call' after a grant is a dead end",
+    "Optional: rotate refresh_token on /auth/refresh for X-Client: native (return the new one in the body), and consider server-side revocation on logout",
+    "Optional: useApi sets data null on error. An app:resume while offline wipes data that was already loaded; keep the stale data and show the error instead"
+  ],
+  "critical_code_review_comments": [
+    "api.js: the GET retry also fires on axios timeouts (no err.response). With a 30s timeout plus 2 retries, a slow request can hang for about 95s before the error shows. Consider retrying only when !navigator.onLine or on ERR_NETWORK, or use a shorter timeout for retries.",
+    "NetworkBanner relies on @capacitor/network (navigator.onLine on web). Captive portals and 'connected but no internet' won't show the banner. That's acceptable, but the GET retry is then the only recovery.",
+    "AuthContext does not re-check the session on app:reconnect (only on app:resume). It's fine because the 401 interceptor refreshes, but it's noted for consistency.",
+    "Note: the Java package 'in.nakshatraveda.app' is valid in Java ('in' is a keyword only in Kotlin). If Kotlin sources are ever added under this package, they need backticks."
+  ],
+  "updated_files": ["/app/backend/tests/test_native_auth.py"],
+  "success_rate": {"backend": "100% (46/46 incl. 8 new)", "frontend": "~90% (1 bug: permission dialog retry after grant)"},
+  "test_credentials": "From /app/memory/test_credentials.md; demo.customer@nakshatraveda.test / DemoPass@123 worked.",
+  "seed_data_creation": "Temporary bookings TEST_ui_audio, TEST_ui_video and TEST_call_* (copied from a chat booking, mode audio/video, in_progress) plus their call_sessions were inserted and then deleted. cleanup_test_data.py was run; 0 TEST_ bookings/users remain. rate_limits register:* was cleared twice.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run order: test_marketplace_e2e -> test_chat_extras + test_iteration2_changes -> test_native_auth (all with -n 0 -p no:cacheprovider) -> tests/cleanup_test_data.py. If register returns 429, run db.rate_limits.deleteMany({_id:/^register:/}). The test_native_auth fixture inserts and removes its own audio booking. To test the denied permission path in Playwright, use add_init_script to override navigator.mediaDevices.getUserMedia so it rejects with DOMException NotAllowedError. Headless Chromium here has fake devices and auto-accepts."
+}

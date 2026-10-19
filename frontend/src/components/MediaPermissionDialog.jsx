@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Mic, Camera, ShieldAlert, CheckCircle2 } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "./ui/dialog";
 import { Button } from "./ui/button";
@@ -7,6 +7,7 @@ import { isNative } from "../lib/native";
 // Explains why we need access before the OS prompt appears (Android shows its runtime dialog on getUserMedia).
 export function MediaPermissionDialog({ open, onOpenChange, video, onGranted }) {
   const [state, setState] = useState("ask");
+  useEffect(() => { if (open) setState("ask"); }, [open]);
   const request = async () => {
     if (!navigator.mediaDevices?.getUserMedia) return setState("unsupported");
     setState("asking");
@@ -20,7 +21,7 @@ export function MediaPermissionDialog({ open, onOpenChange, video, onGranted }) 
     }
   };
   return (
-    <Dialog open={open} onOpenChange={(v) => { onOpenChange(v); if (!v) setState("ask"); }}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent data-testid="media-permission-dialog" className="bg-card">
         <DialogHeader>
           <DialogTitle className="font-serif">Allow {video ? "microphone and camera" : "microphone"}?</DialogTitle>

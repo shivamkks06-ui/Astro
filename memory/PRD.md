@@ -27,6 +27,13 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - Reviews (completed and attended bookings only), reports, blocks, privacy toggles, data export, deletion request with admin anonymisation, legal pages, disclaimers
 - Tests: 38/38 backend tests (tests/test_marketplace_e2e.py, test_chat_extras.py, test_iteration2_changes.py) plus frontend flows
 
+## Implemented (2026-10-19), Android shell
+- Capacitor 7 Android project (frontend/android, appId in.nakshatraveda.app); manifest declares mic, camera and network permissions
+- Native auth: X-Client: native gets refresh_token in the body, which rotates on refresh; tokens are kept in Capacitor Preferences and sent as Bearer. The web version stays cookie-only
+- Mic/camera consent dialog before the Android runtime prompt, with recovery steps if denied
+- Offline banner, reload on reconnect/resume, GET retry on network errors, back-button handling, session re-check on resume
+- APK NOT built: the container is ARM64 and Android's aapt2 tool doesn't run on ARM Linux. Build steps are in frontend/ANDROID.md
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)

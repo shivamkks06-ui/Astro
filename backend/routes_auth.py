@@ -99,6 +99,9 @@ async def refresh(request: Request, response: Response, body: Optional[RefreshIn
     user = await db.users.find_one({"_id": payload["sub"]})
     if not user or user["status"] != "active":
         raise HTTPException(401, "Session no longer valid")
+    if request.headers.get("X-Client") == "native":
+        access, refresh_tok = set_session(response, user["_id"])
+        return session_body(request, user, access, refresh_tok)
     access = make_token(user["_id"], "access", 15)
     response.set_cookie("access_token", access, httponly=True, secure=True, samesite="none", max_age=900, path="/")
     return {"user": out(user), "access_token": access}

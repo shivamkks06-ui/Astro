@@ -10,7 +10,7 @@ export function useApi(url) {
       const { data } = await api.get(url);
       setState({ data, loading: false, error: null });
     } catch (e) {
-      setState({ data: null, loading: false, error: errMsg(e) });
+      setState((s) => ({ data: s.data, loading: false, error: errMsg(e) }));
     }
   }, [url]);
   useEffect(() => {
