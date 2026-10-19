@@ -1,0 +1,11 @@
+{
+	"appId": "in.nakshatraveda.app",
+	"appName": "NakshatraVeda",
+	"webDir": "build",
+	"server": {
+		"androidScheme": "https"
+	},
+	"android": {
+		"allowMixedContent": false
+	}
+}

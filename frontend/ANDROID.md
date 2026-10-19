@@ -3,6 +3,7 @@
 App id `in.nakshatraveda.app`. The native project is in `frontend/android/`.
 
 ## Build a debug APK (on a Mac, Windows or x86 Linux machine with Android Studio, JDK 21 and SDK 35)
+The repo already contains a pre-built web bundle in `android/app/src/main/assets/public`, so you can open `frontend/android` in Android Studio and run it right away. That bundle points at the preview backend. To point it at your live backend, rebuild:
 1. In `frontend/.env`, set `REACT_APP_BACKEND_URL` to the deployed backend URL (not the preview URL).
 2. `cd frontend && yarn install && yarn build && npx cap sync android`
 3. `npx cap open android` and click Run, or `cd android && ./gradlew assembleDebug`. The APK is written to `android/app/build/outputs/apk/debug/`.
