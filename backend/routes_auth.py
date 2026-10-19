@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Literal
+from typing import Literal, Optional
 
 import jwt
 from fastapi import APIRouter, Request, Response, HTTPException, Depends
@@ -24,11 +24,23 @@ class LoginIn(BaseModel):
     password: str = Field(min_length=1, max_length=128)
 
 
-def set_session(resp: Response, uid: str) -> str:
+class RefreshIn(BaseModel):
+    refresh_token: Optional[str] = Field(None, max_length=2000)
+
+
+def set_session(resp: Response, uid: str):
     access = make_token(uid, "access", 15)
+    refresh_tok = make_token(uid, "refresh", 60 * 24 * 7)
     resp.set_cookie("access_token", access, httponly=True, secure=True, samesite="none", max_age=900, path="/")
-    resp.set_cookie("refresh_token", make_token(uid, "refresh", 60 * 24 * 7), httponly=True, secure=True, samesite="none", max_age=604800, path="/")
-    return access
+    resp.set_cookie("refresh_token", refresh_tok, httponly=True, secure=True, samesite="none", max_age=604800, path="/")
+    return access, refresh_tok
+
+
+def session_body(request: Request, user, access, refresh_tok):
+    body = {"user": out(user), "access_token": access}
+    if request.headers.get("X-Client") == "native":
+        body["refresh_token"] = refresh_tok  # Android app stores it; web relies on httpOnly cookie only
+    return body
 
 
 @router.post("/register")
@@ -50,8 +62,8 @@ async def register(body: RegisterIn, request: Request, response: Response):
             "rates": {"chat": 0, "audio": 0, "video": 0}, "modes_enabled": ["chat"], "payout_account": None,
             "identity_status": "not_submitted", "credential_status": "not_submitted", "listing_expires_at": None,
             "account_status": "active", "rating_avg": 0, "rating_count": 0, "created_at": now(), "updated_at": now()})
-    token = set_session(response, user["_id"])
-    return {"user": out(user), "access_token": token}
+    access, refresh_tok = set_session(response, user["_id"])
+    return session_body(request, user, access, refresh_tok)
 
 
 @router.post("/login")
@@ -71,13 +83,13 @@ async def login(body: LoginIn, request: Request, response: Response):
     if user["status"] != "active":
         raise HTTPException(403, f"Account is {user['status']}")
     await db.login_attempts.delete_many({"identifier": {"$in": [ident, acct]}})
-    token = set_session(response, user["_id"])
-    return {"user": out(user), "access_token": token}
+    access, refresh_tok = set_session(response, user["_id"])
+    return session_body(request, user, access, refresh_tok)
 
 
 @router.post("/refresh")
-async def refresh(request: Request, response: Response):
-    token = request.cookies.get("refresh_token")
+async def refresh(request: Request, response: Response, body: Optional[RefreshIn] = None):
+    token = request.cookies.get("refresh_token") or (body.refresh_token if body else None)
     if not token:
         raise HTTPException(401, "No refresh session")
     try:

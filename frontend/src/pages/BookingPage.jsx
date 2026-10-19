@@ -9,6 +9,7 @@ import { BookingActions, Extensions } from "../components/BookingActions";
 import { ReportBlock } from "../components/ReportBlock";
 import { ActionDialog } from "../components/ActionDialog";
 import { Disclaimer } from "../components/Layout";
+import { MediaPermissionDialog } from "../components/MediaPermissionDialog";
 import { useApi } from "../lib/useApi";
 import { api, errMsg, inr, fmtDate } from "../lib/api";
 
@@ -38,13 +39,16 @@ function Settlement({ s }) {
 }
 
 function CallBox({ b }) {
+  const [perm, setPerm] = useState(false);
   if (b.mode === "chat") return null;
-  const tryCall = async () => { try { await api.post(`/bookings/${b.id}/call-token`); } catch (e) { toast.error(errMsg(e)); } };
+  const requestToken = async () => { try { await api.post(`/bookings/${b.id}/call-token`); } catch (e) { toast.error(errMsg(e)); } };
+  const tryCall = () => setPerm(true);
   return (
     <div className="rounded-xl border p-4 space-y-2" data-testid="call-box">
       <p className="text-sm">Before joining a call, you'll be asked to allow microphone{b.mode === "video" ? " and camera" : ""} access.</p>
       <Button data-testid="start-call-button" variant="outline" onClick={tryCall}><Phone className="h-4 w-4 mr-2" />Join {b.mode} call</Button>
       <p className="text-xs text-muted-foreground">Calling isn't live yet, and calls that don't connect are never charged.</p>
+      <MediaPermissionDialog open={perm} onOpenChange={setPerm} video={b.mode === "video"} onGranted={() => { setPerm(false); requestToken(); }} />
     </div>
   );
 }

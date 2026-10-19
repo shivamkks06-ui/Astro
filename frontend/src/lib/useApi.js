@@ -13,6 +13,15 @@ export function useApi(url) {
       setState({ data: null, loading: false, error: errMsg(e) });
     }
   }, [url]);
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    load();
+    const again = () => load();
+    window.addEventListener("app:reconnect", again);
+    window.addEventListener("app:resume", again);
+    return () => {
+      window.removeEventListener("app:reconnect", again);
+      window.removeEventListener("app:resume", again);
+    };
+  }, [load]);
   return { ...state, reload: load };
 }

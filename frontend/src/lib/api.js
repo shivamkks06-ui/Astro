@@ -1,17 +1,39 @@
 import axios from "axios";
+import { isNative, tokens } from "./native";
 
 export const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
 export const api = axios.create({ baseURL: API, withCredentials: true, timeout: 30000 });
 
+api.interceptors.request.use((cfg) => {
+  if (isNative) {
+    cfg.headers["X-Client"] = "native";
+    if (tokens.access()) cfg.headers.Authorization = `Bearer ${tokens.access()}`;
+  }
+  return cfg;
+});
+
+const doRefresh = async () => {
+  const { data } = await api.post("/auth/refresh", isNative ? { refresh_token: await tokens.refresh() } : {});
+  await tokens.save(data);
+  return data;
+};
+
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let refreshing = null;
 const NO_REFRESH = ["/auth/login", "/auth/register", "/auth/refresh"];
 api.interceptors.response.use(
   (r) => r,
   async (err) => {
     const cfg = err.config;
+    // flaky mobile networks: retry idempotent GETs with backoff
+    if (!err.response && cfg && cfg.method === "get" && (cfg._netRetry || 0) < 2) {
+      cfg._netRetry = (cfg._netRetry || 0) + 1;
+      await sleep(800 * 2 ** cfg._netRetry);
+      return api(cfg);
+    }
     if (err.response?.status === 401 && cfg && !cfg._retry && !NO_REFRESH.some((u) => cfg.url.includes(u))) {
       cfg._retry = true;
-      refreshing = refreshing || api.post("/auth/refresh").finally(() => { refreshing = null; });
+      refreshing = refreshing || doRefresh().finally(() => { refreshing = null; });
       try {
         await refreshing;
         return api(cfg);
