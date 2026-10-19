@@ -1,0 +1,43 @@
+# NakshatraVeda: Vedic Astrology & Verified Astrologer Marketplace
+
+## Original problem statement
+Build a responsive Indian astrology marketplace with Android compatibility (React + Capacitor), a secure backend and a relational database. Roles: customers, astrologers, administrators. Business model: paid astrologer listings (Monthly ₹299 / Quarterly ₹799, admin-editable), commission on completed paid consultations (default 25%), and premium reports later. Modes: chat, audio, video. Requirements include: server-side authorization; astrologer onboarding with private documents and identity verification kept separate from credential verification; paid listings verified server-side; a booking state machine (requested, accepted, payment_pending, confirmed, in_progress, completed, cancelled, expired, disputed) with double-booking prevention and immutable price snapshots; chat/audio/video behind a provider abstraction (not operational without credentials); a payment and commission engine with integer paise, idempotency, verified webhooks and a double-entry ledger; admin-reviewed payouts; an admin dashboard; safety, privacy and consent; and the 14 acceptance tests. Execution phases 1 to 7. (The full original text is in the first user message.)
+
+## User choices
+- DB: MongoDB with enforced constraints (unique and partial indexes, JSON-schema validators, versioned migrations)
+- Payments: build the provider boundary now, plug a real provider in later. MOCK sandbox provider active
+- Auth: email/password JWT (httpOnly cookies plus a Bearer token for Capacitor)
+- Calls: no credentials. Boundary only, clearly NOT operational
+- Scope: phases 1 to 5 now, plus basic chat and the call boundary
+
+## Architecture
+- backend: core.py (db, auth deps, audit, rate limits, settings), migrations.py (001 indexes, 002 validators, 003 seed config, admin seed), ledger.py (append-only balanced journals with idempotent keys and deterministic entry ids; astrologer balances), finance.py (PaymentProvider boundary + MockSandboxProvider with HMAC webhooks, booking state machine, settlements, refunds, disputes, payouts, 60s sweep), storage.py (Emergent object storage, private), routes_auth/user/astrologer/bookings/admin.py
+- frontend: React + shadcn, dark celestial theme; pages: Landing, Discover, AstrologerPage, Auth, Legal, PayPage (MOCK banner), BookingPage (chat polling, actions, extensions), CustomerDashboard, AstrologerDashboard (Studio), AdminDashboard (18 tabs, generic DataTable with CSV)
+
+## User personas
+Customer seeking guidance; independent astrologer; platform admin/finance/safety reviewer.
+
+## Implemented (2026-10-19)
+- Auth, roles, lockout (per IP plus per account), origin guard, audit logs, account suspension
+- Astrologer profile, private KYC/credential uploads, separate verification cases, admin approve/reject/resubmit, 5-min audited document links
+- Listing plans (admin-editable), subscriptions activated only by a verified webhook, extension from current expiry, cancel-at-period-end, admin refund
+- Slots, bookings with server price snapshot, slot-claim atomicity plus unique partial index, full state machine, cancellation windows, no-show, partial-session pro-rata, extension consent and payment, unconnected calls never charged
+- Double-entry ledger, 25% configurable commission, tax-on-commission setting, gateway fees, refunds via reversal journals, dispute hold, reconciliation, eligible-balance payouts (one open per astrologer), MOCK settlement webhooks, finance summary and commission report
+- Polling chat (participants only, live sessions only, rate limited, idempotent client ids); call-token endpoint returns 503 "not operational"
+- Reviews (completed and attended bookings only), reports, blocks, privacy toggles, data export, deletion request with admin anonymisation, legal pages, disclaimers
+- Tests: 38/38 backend tests (tests/test_marketplace_e2e.py, test_chat_extras.py, test_iteration2_changes.py) plus frontend flows
+
+## Known limitations
+- Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
+- Audio/video NOT operational (no SDK credentials)
+- Standalone MongoDB has no multi-document transactions; idempotent keys and deterministic entries are used instead. Move to a replica set or Atlas for transactions
+- No password reset or email yet; receipts are not GST invoices; Android/Capacitor build not started
+- Per-account lock (20 failures) could be abused to lock out a user; consider CAPTCHA or progressive delay
+
+## Backlog
+- P0: Real payment provider integration (Razorpay), Android Capacitor build, password reset email
+- P1: Audio/video SDK (Agora/100ms) with server tokens and connection webhooks; WebSocket chat; GST invoices
+- P2: Premium astrology reports, notifications, analytics
+
+## Next tasks
+Connect a real payment gateway, then the Capacitor Android shell.

@@ -34,7 +34,7 @@ export default function PayPage() {
         <div className="flex justify-between"><span className="text-muted-foreground capitalize">{p.purpose} payment</span><b data-testid="payment-amount" className="text-amber-300">{inr(p.amount_paise)}</b></div>
         <div className="flex justify-between text-sm"><span className="text-muted-foreground">Status</span><StatusPill status={p.status} testid="payment-status" /></div>
         <p className="text-xs text-muted-foreground">Order ref: <span className="font-mono">{p.provider_order_id}</span></p>
-        {["created", "failed"].includes(p.status) && p.status !== "failed" ? (
+        {p.status === "created" ? (
           <div className="grid grid-cols-2 gap-3">
             <Button data-testid="mock-pay-success" disabled={busy} onClick={() => run("success")}>Simulate success</Button>
             <Button data-testid="mock-pay-failure" disabled={busy} variant="outline" onClick={() => run("failure")}>Simulate failure</Button>

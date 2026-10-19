@@ -12,7 +12,7 @@ function NavLinks({ user, onNav }) {
   if (user) links.push({ to: homeFor(user), label: user.role === "admin" ? "Admin Console" : user.role === "astrologer" ? "Astrologer Studio" : "My Account" });
   return links.map((l) => (
     <NavLink key={l.to} to={l.to} onClick={onNav} data-testid={`nav-${l.to.replace(/\//g, "-").slice(1)}`}
-      className={({ isActive }) => `text-sm transition-colors duration-200 ${isActive ? "text-amber-300" : "text-slate-300 hover:text-amber-200"}`}>
+      className={({ isActive }) => `text-sm whitespace-nowrap transition-colors duration-200 ${isActive ? "text-amber-300" : "text-slate-300 hover:text-amber-200"}`}>
       {l.label}
     </NavLink>
   ));

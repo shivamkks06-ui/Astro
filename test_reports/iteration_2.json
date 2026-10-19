@@ -1,0 +1,39 @@
+{
+  "summary": "Iteration 2 regression plus checks on the changed areas. test_marketplace_e2e.py: 27/27 passed. test_chat_extras.py: 3/3 passed. New tests/test_iteration2_changes.py: 8/8 passed after one fix to the test itself (it now reuses a customer because register is limited to 10 per IP per hour). Results: (1) Replayed and duplicate webhooks create no duplicate ledger entries and the trial balance stays balanced. (2) Deleting a journal header to simulate a crash, then sending a capture with a new event id, re-creates the header and does not duplicate entry lines; entry ids are '{key}#{i}'. (3) When the same capture arrives again under a new event id, the effects are re-applied idempotently: the booking is confirmed once and no extra refund is made. (4) A capture for a booking cancelled while payment_pending is auto-refunded exactly once (late:{pid}), and a second capture event adds no refund and no ledger lines. (5) Login lockout: rotating spoofed X-Forwarded-For values still gives 429 on the 6th attempt and on the correct password. The per-account lock (count 20) blocks login even with the correct password. (6) Origin guard: a same-host Origin is allowed; a foreign origin and the lookalike host.evil.example are both 403. (7) finance/summary: trial_balance_ok is true, every commission_report row has a name, and late-cancel retained commission is included and matches the booking settlements. (8) refund_sub with no captured payment returns 409 and the subscription status is restored to active. Frontend: PayPage mock success shows 'Payment confirmed by the server', the CTA changes from 'Back' to 'Go to booking' and opens the confirmed booking. The admin overview shows the 'Balanced' badge, the ledger table fits its box at 1920 and 768 (scrollWidth == clientWidth), and fractional amounts show 2 decimals (for example ₹17,561.96, ₹12.50). TEST_ data was cleaned up afterwards; the trial balance is still balanced.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/auth/login", "issue": "The per-account lock (20 failures in 15 min, across any IPs) lets anyone lock a known user out of their account (DoS). This is a common tradeoff, but consider CAPTCHA or progressive delay instead of a hard lock, or notify the user."},
+      {"endpoint": "ledger.post_journal", "issue": "If a retry posts the same key with different line values (for example available_at recomputed with now()), the conflicting lines are silently ignored. The result is still balanced because the ids are deterministic, but nothing verifies that the retried lines match the stored ones."},
+      {"endpoint": "origin_guard", "issue": "The same-host check compares only netloc and ignores the scheme, so http://<host> is also accepted. Low risk."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Admin overview ledger", "issues": ["Negative values render as '₹-16,036.04'; the usual format is '-₹16,036.04'", "The astrologer payable account shows a raw id (liability:astrologer_payable:9aa4b...) instead of the astrologer's name"]},
+      {"screen": "Tablet 768px admin", "issues": ["Header nav items wrap onto 2 lines", "The admin tab strip is cut off at the right edge ('Payment...') with no visible scroll cue"]},
+      {"screen": "PayPage", "issues": ["The success toast at top-center covers the header nav for a short time (cosmetic)", "The condition ['created','failed'].includes(status) && status !== 'failed' is redundant; it equals status === 'created'"]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_marketplace_e2e.py", "/app/backend/tests/test_chat_extras.py", "/app/backend/tests/test_iteration2_changes.py", "/app/test_reports/pytest/iteration2.xml"],
+  "action_items": [
+    "Optional: format negative money as -₹X in inr()",
+    "Optional: show astrologer names for payable accounts in the admin ledger table",
+    "Optional: tablet admin tab-strip overflow cue and header nav wrapping",
+    "Optional: reconsider the per-account hard lock (account-lockout DoS)"
+  ],
+  "critical_code_review_comments": [
+    "on_payment_captured late-refund guard relies on `not cur.get('settlement')`. This works today only because the cancel paths call settle_cancellation only when the booking was confirmed. If anyone later calls settle_cancellation for payment_pending bookings (which writes settlement {gross:0}), the late capture would never be refunded. Prefer checking settlement.gross or captured payments.",
+    "routes_admin.refund_sub has `from datetime import timedelta` inside the function body; move it to the module imports.",
+    "The register rate limit is per client_ip (10 per hour). Behind shared NAT or ingress this is tight, and it slowed automated tests."
+  ],
+  "updated_files": ["/app/backend/tests/test_iteration2_changes.py"],
+  "success_rate": {"backend": "100% (38/38)", "frontend": "100% of the requested quick checks"},
+  "test_credentials": "From /app/memory/test_credentials.md (admin worked). TEST customers/astrologers are registered at @testmail.in, password TestPass@123.",
+  "seed_data_creation": "Only TEST_ data, removed with tests/cleanup_test_data.py. Register rate_limits keys were cleared once during testing.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Order: test_marketplace_e2e.py -> test_chat_extras.py -> test_iteration2_changes.py (all with -n 0 -p no:cacheprovider) -> python tests/cleanup_test_data.py. The later files need the TEST astrologer created by the first one. Register is limited to 10 per IP per hour; if you hit 429 on register, delete db.rate_limits {_id:/^register:/}. The login input testids are login-email-input, login-password-input and login-submit-button."
+}
