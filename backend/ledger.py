@@ -1,6 +1,6 @@
 from datetime import timedelta
-from pymongo.errors import DuplicateKeyError
-from core import db, now, new_id
+from pymongo.errors import DuplicateKeyError, BulkWriteError
+from core import db, now
 
 GATEWAY = "asset:gateway_clearing"
 PREPAY = "liability:customer_prepayments"
@@ -25,18 +25,26 @@ async def post_journal(key: str, kind: str, lines: list, refs: dict = None) -> b
     if total_d != total_c or total_d <= 0:
         raise ValueError("Unbalanced journal")
     refs = refs or {}
-    try:
-        await db.journals.insert_one({"_id": key, "kind": kind, "refs": refs, "total_paise": total_d, "created_at": now()})
-    except DuplicateKeyError:
+    if await db.journals.find_one({"_id": key}, {"_id": 1}):
         return False
     ts = now()
-    await db.ledger_entries.insert_many([{
-        "_id": new_id(), "journal_id": key, "kind": kind, "account": ln["account"],
+    # deterministic entry ids: a retried/concurrent post can't duplicate lines; header written last marks completion
+    docs = [{
+        "_id": f"{key}#{i}", "journal_id": key, "kind": kind, "account": ln["account"],
         "debit": int(ln.get("debit", 0)), "credit": int(ln.get("credit", 0)),
         "astrologer_id": ln.get("astrologer_id"), "booking_id": refs.get("booking_id"),
         "payment_id": refs.get("payment_id"), "payout_id": refs.get("payout_id"),
         "available_at": ln.get("available_at"), "memo": ln.get("memo", ""), "created_at": ts,
-    } for ln in lines if ln.get("debit") or ln.get("credit")])
+    } for i, ln in enumerate(lines) if ln.get("debit") or ln.get("credit")]
+    try:
+        await db.ledger_entries.insert_many(docs, ordered=False)
+    except BulkWriteError as e:
+        if any(err.get("code") != 11000 for err in e.details.get("writeErrors", [])):
+            raise
+    try:
+        await db.journals.insert_one({"_id": key, "kind": kind, "refs": refs, "total_paise": total_d, "created_at": ts})
+    except DuplicateKeyError:
+        return False
     return True
 
 

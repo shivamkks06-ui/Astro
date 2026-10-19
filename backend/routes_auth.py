@@ -20,7 +20,7 @@ class RegisterIn(BaseModel):
 
 
 class LoginIn(BaseModel):
-    email: EmailStr
+    email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=1, max_length=128)
 
 
@@ -58,16 +58,19 @@ async def register(body: RegisterIn, request: Request, response: Response):
 async def login(body: LoginIn, request: Request, response: Response):
     email = body.email.lower()
     ident = f"{client_ip(request)}:{email}"
-    att = await db.login_attempts.find_one({"identifier": ident})
-    if att and att.get("count", 0) >= 5 and att["locked_until"] > now():
-        raise HTTPException(429, "Too many failed attempts. Try again in 15 minutes.")
+    acct = f"acct:{email}"
+    for key, limit in ((ident, 5), (acct, 20)):
+        att = await db.login_attempts.find_one({"identifier": key})
+        if att and att.get("count", 0) >= limit and att["locked_until"] > now():
+            raise HTTPException(429, "Too many failed attempts. Try again in 15 minutes.")
     user = await db.users.find_one({"email": email})
     if not user or not verify_password(body.password, user["password_hash"]):
-        await db.login_attempts.update_one({"identifier": ident}, {"$inc": {"count": 1}, "$set": {"locked_until": now() + timedelta(minutes=15), "expires_at": now() + timedelta(minutes=15)}}, upsert=True)
+        for key in (ident, acct):
+            await db.login_attempts.update_one({"identifier": key}, {"$inc": {"count": 1}, "$set": {"locked_until": now() + timedelta(minutes=15), "expires_at": now() + timedelta(minutes=15)}}, upsert=True)
         raise HTTPException(401, "Invalid email or password")
     if user["status"] != "active":
         raise HTTPException(403, f"Account is {user['status']}")
-    await db.login_attempts.delete_many({"identifier": ident})
+    await db.login_attempts.delete_many({"identifier": {"$in": [ident, acct]}})
     token = set_session(response, user["_id"])
     return {"user": out(user), "access_token": token}
 

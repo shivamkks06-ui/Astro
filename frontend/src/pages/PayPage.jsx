@@ -42,7 +42,8 @@ export default function PayPage() {
         ) : p.status === "failed" ? (
           <p className="text-sm text-red-300">Payment failed. Go back and try again; a new attempt will be created.</p>
         ) : null}
-        <Button asChild variant="ghost" className="w-full"><Link data-testid="payment-back-link" to={back}>Back</Link></Button>
+        {p.status === "captured" && <p data-testid="payment-verified" className="text-sm text-emerald-300">Payment confirmed by the server.</p>}
+        <Button asChild variant={p.status === "captured" ? "default" : "ghost"} className="w-full"><Link data-testid="payment-back-link" to={back}>{p.status === "captured" ? (p.purpose === "listing" ? "Go to studio" : "Go to booking") : "Back"}</Link></Button>
       </div>
     </div>
   );

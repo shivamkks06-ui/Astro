@@ -4,6 +4,7 @@ load_dotenv(Path(__file__).parent / ".env")
 
 import os
 import asyncio
+from urllib.parse import urlparse
 import logging
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
@@ -28,7 +29,8 @@ ALLOWED_ORIGINS = [o.strip() for o in os.environ["CORS_ORIGINS"].split(",") if o
 @app.middleware("http")
 async def origin_guard(request: Request, call_next):
     origin = request.headers.get("origin")
-    if request.method in ("POST", "PUT", "PATCH", "DELETE") and origin and origin not in ALLOWED_ORIGINS:
+    same_host = origin and urlparse(origin).netloc in (request.headers.get("x-forwarded-host"), request.headers.get("host"))
+    if request.method in ("POST", "PUT", "PATCH", "DELETE") and origin and not same_host and origin not in ALLOWED_ORIGINS:
         return JSONResponse({"detail": "Origin not allowed"}, status_code=403)
     try:
         return await call_next(request)

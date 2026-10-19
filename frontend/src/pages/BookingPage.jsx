@@ -73,7 +73,7 @@ export default function BookingPage() {
         <div>
           <p className="overline mb-2">Booking</p>
           <h1 className="text-2xl sm:text-3xl">{b.viewer_role === "customer" ? b.astrologer_name : b.customer_name}</h1>
-          <div className="flex items-center gap-3 mt-3"><StatusPill status={b.status} testid="booking-status" /><span className="text-sm text-muted-foreground capitalize">{b.mode} · {fmtDate(b.slot_start)}</span></div>
+          <div className="flex items-center gap-3 mt-3"><StatusPill status={b.status} testid="booking-status" /><span className="text-sm text-muted-foreground"><span className="capitalize">{b.mode}</span> · {fmtDate(b.slot_start)}</span></div>
         </div>
         <Timer b={b} />
         <BookingActions b={b} reload={reload} />

@@ -76,7 +76,8 @@ def decode_token(token: str, typ: str) -> dict:
 
 
 def client_ip(request: Request) -> str:
-    fwd = request.headers.get("x-forwarded-for", "").split(",")[0].strip()
+    # rightmost hop is appended by our ingress; leftmost entries are client-controlled
+    fwd = request.headers.get("x-forwarded-for", "").split(",")[-1].strip()
     return fwd or (request.client.host if request.client else "unknown")
 
 

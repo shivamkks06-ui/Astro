@@ -138,14 +138,20 @@ async def on_payment_captured(data):
             await issue_refund(f"dup:{dup['_id']}", dup, dup["amount_paise"], "duplicate_payment", [{"account": PREPAY if dup["purpose"] != "listing" else LISTING, "debit": dup["amount_paise"]}])
         return
     if not updated:
-        return
+        # retry after a partial failure: effects below are idempotent, so re-apply them
+        updated = await db.payments.find_one({"_id": pay["_id"], "status": "captured", "provider_payment_id": data["payment_id"]})
+        if not updated:
+            return
     await post_capture_journal(updated)
     if updated["purpose"] == "listing":
         await activate_subscription(updated)
     elif updated["purpose"] == "consultation":
         b = await move(updated["booking_id"], {"payment_pending"}, "confirmed", "system", note="payment verified via webhook")
         if not b:
-            await issue_refund(f"late:{updated['_id']}", updated, updated["amount_paise"], "booking_no_longer_valid", [{"account": PREPAY, "debit": updated["amount_paise"]}])
+            cur = await db.bookings.find_one({"_id": updated["booking_id"]})
+            refunded = await db.refunds_disputes.find_one({"payment_id": updated["_id"], "type": "refund"})
+            if cur["status"] in ("cancelled", "expired") and not cur.get("settlement") and not refunded:
+                await issue_refund(f"late:{updated['_id']}", updated, updated["amount_paise"], "booking_no_longer_valid", [{"account": PREPAY, "debit": updated["amount_paise"]}])
     elif updated["purpose"] == "extension":
         await apply_extension(updated)
 
@@ -245,7 +251,9 @@ async def settle_cancellation(before, by_role):
         await post_journal(f"cancel_retain:{before['_id']}", "late_cancellation_settlement",
                            [{"account": PREPAY, "debit": retained}] + settlement_lines(retained, sp, before["astrologer_id"], s["payout_hold_hours"]),
                            {"booking_id": before["_id"], "payment_id": pays[0]["_id"]})
-    summary = {"gross": gross, "refund": refund, "retained": retained}
+    sp = split_amount(retained, before["price"]["commission_bps"], before["price"]["tax_bps"])
+    summary = {"gross": gross, "refund": refund, "retained": retained, "refund_reason": f"cancelled_by_{by_role}",
+               "commission": sp["commission"] if retained else 0, "tax": sp["tax"] if retained else 0, "astrologer_share": sp["share"] if retained else 0}
     await db.bookings.update_one({"_id": before["_id"]}, {"$set": {"settlement": summary}})
     return summary
 

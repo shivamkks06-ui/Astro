@@ -33,7 +33,7 @@ export function errMsg(e) {
   return String(d);
 }
 
-export const inr = (p) => `₹${((p || 0) / 100).toLocaleString("en-IN", { maximumFractionDigits: 2 })}`;
+export const inr = (p) => { const f = (p || 0) % 100 ? 2 : 0; return `₹${((p || 0) / 100).toLocaleString("en-IN", { minimumFractionDigits: f, maximumFractionDigits: 2 })}`; };
 export const fmtDate = (d) => (d ? new Date(d).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }) : "—");
 export const idem = () => (window.crypto?.randomUUID ? window.crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`);
 export const label = (s) => (s || "").replace(/_/g, " ");

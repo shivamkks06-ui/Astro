@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { CheckCircle2, Circle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Loading, ErrorState } from "../components/States";
@@ -31,6 +32,7 @@ function Checklist({ d }) {
 export default function AstrologerDashboard() {
   const { data, loading, error, reload } = useApi("/astrologer/profile");
   const cfg = useApi("/public/config");
+  const [tab, setTab] = useState("profile");
   if (loading || cfg.loading) return <Loading />;
   if (error || cfg.error) return <div className="max-w-3xl mx-auto px-4 py-16"><ErrorState error={error || cfg.error} onRetry={() => { reload(); cfg.reload(); }} /></div>;
   return (
@@ -38,7 +40,7 @@ export default function AstrologerDashboard() {
       <p className="overline mb-2">Astrologer studio</p>
       <h1 className="text-3xl mb-6">{data.profile.display_name}</h1>
       <Checklist d={data} />
-      <Tabs defaultValue="profile">
+      <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="flex flex-wrap h-auto bg-card mb-6">
           {[["profile", "Profile"], ["verification", "Verification"], ["listing", "Listing plan"], ["slots", "Availability"], ["bookings", "Bookings"], ["earnings", "Earnings & payouts"], ["privacy", "Privacy"]].map(([v, l]) => (
             <TabsTrigger key={v} value={v} data-testid={`studio-tab-${v}`}>{l}</TabsTrigger>

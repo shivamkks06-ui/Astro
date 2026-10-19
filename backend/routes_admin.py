@@ -108,7 +108,7 @@ async def finance_summary(user=Depends(admin)):
                     "commission": {"$sum": {"$ifNull": ["$settlement.commission", 0]}}, "share": {"$sum": {"$ifNull": ["$settlement.astrologer_share", 0]}}}}]).to_list(500)
     names = {p["_id"]: p["display_name"] async for p in db.astrologer_profiles.find({"_id": {"$in": [r["_id"] for r in by_astro]}}, {"display_name": 1})}
     return {"accounts": [{"account": r["_id"], "debit": r["debit"], "credit": r["credit"], "balance": r["credit"] - r["debit"]} for r in rows],
-            "commission_report": [{**r, "astrologer_id": r.pop("_id"), "name": names.get(r.get("_id"), "")} for r in by_astro],
+            "commission_report": [{**{k: v for k, v in r.items() if k != "_id"}, "astrologer_id": r["_id"], "name": names.get(r["_id"], "")} for r in by_astro],
             "trial_balance_ok": sum(r["debit"] for r in rows) == sum(r["credit"] for r in rows)}
 
 
@@ -237,7 +237,10 @@ async def refund_sub(sid: str, body: ReasonIn, request: Request, user=Depends(ad
     sub = await db.listing_subscriptions.find_one_and_update({"_id": sid, "status": {"$in": ["active", "cancelled"]}}, {"$set": {"status": "refunded", "refund_status": "processing", "refund_reason": body.reason}})
     if not sub:
         raise HTTPException(409, "Only active subscriptions can be refunded")
-    pay = await db.payments.find_one({"_id": sub["payment_id"], "status": "captured"})
+    pay = await db.payments.find_one({"_id": sub.get("payment_id"), "status": "captured"})
+    if not pay:
+        await db.listing_subscriptions.update_one({"_id": sid}, {"$set": {"status": sub["status"], "refund_status": None}})
+        raise HTTPException(409, "No captured payment found for this subscription")
     amt = sub["plan"]["price_paise"]
     await issue_refund(f"sub:{sid}", pay, amt, "listing_refund", [{"account": LISTING, "debit": amt}], actor_id=user["_id"])
     await db.listing_subscriptions.update_one({"_id": sid}, {"$set": {"refund_status": "processed"}})

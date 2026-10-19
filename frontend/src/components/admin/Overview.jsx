@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
-import { Loading, ErrorState, StatusPill } from "../States";
+import { Loading, ErrorState } from "../States";
 import { ActionDialog } from "../ActionDialog";
 import { useApi } from "../../lib/useApi";
 import { api, inr, label } from "../../lib/api";
@@ -24,9 +24,9 @@ export function Overview() {
       </div>
       <div className="grid lg:grid-cols-2 gap-6">
         <div className="rounded-xl border p-4 overflow-x-auto">
-          <div className="flex justify-between mb-3"><h3 className="text-lg">Ledger accounts</h3><StatusPill status={fin.data.trial_balance_ok ? "approved" : "failed"} testid="trial-balance" /></div>
+          <div className="flex justify-between mb-3"><h3 className="text-lg">Ledger accounts</h3><span data-testid="trial-balance" className={`text-xs rounded-full border px-2.5 py-0.5 ${fin.data.trial_balance_ok ? "text-emerald-300 border-emerald-500/30" : "text-red-300 border-red-500/30"}`}>{fin.data.trial_balance_ok ? "Balanced" : "Unbalanced"}</span></div>
           <table className="w-full text-xs"><thead className="text-muted-foreground text-left"><tr><th className="p-2">Account</th><th className="p-2">Debit</th><th className="p-2">Credit</th><th className="p-2">Net credit</th></tr></thead>
-            <tbody>{fin.data.accounts.map((a) => <tr key={a.account} className="border-t"><td className="p-2 font-mono">{a.account}</td><td className="p-2">{inr(a.debit)}</td><td className="p-2">{inr(a.credit)}</td><td className="p-2">{inr(a.balance)}</td></tr>)}</tbody></table>
+            <tbody>{fin.data.accounts.map((a) => <tr key={a.account} className="border-t"><td className="p-2 font-mono break-all max-w-[220px]">{a.account}</td><td className="p-2">{inr(a.debit)}</td><td className="p-2">{inr(a.credit)}</td><td className="p-2">{inr(a.balance)}</td></tr>)}</tbody></table>
         </div>
         <div className="rounded-xl border p-4 overflow-x-auto">
           <h3 className="text-lg mb-3">Commission report</h3>
