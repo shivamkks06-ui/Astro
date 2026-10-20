@@ -61,7 +61,7 @@ function App() {
           <Footer />
           <BottomNav />
         </div>
-        <Toaster richColors position="top-center" />
+        <Toaster richColors position="top-center" mobileOffset={{ bottom: "calc(84px + env(safe-area-inset-bottom))" }} />
       </BrowserRouter>
     </AuthProvider>
   );

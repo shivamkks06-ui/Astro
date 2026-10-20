@@ -16,7 +16,7 @@ export default function Landing() {
   return (
     <div>
       <section className="relative overflow-hidden">
-        <img src="/hero.jpg" alt="" aria-hidden="true" decoding="async" fetchpriority="high" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+        <img src="/hero.jpg" alt="" aria-hidden="true" width={1800} height={1200} decoding="async" fetchpriority="high" className="absolute inset-0 h-full w-full object-cover opacity-40" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#0B0F19]/40 via-[#0B0F19]/70 to-[#0B0F19]" />
         <div className="relative max-w-7xl mx-auto px-5 sm:px-8 pt-10 pb-12 sm:py-24 lg:py-32 grid md:grid-cols-12 gap-8">
           <div className="md:col-span-8 fade-up">

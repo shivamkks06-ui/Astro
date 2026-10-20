@@ -1,0 +1,33 @@
+{
+  "summary": "Iteration 11, frontend only. Tested the Android Back logic through window.__nvBack, the root double-press exit, Discover URL state, the avatar fallback, and mobile/desktop regressions. Main suite /app/tests/ui_iter11_native_back.py passes 100/101. Its one failure is the hero.jpg image on home missing width/height attributes (minor). Two extra checks found two real issues: (1) the 'Press back again to exit' toast sits on top of the bottom nav labels, and (2) Discover shows a stale result list when responses arrive out of order. Verified: a nested profile returns 'back' to /discover. The drawer, the Select dropdown (language and sort), the profile login sheet (also with an input focused) and the booking dialog each return 'overlay', close, and leave the route unchanged. On a directly opened '/' (history idx 0): the first call returns 'exit-armed' and shows the toast at the bottom; a second call within 2 s returns 'exit' and the page stays on '/'; after more than 2 s the next call re-arms and shows the toast again. Deep links to /discover and to a profile return 'home' and replace to '/' (history.length unchanged, idx 0). 5 Home->Discover->Back cycles each did exactly one step. Discover: q, language, expertise, min_exp, verified_credential and sort all appear in the URL. history.length doesn't grow per keystroke or filter change (replace). Profile -> Back restores every input, select, switch, sort and the count. The next Back goes to '/'. Results count reads '1 astrologer' / '2 astrologers' / '0 astrologers'. Clear filters resets the URL and inputs. The page param and Previous/Next work (the 3-page case was tested with a faked total). The error state with retry and the loading skeleton both render. Avatar: an injected photo_url renders an img with width=112, height=112, loading=lazy, shown at 56x56. A photo that 404s or is aborted shows initials ('AR') and leaves no broken images, on the cards and on the profile. At 360 and 390: no horizontal overflow on '/', /discover or the profile; the bottom nav shows; the drawer is right-anchored; the login sheet is bottom-anchored and full width, and logging in through it stays on the profile; the booking dialog is anchored, within the width, and Back closes it. At 1920 the header is correct.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Discover / useApi", "issue": "Stale-response race. Every keystroke in search or min_exp fires a request, and useApi doesn't discard out-of-order responses. Reproduced: with the q=A response delayed, typing 'Ac' leaves the input and URL at q=Ac, but the list shows '2 astrologers' (the q=A result; the server returns 1 for q=Ac). This is likely on slow mobile networks.", "selector": "[data-testid=results-count]", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Root exit hint toast (mobile)", "issues": ["The 'Press back again to exit' toast (sonner bottom-center, 16px offset on mobile) overlaps the bottom nav. At 390 the toast spans y 774-828 and the nav starts at y 779, so it covers the Home/Discover/Log in labels. Raise the offset above the 64px nav plus safe area, e.g. <Toaster mobileOffset={{ bottom: 'calc(80px + env(safe-area-inset-bottom))' }} />, or set an offset per toast."]},
+      {"screen": "Landing hero", "issues": ["/hero.jpg <img> has no width/height attributes. The other images do. There's no layout shift because it's absolute inset-0, but the requirement says every image has dimensions."]}
+    ]
+  },
+  "test_report_links": ["/app/tests/ui_iter11_native_back.py", "/app/tests/ui_iter11_toast_check.py", "/app/tests/ui_iter11_race_check.py"],
+  "action_items": [
+    "useApi: ignore stale responses (keep a request counter or ref to the latest URL, or use an AbortController in the effect cleanup). Consider debouncing the Discover search and min_exp inputs by about 300 ms. The URL can still update immediately with replace.",
+    "Move the exit-hint toast (or the bottom-position toasts in general) above the bottom nav and book bar on mobile",
+    "Optional: add width/height attributes to the Landing hero img"
+  ],
+  "critical_code_review_comments": [
+    "lib/useApi.js: no cancellation or stale guard, so the out-of-order setState shows mismatched data (reproduced above). The same hook drives the resume and reconnect refreshes.",
+    "native.js handleBack: closeTopOverlay dispatches Escape on document.activeElement. That works because the Radix DismissableLayer listens at the document level. Toasts and non-Radix overlays (if added later) won't be detected by the OVERLAY selector.",
+    "native.js: exitArmedAt is module-level and isn't reset when the user leaves '/'. That's harmless because the 2 s window expires, but a press within 2 s after returning via 'home' could count as the second press. In practice the 'home' branch doesn't arm, so this is OK.",
+    "Discover: min_exp accepts negative values typed manually (min=0 only applies to the spinner). That's minor."
+  ],
+  "updated_files": ["/app/tests/ui_iter11_native_back.py", "/app/tests/ui_iter11_toast_check.py", "/app/tests/ui_iter11_race_check.py"],
+  "success_rate": {"backend": "skipped (frontend only)", "frontend": "99% (100/101 checks in the main suite), plus the toast-overlap and race issues found in the extra checks"},
+  "seed_data_creation": "None. No DB writes or deletes and no photo upload: the photo fallback used Playwright interception, injecting photo_url into the /api/astrologers responses and returning 404 or aborting /api/astrologers/*/photo. Logged in as demo.customer in the regression contexts, then logged out via /api/auth/logout.",
+  "retest_needed": true,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run python /app/tests/ui_iter11_native_back.py (about 2-3 minutes, local headless_shell). Run ui_iter11_race_check.py to confirm the useApi stale-response fix: the count should read '1 astrologer' for q=Ac. Run ui_iter11_toast_check.py to compare the toast box with the bottom-nav box: toast.bottom must be <= nav.y. Only 2 astrologers exist, so pagination is tested by faking total=30 through route interception. Wait about 700 ms after the drawer opens before measuring it (slide animation). Native Android hardware Back wasn't tested; only the dev hook was.",
+  "test_credentials": "demo.customer@nakshatraveda.test / DemoPass@123 works"
+}
