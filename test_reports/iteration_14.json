@@ -1,0 +1,43 @@
+{
+  "summary": "Iteration 14: tested the Daily Horoscope and Kundli phase on both backend and frontend. Backend: 17/17 pytest pass (backend/tests/test_astro_kundli_horoscope.py). Places: offline 'varan' returns Varanasi first with Asia/Kolkata; q<2 gives 422; online OSM returns 200 with the correct tz via timezonefinder (Reykjavik -> Atlantic/Reykjavik); the 11th call in a minute gets 429. Kundli calculate for the reference input: Libra ascendant, Taurus Moon, Rohini pada 3, 9 planets in order with valid sign/degree/house/pada/retro, Rahu and Ketu exactly opposite, 12 houses, current dasha Jupiter/Venus, system Lahiri/Whole sign/DE421. All 9 validation cases return 422 (bad tz, 1899, 2050, lat 70/-67, malformed date and time, invalid month, invalid time). Saved kundlis: 401 without auth, save then duplicate:true, list, GET recompute, other user gets 404 on GET and DELETE, delete then 404. Horoscope: today's IST date, 9 transits, 12 signs with tone/overview/moon_house and 4 categories with basis; AI ready for today. Yesterday and tomorrow went pending -> ready within about 15s via Claude. Other dates (+-2, garbage) return 422. Transit sanity check: Venus and Saturn are retrograde in Oct 2026, which matches the real ephemeris. Frontend: the sign picker updates ?sign= and localStorage and persists across reload and a bare /horoscope URL. Day tabs work. AI interpretation and Calculated reading labels show, along with 4 category cards with tone badges, the Why basis toggle and the transits details. Polling took tomorrow from 'being written' to the AI text. Kundli: form errors for missing date/time and missing place, the offline place dropdown, result summary, north SVG and south grid toggle, planet table (10 rows), dasha toggle, method text. 'Log in to save' goes to /login?next=/kundli, and after login returns and recalculates. Save -> Saved. The saved list links to /kundli/<id> (opens with the saved south style). Delete works. Header links and the 5-item bottom nav (Home, Horoscope, Kundli, Discover, Log in/Bookings) fit at 390 with no truncation. Quick tiles work. No horizontal overflow at 360/390/1920 on /, /horoscope, /kundli, /discover or the kundli result. Regression ui_iter11_native_back.py: 101/101. The only console errors are the expected logged-out 401s.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/kundlis", "issue": "The MAX_SAVED count check runs before the duplicate check, so at 100 saved charts re-saving an existing chart returns 409 instead of duplicate:true. Swap the order."},
+      {"endpoint": "GET /api/kundlis/{id}", "issue": "BirthIn(**r['input']) is built without a try/except. If a stored input ever fails validation (for example after future tz or validator changes), the endpoint returns 500 instead of a handled error."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Horoscope day tabs", "issue": "useApi keeps the previous data while the new URL loads, and the Loading view only renders when !h.data. Switching Today -> Tomorrow briefly shows today's reading (old date and text) under the Tomorrow tab with no loading indicator.", "selector": "[data-testid=horoscope-day-tomorrow]", "priority": "LOW"},
+      {"component": "Horoscope date label", "issue": "new Date('YYYY-MM-DD') parses as UTC midnight, so users in timezones west of UTC (Americas) see the previous weekday/date. Use new Date(h.data.date + 'T12:00:00') or format with timeZone:'Asia/Kolkata'.", "selector": "[data-testid=horoscope-date]", "priority": "LOW"},
+      {"component": "Kundli saved view delete", "issue": "Deleting the chart that is currently open at /kundli/<id> leaves the deleted chart rendered on screen. Navigate to /kundli after deleting the open id.", "selector": "[data-testid^=kundli-delete-]", "priority": "LOW"},
+      {"component": "Horoscope sign picker (mobile)", "issue": "With ?sign=pisces (or a stored later sign), the horizontal chip strip stays scrolled at Aries, so the selected chip is off-screen. scrollIntoView the selected chip on mount.", "selector": "[data-testid=sign-pisces]", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Kundli result", "issues": ["The caption 'Numbers in the North chart are sign numbers' still shows when the South Indian chart is selected.", "'New chart' clears the form entirely. Prefilling BirthForm with the previous input (the initial prop exists) would be friendlier.", "Android Back (__nvBack) on a calculated result goes to the previous route rather than back to the form, because the result isn't a history entry. That's acceptable, but the result is lost."]},
+      {"screen": "Horoscope", "issues": ["The H1 'Today under the stars' doesn't change on the Yesterday/Tomorrow tabs."]},
+      {"screen": "Kundli form", "issues": ["It uses native input type=date/time pickers rather than the shadcn calendar. This is acceptable for birth dates on mobile; just noting it."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_astro_kundli_horoscope.py", "/app/test_reports/pytest/pytest_iter14.xml", "/app/tests/ui_iter11_native_back.py"],
+  "action_items": [
+    "Optional: show a loading state when the horoscope day changes (or clear data when the URL changes in useApi for this page)",
+    "Optional: format the horoscope date without the UTC-parse off-by-one",
+    "Optional: navigate away after deleting the currently viewed saved kundli",
+    "Optional: swap the MAX_SAVED and duplicate checks in save_kundli, and guard the BirthIn rebuild in get_kundli",
+    "Optional: scroll the selected sign chip into view on mobile, and hide the North caption in South mode"
+  ],
+  "critical_code_review_comments": [
+    "The usePollWhilePending tries counter is never reset on a day/date change, so after 8 polls on one day no further polling happens on another pending day until a remount.",
+    "horoscope.daily: if AI fails, every request until ai_attempts>=3 spawns a new attempt, which is fine. ai_status stays 'pending' during failed retries, so the UI keeps saying 'being written' briefly after a failure.",
+    "The offline Varanasi coords (25.3167, 83.0104) differ slightly from the review input (82.9739). Results are still identical (Libra/Taurus/Rohini)."
+  ],
+  "updated_files": ["/app/backend/tests/test_astro_kundli_horoscope.py"],
+  "success_rate": {"backend": "100% (17/17)", "frontend": "100% of requested flows; 4 low-priority UX bugs"},
+  "seed_data_creation": "None persisted. Test kundlis (TEST_Kundli, TEST_UI Chart) were deleted; db.kundlis count is 0. Cleared the osm/kundli rate_limits after the 429 check. Horoscope docs for yesterday/tomorrow were generated (AI ready) as a side effect.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run REACT_APP_BACKEND_URL=... pytest backend/tests/test_astro_kundli_horoscope.py (pytest.ini uses xdist; use -n0 -s to see prints). The container clock is Oct 2026. Use demo.customer and demo.astro1 for the ownership tests. The UI regression is python /app/tests/ui_iter11_native_back.py (101 checks, ~2 min)."
+}

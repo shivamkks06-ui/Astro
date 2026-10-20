@@ -12,10 +12,14 @@ import { useApi } from "../lib/useApi";
 
 const PENDING = "nv:pending-kundli";
 
-function Saved({ reloadKey }) {
+function Saved({ reloadKey, currentId }) {
+  const nav = useNavigate();
   const { data, loading, error, reload } = useApi(`/kundlis?k=${reloadKey}`);
   const del = async (id) => {
-    try { await api.delete(`/kundlis/${id}`); toast.success("Chart deleted"); reload(); } catch (e) { toast.error(errMsg(e)); }
+    try {
+      await api.delete(`/kundlis/${id}`); toast.success("Chart deleted");
+      if (id === currentId) nav("/kundli", { replace: true }); else reload();
+    } catch (e) { toast.error(errMsg(e)); }
   };
   if (loading) return <Loading text="Loading saved charts" />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
@@ -53,12 +57,13 @@ export default function Kundli() {
   const [saved, setSaved] = useState(null);
   const [style, setStyle] = useState("north");
   const [k, setK] = useState(0);
+  const [last, setLast] = useState(null);
 
   const calc = async (input) => {
     setBusy(true);
     try {
       const { data } = await api.post("/kundli/calculate", input);
-      setRes(data); setSaved(null);
+      setRes(data); setSaved(null); setLast(input);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
@@ -93,11 +98,11 @@ export default function Kundli() {
       </header>
       {id ? <SavedView id={id} /> : res ? (
         <KundliResult input={res.input} chart={res.chart} onStyle={setStyle} actions={saveBtn} onEdit={() => setRes(null)} />
-      ) : <BirthForm busy={busy} onSubmit={calc} />}
+      ) : <BirthForm key={JSON.stringify(last)} initial={last} busy={busy} onSubmit={calc} />}
       {user && (
         <section className="space-y-4">
           <h2 className="text-xl sm:text-2xl">Saved charts</h2>
-          <Saved reloadKey={k} />
+          <Saved reloadKey={k} currentId={id} />
         </section>
       )}
     </div>

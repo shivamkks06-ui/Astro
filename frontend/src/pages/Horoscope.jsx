@@ -16,11 +16,13 @@ const AiLabel = () => <span className="inline-flex items-center gap-1 text-[11px
 const CalcLabel = () => <span className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-muted-foreground"><Calculator className="h-3 w-3" />Calculated reading</span>;
 
 function SignPicker({ value, onPick }) {
+  const ref = useRef(null);
+  useEffect(() => { ref.current?.querySelector('[aria-selected="true"]')?.scrollIntoView({ block: "nearest", inline: "center" }); }, [value]);
   return (
-    <div role="tablist" aria-label="Moon sign" className="-mx-5 px-5 flex gap-2 overflow-x-auto pb-2 snap-x sm:mx-0 sm:px-0 sm:grid sm:grid-cols-6 lg:grid-cols-12">
+    <div ref={ref} role="tablist" aria-label="Moon sign" className="-mx-5 px-5 flex gap-2 overflow-x-auto pb-2 snap-x sm:mx-0 sm:px-0 sm:grid sm:grid-cols-6 lg:grid-cols-12">
       {SIGNS.map(([s, r, g], i) => (
         <button key={s} role="tab" type="button" aria-selected={value === i} data-testid={`sign-${s.toLowerCase()}`} onClick={() => onPick(i)}
-          className={`snap-start shrink-0 w-[76px] sm:w-auto rounded-xl border px-2 py-2.5 text-center transition-colors ${value === i ? "border-amber-400 bg-amber-400/15 text-amber-100" : "bg-card/60 text-muted-foreground hover:text-foreground"}`}>
+          className={`snap-start shrink-0 w-[88px] sm:w-auto [overflow-wrap:normal] rounded-xl border px-1.5 py-2.5 text-center transition-colors ${value === i ? "border-amber-400 bg-amber-400/15 text-amber-100" : "bg-card/60 text-muted-foreground hover:text-foreground"}`}>
           <span aria-hidden="true" className="block text-xl leading-none text-amber-300">{g}&#xFE0E;</span>
           <span className="block mt-1 text-xs font-medium">{s}</span><span className="block text-[10px] opacity-80">{r}</span>
         </button>
@@ -42,8 +44,9 @@ function Category({ id, label, c, ai }) {
   );
 }
 
-function usePollWhilePending(h) {
+function usePollWhilePending(h, date) {
   const tries = useRef(0);
+  useEffect(() => { tries.current = 0; }, [date]);
   useEffect(() => {
     if (h.data?.ai_status !== "pending" || tries.current >= 8) return undefined;
     const id = setTimeout(() => { tries.current += 1; h.reload(); }, 7000);
@@ -58,16 +61,17 @@ export default function Horoscope() {
   const day = sp.get("day") || "today";
   const date = (() => { const d = new Date(Date.now() + 330 * 60000); d.setUTCDate(d.getUTCDate() + (day === "yesterday" ? -1 : day === "tomorrow" ? 1 : 0)); return d.toISOString().slice(0, 10); })();
   const h = useApi(`/horoscope/daily?date=${date}`);
-  usePollWhilePending(h);
+  usePollWhilePending(h, date);
   const pick = (i) => { localStorage.setItem(KEY, String(i)); setSp((p) => { p.set("sign", SIGNS[i][0].toLowerCase()); return p; }, { replace: true }); };
   const setDay = (d) => setSp((p) => { p.set("day", d); return p; }, { replace: true });
-  const r = h.data?.signs[sign];
+  const r = h.data?.date === date ? h.data.signs[sign] : null;
+  const title = { yesterday: "Yesterday under the stars", today: "Today under the stars", tomorrow: "Tomorrow under the stars" }[day] || "Today under the stars";
 
   return (
     <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-12 space-y-6">
       <header className="max-w-2xl">
         <p className="overline mb-2">Daily horoscope</p>
-        <h1 className="text-[1.875rem] leading-tight sm:text-5xl">Today under the stars</h1>
+        <h1 className="text-[1.875rem] leading-tight sm:text-5xl">{title}</h1>
         <p className="mt-3 text-sm sm:text-base text-muted-foreground">Pick your Moon sign (Rashi). Readings come from the day's real sidereal planet positions.</p>
       </header>
       <SignPicker value={sign} onPick={pick} />
@@ -77,12 +81,12 @@ export default function Horoscope() {
             className={`min-h-10 px-4 rounded-full text-sm capitalize ${day === d ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground"}`}>{d}</button>
         ))}
       </div>
-      {h.loading && !h.data ? <Loading text="Reading today's transits" /> : h.error ? <ErrorState error={h.error} onRetry={h.reload} /> : r && (
+      {h.error ? <ErrorState error={h.error} onRetry={h.reload} /> : !r ? <Loading text="Reading the transits" /> : (
         <div className="space-y-5">
           <section data-testid="horoscope-overview" className="glass rounded-2xl p-5 sm:p-7 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-2xl">{r.sign} <span className="text-base text-muted-foreground">· {r.rashi}</span></h2>
-              <div className="flex items-center gap-2"><span data-testid="horoscope-date" className="text-xs text-muted-foreground">{new Date(h.data.date).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}</span><Tone t={r.tone} /></div>
+              <div className="flex items-center gap-2"><span data-testid="horoscope-date" className="text-xs text-muted-foreground">{new Date(`${h.data.date}T12:00:00`).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}</span><Tone t={r.tone} /></div>
             </div>
             {r.ai ? <div className="space-y-1"><AiLabel /><p data-testid="horoscope-ai-overview" className="leading-relaxed">{r.ai.overview}</p></div>
               : <p data-testid="horoscope-ai-status" className="text-xs text-muted-foreground">{h.data.ai_status === "pending" ? "AI interpretation is being written. The calculated reading is shown meanwhile." : "AI interpretation is unavailable right now; showing the calculated reading."}</p>}

@@ -70,6 +70,12 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - Hero image compressed (829KB -> 389KB)
 - Deferred by user: Daily Horoscope, Kundli, compatibility, AI reports, premium plans (future phase)
 
+## Implemented (2026-10-20), Daily Horoscope & Kundli
+- Backend: astro_calc.py (Skyfield + JPL DE421, Lahiri ayanamsa, mean nodes, whole-sign houses, Ascendant, nakshatra/pada, Vimshottari maha/antar dasha); data/cities.json (6,171 GeoNames cities, 3,783 Indian, offline) + OpenStreetMap Nominatim fallback with timezonefinder; routes_astro.py: /api/places, /api/kundli/calculate, /api/kundlis CRUD (per user, max 100), /api/horoscope/daily (IST yesterday/today/tomorrow)
+- horoscope.py: Chandra-gochar rule readings (career/relationships/health/finance + basis) always; Claude Sonnet 4.5 (Emergent key) writes the "AI interpretation" once per date, cached in db.horoscopes, max 3 attempts, rule fallback
+- Frontend: /horoscope (sign picker persisted, day tabs, AI vs calculated labels, tone badges, transit list), /kundli (birth form, place search, North SVG + South grid charts, planet table, dasha, save/history, /kundli/:id), 5-tab bottom nav, header links, landing quick tiles
+- Tests: iteration_14 (backend 17/17, frontend all flows, 101/101 regression); low-priority follow-ups fixed afterwards
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)

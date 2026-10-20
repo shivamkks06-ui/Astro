@@ -110,11 +110,11 @@ async def list_kundlis(user=Depends(current_user)):
 @router.post("/kundlis")
 async def save_kundli(b: BirthIn, user=Depends(current_user)):
     await rate_limit(f"kundli-save:{user['_id']}", 20, 60)
-    if await db.kundlis.count_documents({"user_id": user["_id"]}) >= MAX_SAVED:
-        raise HTTPException(409, f"You can save up to {MAX_SAVED} charts. Delete one to save another.")
     dup = await db.kundlis.find_one({"user_id": user["_id"], "input.date": b.date, "input.time": b.time, "input.lat": b.lat, "input.lon": b.lon, "input.name": b.name})
     if dup:
         return {"id": dup["_id"], "duplicate": True}
+    if await db.kundlis.count_documents({"user_id": user["_id"]}) >= MAX_SAVED:
+        raise HTTPException(409, f"You can save up to {MAX_SAVED} charts. Delete one to save another.")
     chart = await _calc(b)
     kid = new_id()
     await db.kundlis.insert_one({"_id": kid, "user_id": user["_id"], "input": b.model_dump(), "moon_sign": chart["moon_sign"],
@@ -132,7 +132,11 @@ async def _own(kid, user):
 @router.get("/kundlis/{kid}")
 async def get_kundli(kid: str, user=Depends(current_user)):
     r = await _own(kid, user)
-    return {"id": r["_id"], "input": r["input"], "chart": await _calc(BirthIn(**r["input"]))}
+    try:
+        b = BirthIn(**r["input"])
+    except ValueError:
+        raise HTTPException(422, "This saved chart has invalid birth details. Delete it and create it again.")
+    return {"id": r["_id"], "input": r["input"], "chart": await _calc(b)}
 
 
 @router.delete("/kundlis/{kid}")
