@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { BadgeCheck, GraduationCap, Star, CalendarClock, ChevronRight } from "lucide-react";
 import { inr, fmtDate } from "../lib/api";
@@ -23,9 +24,11 @@ export const Initials = ({ name, className = "h-14 w-14 text-lg" }) => (
   </div>
 );
 
-export const Avatar = ({ a, className = "h-14 w-14 text-lg" }) => (a.photo_url
-  ? <img src={`${process.env.REACT_APP_BACKEND_URL}${a.photo_url}`} alt={a.display_name} loading="lazy" decoding="async" data-testid="astrologer-photo" className={`rounded-full object-cover border border-amber-500/30 shrink-0 ${className}`} />
-  : <Initials name={a.display_name} className={className} />);
+export function Avatar({ a, className = "h-14 w-14 text-lg" }) {
+  const [broken, setBroken] = useState(false);
+  if (!a.photo_url || broken) return <Initials name={a.display_name} className={className} />;
+  return <img src={`${process.env.REACT_APP_BACKEND_URL}${a.photo_url}`} alt={a.display_name} width={112} height={112} loading="lazy" decoding="async" onError={() => setBroken(true)} data-testid="astrologer-photo" className={`rounded-full object-cover bg-muted border border-amber-500/30 shrink-0 ${className}`} />;
+}
 
 export function AstroCard({ a, i = 0 }) {
   return (

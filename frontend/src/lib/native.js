@@ -4,6 +4,7 @@ import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
 import { App as CapApp } from "@capacitor/app";
 import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
+import { toast } from "sonner";
 
 // subtle confirmation feedback on key actions; silently no-op on web or unsupported devices
 export function haptic(kind = "light") {
@@ -52,12 +53,23 @@ export function closeTopOverlay() {
   return true;
 }
 
+let exitArmedAt = 0;
+const EXIT_WINDOW_MS = 2000;
+
 export function handleBack({ navigate, pathname }) {
   if (closeTopOverlay()) return "overlay";
   if ((window.history.state?.idx ?? 0) > 0) { navigate(-1); return "back"; }
   if (pathname !== "/") { navigate("/", { replace: true }); return "home"; }
-  CapApp.minimizeApp();
-  return "minimize";
+  // root screen: Android-style double press to exit
+  if (Date.now() - exitArmedAt < EXIT_WINDOW_MS) {
+    exitArmedAt = 0;
+    toast.dismiss("exit-hint");
+    if (Capacitor.isNativePlatform()) CapApp.exitApp();
+    return "exit";
+  }
+  exitArmedAt = Date.now();
+  toast("Press back again to exit", { id: "exit-hint", duration: EXIT_WINDOW_MS, position: "bottom-center" });
+  return "exit-armed";
 }
 
 // The only native listener registration in the app. The keyboard consumes Back before it reaches us.
@@ -67,7 +79,11 @@ export function NativeShell() {
   const ref = useRef({ navigate, pathname });
   ref.current = { navigate, pathname };
   useEffect(() => {
-    if (!isNative) return undefined;
+    if (!isNative) {
+      // dev-only hook so browser QA can drive the exact hardware-Back logic
+      if (process.env.NODE_ENV !== "production") window.__nvBack = () => handleBack(ref.current);
+      return undefined;
+    }
     let alive = true;
     const handles = [];
     const keep = (p) => p.then((h) => (alive ? handles.push(h) : h.remove()));

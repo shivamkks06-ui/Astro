@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { Search } from "lucide-react";
 import { Input } from "../components/ui/input";
 import { Switch } from "../components/ui/switch";
@@ -24,8 +24,19 @@ function Pick({ value, onChange, items, placeholder, testid }) {
 
 export default function Discover() {
   const cfg = useApi("/public/config");
-  const [f, setF] = useState({ language: ANY, expertise: ANY, sort: "rating", min_exp: "", q: "", verified_credential: false });
-  const [page, setPage] = useState(1);
+  // filters live in the URL so Back from a profile restores them (replace: no extra history entries)
+  const [sp, setSp] = useSearchParams();
+  const f = {
+    language: sp.get("language") || ANY, expertise: sp.get("expertise") || ANY, sort: sp.get("sort") || "rating",
+    min_exp: sp.get("min_exp") || "", q: sp.get("q") || "", verified_credential: sp.get("verified_credential") === "true",
+  };
+  const page = Math.max(1, parseInt(sp.get("page") || "1", 10) || 1);
+  const update = (changes) => {
+    const next = new URLSearchParams(sp);
+    Object.entries(changes).forEach(([k, v]) => (v === "" || v === false || v === ANY || v == null || (k === "page" && v === 1) || (k === "sort" && v === "rating") ? next.delete(k) : next.set(k, String(v))));
+    setSp(next, { replace: true });
+  };
+  const setPage = (p) => update({ page: p });
   const params = new URLSearchParams({ page, limit: 12, sort: f.sort });
   if (f.language !== ANY) params.set("language", f.language);
   if (f.expertise !== ANY) params.set("expertise", f.expertise);
@@ -33,7 +44,7 @@ export default function Discover() {
   if (f.q) params.set("q", f.q);
   if (f.verified_credential) params.set("verified_credential", "true");
   const list = useApi(`/astrologers?${params}`);
-  const set = (k) => (v) => { setPage(1); setF({ ...f, [k]: v }); };
+  const set = (k) => (v) => update({ [k]: v, page: 1 });
   const pages = list.data ? Math.max(1, Math.ceil(list.data.total / 12)) : 1;
 
   return (
@@ -51,14 +62,17 @@ export default function Discover() {
         <label className="flex items-center gap-2 text-sm min-h-11"><Switch data-testid="filter-credential-verified" checked={f.verified_credential} onCheckedChange={set("verified_credential")} />Credentials reviewed</label>
       </div>
       <div className="flex justify-between items-center mb-6 text-sm text-muted-foreground">
-        <span data-testid="results-count">{list.data ? `${list.data.total} astrologers` : ""}</span>
+        <span data-testid="results-count">{list.data ? `${list.data.total} ${list.data.total === 1 ? "astrologer" : "astrologers"}` : ""}</span>
         <Select value={f.sort} onValueChange={set("sort")}>
           <SelectTrigger data-testid="sort-select" className="w-44 bg-card"><SelectValue /></SelectTrigger>
           <SelectContent><SelectItem value="rating">Top rated</SelectItem><SelectItem value="experience">Most experienced</SelectItem><SelectItem value="price">Lowest chat rate</SelectItem></SelectContent>
         </Select>
       </div>
       {list.loading && !list.data ? <CardSkeletons n={6} /> : list.error ? <ErrorState error={list.error} onRetry={list.reload} /> : list.data.items.length === 0 ? (
-        <Empty title="No astrologers match these filters" hint="Try removing a filter." />
+        <div className="space-y-4 text-center">
+          <Empty title="No astrologers match these filters" hint="Try removing a filter." />
+          {sp.toString() && <Button data-testid="clear-filters" variant="outline" className="rounded-full" onClick={() => setSp(new URLSearchParams(), { replace: true })}>Clear filters</Button>}
+        </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">{list.data.items.map((a, i) => <AstroCard key={a.id} a={a} i={i} />)}</div>
       )}
