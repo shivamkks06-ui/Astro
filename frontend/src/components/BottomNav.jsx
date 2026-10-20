@@ -10,7 +10,10 @@ export const showsBottomNav = (path) => !HIDDEN.some((r) => r.test(path));
 export function BottomNav() {
   const { user } = useAuth();
   const { pathname } = useLocation();
-  if (!showsBottomNav(pathname)) return null;
+  if (!showsBottomNav(pathname)) {
+    // the profile's sticky book bar needs the same room so the footer links stay tappable
+    return /^\/astrologers\//.test(pathname) ? <div aria-hidden="true" data-testid="profile-bar-spacer" className="lg:hidden h-[76px] pb-[env(safe-area-inset-bottom)] box-content" /> : null;
+  }
   const own = !user ? { to: "/login", label: "Log in", icon: LogIn }
     : user.role === "admin" ? { to: "/admin", label: "Admin", icon: Shield }
       : user.role === "astrologer" ? { to: "/studio", label: "Studio", icon: LayoutDashboard }
@@ -18,7 +21,7 @@ export function BottomNav() {
   const items = [{ to: "/", label: "Home", icon: Home, end: true }, { to: "/discover", label: "Discover", icon: Compass }, own];
   return (
     <>
-    <div aria-hidden="true" className="md:hidden h-16 pb-[env(safe-area-inset-bottom)] box-content" />
+    <div aria-hidden="true" className="md:hidden h-[65px] pb-[env(safe-area-inset-bottom)] box-content" />
     <nav data-testid="bottom-nav" aria-label="Main" className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-amber-500/15 bg-[#0B0F19]/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
       <div className="grid grid-cols-3 h-16">
         {items.map(({ to, label, icon: I, end }) => (

@@ -103,7 +103,7 @@ export default function AstrologerPage() {
   const cta = !user ? "Log in to book" : slot ? "Review & request booking" : "Choose a slot";
 
   return (
-    <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-5 pb-28 lg:pb-12 sm:pt-10 grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 lg:gap-10">
+    <div className="max-w-6xl mx-auto px-5 sm:px-8 pt-5 pb-6 lg:pb-12 sm:pt-10 grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 lg:gap-10">
       <div className="space-y-6 min-w-0">
         <div id="about" className="flex items-center gap-4 sm:gap-5 scroll-mt-28">
           <Avatar a={a} className="h-20 w-20 sm:h-24 sm:w-24 text-2xl" />

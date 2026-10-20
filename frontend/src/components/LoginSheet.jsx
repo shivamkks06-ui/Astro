@@ -19,6 +19,10 @@ export function LoginSheet({ open, onOpenChange, reason = "Log in to book a cons
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const errs = { email: !EMAIL.test(f.email.trim()) && "Enter a valid email address", password: f.password.length < 8 && "Password has at least 8 characters" };
+  const change = (v) => {
+    if (!v) { setTouched({}); setError(""); setF((p) => ({ ...p, password: "" })); }
+    onOpenChange(v);
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -30,7 +34,7 @@ export function LoginSheet({ open, onOpenChange, reason = "Log in to book a cons
       const u = await login(f.email.trim(), f.password);
       haptic("success");
       toast.success(`Welcome back, ${u.name.split(" ")[0]}`);
-      onOpenChange(false);
+      change(false);
     } catch (err) {
       haptic("error");
       setError(errMsg(err));
@@ -47,7 +51,7 @@ export function LoginSheet({ open, onOpenChange, reason = "Log in to book a cons
     </div>
   );
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={change}>
       <DialogContent data-testid="login-sheet" className="bg-card sm:max-w-sm">
         <DialogHeader className="text-left pr-10">
           <DialogTitle className="font-serif text-xl">Log in</DialogTitle>
@@ -59,7 +63,7 @@ export function LoginSheet({ open, onOpenChange, reason = "Log in to book a cons
           {error && <p data-testid="login-sheet-error" role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-[13px] text-red-200">{error}</p>}
           <Button type="submit" data-testid="login-sheet-submit" disabled={busy} className="w-full rounded-full h-12 text-base">{busy ? "Logging in…" : "Log in"}</Button>
         </form>
-        <p className="text-[13px] text-center text-muted-foreground">New here? <Link data-testid="login-sheet-register" to={`/register${next ? `?next=${encodeURIComponent(next)}` : ""}`} onClick={() => onOpenChange(false)} className="text-amber-300 py-2 inline-block">Create an account</Link></p>
+        <p className="text-[13px] text-center text-muted-foreground">New here? <Link data-testid="login-sheet-register" to={`/register${next ? `?next=${encodeURIComponent(next)}` : ""}`} state={next ? { from: next } : undefined} onClick={() => change(false)} className="text-amber-300 py-2 inline-block">Create an account</Link></p>
       </DialogContent>
     </Dialog>
   );

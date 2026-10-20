@@ -57,6 +57,7 @@ export function LoginPage() {
 export function RegisterPage() {
   const { register } = useAuth();
   const nav = useNavigate();
+  const loc = useLocation();
   const [sp] = useSearchParams();
   const [f, setF] = useState({ name: "", email: "", password: "", role: sp.get("role") === "astrologer" ? "astrologer" : "customer", accept_terms: false });
   const [err, setErr] = useState("");
@@ -64,7 +65,14 @@ export function RegisterPage() {
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true); setErr("");
-    try { const u = await register(f); const next = sp.get("next"); nav(next && next.startsWith("/") && u.role === "customer" ? next : homeFor(u), { replace: true }); } catch (e2) { setErr(errMsg(e2)); } finally { setBusy(false); }
+    try {
+      const u = await register(f);
+      const next = sp.get("next");
+      const back = next && next.startsWith("/") && u.role === "customer";
+      // came from that page: step back instead of stacking a duplicate entry
+      if (back && loc.state?.from === next) nav(-1);
+      else nav(back ? next : homeFor(u), { replace: true });
+    } catch (e2) { setErr(errMsg(e2)); } finally { setBusy(false); }
   };
   return (
     <Shell title="Create your account" sub="Choose how you'll use the platform.">
