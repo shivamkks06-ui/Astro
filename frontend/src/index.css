@@ -63,6 +63,8 @@
 @media (prefers-reduced-motion: reduce) { .page-enter { animation: none; } }
 button, [role="tab"], nav a { -webkit-user-select: none; user-select: none; }
 html { touch-action: manipulation; }
+/* Devanagari conjuncts break apart with wide letter-spacing */
+html[lang="hi"] .overline, html[lang="hi"] .tracking-wider, html[lang="hi"] .tracking-wide { letter-spacing: 0; }
 
 @media print {
   header, footer, [data-testid="bottom-nav"], [data-testid="network-banner"], .no-print { display: none !important; }

@@ -9,6 +9,8 @@ import { Loading, ErrorState, Empty } from "../components/States";
 import { useAuth } from "../context/AuthContext";
 import { api, errMsg } from "../lib/api";
 import { useApi } from "../lib/useApi";
+import { useLang } from "../lib/i18n";
+import { LangToggle } from "../components/LangToggle";
 
 const PENDING = "nv:pending-kundli";
 
@@ -51,6 +53,7 @@ function SavedView({ id }) {
 export default function Kundli() {
   const { id } = useParams();
   const { user } = useAuth();
+  const { t } = useLang();
   const nav = useNavigate();
   const [res, setRes] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -85,24 +88,24 @@ export default function Kundli() {
 
   const saveBtn = (
     <Button data-testid="kundli-save" onClick={save} disabled={busy || !!saved} variant={saved ? "outline" : "default"} className="rounded-full h-11">
-      {saved ? <><Check className="h-4 w-4 mr-2" />Saved</> : <><Save className="h-4 w-4 mr-2" />{user ? "Save" : "Log in to save"}</>}
+      {saved ? <><Check className="h-4 w-4 mr-2" />{t("Saved")}</> : <><Save className="h-4 w-4 mr-2" />{t(user ? "Save" : "Log in to save")}</>}
     </Button>
   );
 
   return (
     <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-12 space-y-10">
       <header className="max-w-2xl">
-        <p className="overline mb-2">Free Kundli</p>
-        <h1 className="text-[1.875rem] leading-tight sm:text-5xl">Your Vedic birth chart</h1>
-        <p className="mt-3 text-sm sm:text-base text-muted-foreground">Sidereal positions calculated from NASA JPL ephemeris data, with Lagna, houses, nakshatras and Vimshottari dasha.</p>
-        <Link to="/kundli/match" data-testid="kundli-match-link" className="mt-4 inline-flex items-center min-h-11 rounded-full border border-amber-400/40 px-5 text-sm text-amber-200 hover:bg-amber-400/10 print:hidden">Kundli matching (36 Guna Milan) →</Link>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-2"><p className="overline">{t("Free Kundli")}</p><LangToggle /></div>
+        <h1 className="text-[1.875rem] leading-tight sm:text-5xl">{t("Your Vedic birth chart")}</h1>
+        <p className="mt-3 text-sm sm:text-base text-muted-foreground">{t("Sidereal positions calculated from NASA JPL ephemeris data, with Lagna, houses, nakshatras and Vimshottari dasha.")}</p>
+        <Link to="/kundli/match" data-testid="kundli-match-link" className="mt-4 inline-flex items-center min-h-11 rounded-full border border-amber-400/40 px-5 text-sm text-amber-200 hover:bg-amber-400/10 print:hidden">{t("Kundli matching (36 Guna Milan)")} →</Link>
       </header>
       {id ? <SavedView id={id} /> : res ? (
         <KundliResult input={res.input} chart={res.chart} onStyle={setStyle} actions={saveBtn} onEdit={() => setRes(null)} />
       ) : <BirthForm key={JSON.stringify(last)} initial={last} busy={busy} onSubmit={calc} />}
       {user && (
         <section className="space-y-4 print:hidden">
-          <h2 className="text-xl sm:text-2xl">Saved charts</h2>
+          <h2 className="text-xl sm:text-2xl">{t("Saved charts")}</h2>
           <Saved reloadKey={k} currentId={id} />
         </section>
       )}
