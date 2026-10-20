@@ -19,6 +19,7 @@ import AstrologerDashboard from "./pages/AstrologerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import Horoscope from "./pages/Horoscope";
 import Kundli from "./pages/Kundli";
+import Match from "./pages/Match";
 
 function Protected({ roles, children }) {
   const { user } = useAuth();
@@ -38,6 +39,7 @@ function Screens() {
               <Route path="/discover" element={<Discover />} />
               <Route path="/horoscope" element={<Horoscope />} />
               <Route path="/kundli" element={<Kundli />} />
+              <Route path="/kundli/match" element={<Match />} />
               <Route path="/kundli/:id" element={<Protected><Kundli /></Protected>} />
               <Route path="/astrologers/:id" element={<AstrologerPage />} />
               <Route path="/login" element={<LoginPage />} />

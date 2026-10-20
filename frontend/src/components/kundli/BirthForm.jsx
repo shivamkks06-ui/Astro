@@ -5,7 +5,7 @@ import { Label } from "../ui/label";
 import { Button } from "../ui/button";
 import { PlaceSearch } from "./PlaceSearch";
 
-export function BirthForm({ initial, busy, onSubmit }) {
+export function BirthForm({ initial, busy, onSubmit, submitLabel = "Calculate Kundli" }) {
   const [f, setF] = useState({ name: initial?.name || "", date: initial?.date || "", time: initial?.time || "" });
   const [place, setPlace] = useState(initial?.place ? { label: initial.place, lat: initial.lat, lon: initial.lon, tz: initial.tz } : null);
   const [err, setErr] = useState("");
@@ -41,7 +41,7 @@ export function BirthForm({ initial, busy, onSubmit }) {
       </div>
       {err && <p role="alert" data-testid="kundli-form-error" className="text-sm text-red-300">{err}</p>}
       <Button type="submit" data-testid="kundli-submit" disabled={busy} className="w-full sm:w-auto rounded-full h-12 px-8 text-base">
-        {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}Calculate Kundli
+        {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{submitLabel}
       </Button>
       <p className="text-xs text-muted-foreground">Your birth details are used only to calculate the chart. They are stored only if you save the chart to your account.</p>
     </form>

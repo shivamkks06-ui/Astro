@@ -95,12 +95,13 @@ export default function Kundli() {
         <p className="overline mb-2">Free Kundli</p>
         <h1 className="text-[1.875rem] leading-tight sm:text-5xl">Your Vedic birth chart</h1>
         <p className="mt-3 text-sm sm:text-base text-muted-foreground">Sidereal positions calculated from NASA JPL ephemeris data, with Lagna, houses, nakshatras and Vimshottari dasha.</p>
+        <Link to="/kundli/match" data-testid="kundli-match-link" className="mt-4 inline-flex items-center min-h-11 rounded-full border border-amber-400/40 px-5 text-sm text-amber-200 hover:bg-amber-400/10 print:hidden">Kundli matching (36 Guna Milan) →</Link>
       </header>
       {id ? <SavedView id={id} /> : res ? (
         <KundliResult input={res.input} chart={res.chart} onStyle={setStyle} actions={saveBtn} onEdit={() => setRes(null)} />
       ) : <BirthForm key={JSON.stringify(last)} initial={last} busy={busy} onSubmit={calc} />}
       {user && (
-        <section className="space-y-4">
+        <section className="space-y-4 print:hidden">
           <h2 className="text-xl sm:text-2xl">Saved charts</h2>
           <Saved reloadKey={k} currentId={id} />
         </section>

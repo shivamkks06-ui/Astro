@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Calculator, RotateCcw } from "lucide-react";
 import { NorthChart, SouthChart } from "./Charts";
 import { DashaPanel } from "./DashaPanel";
+import { PanchangCard, ManglikCard, ShareBar } from "./KundliExtras";
 
 const deg = (d) => `${Math.floor(d)}°${String(Math.floor((d % 1) * 60)).padStart(2, "0")}′`;
 
@@ -40,6 +41,8 @@ function PlanetTable({ chart }) {
 
 export function KundliResult({ input, chart, style, onStyle, actions, onEdit }) {
   const [s, setS] = useState(style || "north");
+  const [div, setDiv] = useState("d1");
+  const view = div === "d1" ? chart : chart.navamsa;
   const pick = (v) => { setS(v); onStyle?.(v); };
   const b = chart.birth;
   return (
@@ -50,21 +53,27 @@ export function KundliResult({ input, chart, style, onStyle, actions, onEdit }) 
           <h2 className="text-2xl">{input.name || "Birth chart"}</h2>
           <p className="text-sm text-muted-foreground">{input.date} · {input.time} · {input.place} (UTC{b.utc_offset_hours >= 0 ? "+" : ""}{b.utc_offset_hours})</p>
         </div>
-        <div className="flex gap-2">{onEdit && <button type="button" data-testid="kundli-edit" onClick={onEdit} className="inline-flex items-center gap-1.5 min-h-11 px-3 text-sm text-amber-200"><RotateCcw className="h-4 w-4" />New chart</button>}{actions}</div>
+        <div className="flex flex-wrap gap-2 print:hidden">{onEdit && <button type="button" data-testid="kundli-edit" onClick={onEdit} className="inline-flex items-center gap-1.5 min-h-11 px-3 text-sm text-amber-200"><RotateCcw className="h-4 w-4" />New chart</button>}{actions}<ShareBar input={input} chart={chart} /></div>
       </div>
       <Summary chart={chart} />
       <div className="grid lg:grid-cols-[380px_1fr] gap-6 items-start">
         <div className="space-y-3">
-          <div role="tablist" aria-label="Chart style" className="grid grid-cols-2 rounded-full border p-1">
+          <div role="tablist" aria-label="Divisional chart" className="grid grid-cols-2 rounded-full border p-1 print:hidden">
+            {[["d1", "Rashi (D1)"], ["d9", "Navamsa (D9)"]].map(([v, l]) => (
+              <button key={v} role="tab" type="button" aria-selected={div === v} data-testid={`chart-div-${v}`} onClick={() => setDiv(v)}
+                className={`min-h-10 rounded-full text-sm transition-colors ${div === v ? "bg-amber-400/20 text-amber-100 font-semibold" : "text-muted-foreground"}`}>{l}</button>
+            ))}
+          </div>
+          <div role="tablist" aria-label="Chart style" className="grid grid-cols-2 rounded-full border p-1 print:hidden">
             {[["north", "North Indian"], ["south", "South Indian"]].map(([v, l]) => (
               <button key={v} role="tab" type="button" aria-selected={s === v} data-testid={`chart-style-${v}`} onClick={() => pick(v)}
                 className={`min-h-10 rounded-full text-sm transition-colors ${s === v ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground"}`}>{l}</button>
             ))}
           </div>
-          {s === "north" ? <NorthChart chart={chart} /> : <SouthChart chart={chart} />}
+          {s === "north" ? <NorthChart chart={view} testid={div === "d1" ? "chart-north" : "chart-north-d9"} /> : <SouthChart chart={view} label={div === "d1" ? "RASHI" : "NAVAMSA"} />}
           <p className="text-[11px] text-muted-foreground text-center">{s === "north" ? "Numbers are sign numbers (1 = Aries); house 1 is the top diamond. " : "Signs are fixed; Asc marks the Lagna. "}(R) = retrograde.</p>
         </div>
-        <div className="space-y-6 min-w-0"><PlanetTable chart={chart} /><DashaPanel dasha={chart.dasha} /></div>
+        <div className="space-y-6 min-w-0"><PlanetTable chart={chart} /><div className="grid sm:grid-cols-2 gap-4"><PanchangCard p={chart.panchang} /><ManglikCard m={chart.manglik} /></div><DashaPanel dasha={chart.dasha} /></div>
       </div>
       <p data-testid="kundli-method" className="text-xs text-muted-foreground">Method: {chart.system.zodiac} zodiac, {chart.system.ayanamsa} ayanamsa ({chart.system.ayanamsa_degrees.toFixed(2)}°), {chart.system.houses} houses, {chart.system.nodes}, {chart.system.ephemeris} ephemeris. These are astronomical calculations; any reading of them is interpretive guidance, not a prediction.</p>
     </section>

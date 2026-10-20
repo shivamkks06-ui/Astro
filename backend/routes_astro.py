@@ -1,5 +1,6 @@
 import json
 import unicodedata
+from datetime import datetime
 from typing import Optional, Literal
 
 import httpx
@@ -10,6 +11,7 @@ from timezonefinder import TimezoneFinder
 from zoneinfo import ZoneInfo, available_timezones
 
 import astro_calc
+import astro_extras
 import horoscope
 from core import db, now, new_id, current_user, rate_limit, client_ip
 
@@ -88,9 +90,17 @@ class BirthIn(BaseModel):
         return v.strip() or None if v else None
 
 
+def _full(b):
+    c = astro_calc.kundli(b.date, b.time, b.lat, b.lon, b.tz)
+    c["navamsa"] = astro_extras.navamsa(c)
+    c["panchang"] = astro_extras.panchang(c, datetime.fromisoformat(c["birth"]["local"]), b.lat, b.lon)
+    c["manglik"] = astro_extras.manglik(c)
+    return c
+
+
 async def _calc(b: BirthIn):
     try:
-        return await run_in_threadpool(astro_calc.kundli, b.date, b.time, b.lat, b.lon, b.tz)
+        return await run_in_threadpool(_full, b)
     except ValueError as e:
         raise HTTPException(422, str(e) if "year" in str(e) else "Invalid birth date or time")
 
@@ -99,6 +109,18 @@ async def _calc(b: BirthIn):
 async def calculate(b: BirthIn, request: Request):
     await rate_limit(f"kundli:{client_ip(request)}", 30, 60)
     return {"input": b.model_dump(), "chart": await _calc(b)}
+
+
+class MatchIn(BaseModel):
+    boy: BirthIn
+    girl: BirthIn
+
+
+@router.post("/kundli/match")
+async def match(m: MatchIn, request: Request):
+    await rate_limit(f"kundli:{client_ip(request)}", 30, 60)
+    boy, girl = await _calc(m.boy), await _calc(m.girl)
+    return {"boy": m.boy.model_dump(), "girl": m.girl.model_dump(), "result": astro_extras.match(boy, girl)}
 
 
 @router.get("/kundlis")
