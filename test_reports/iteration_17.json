@@ -1,0 +1,24 @@
+{
+  "summary": "Frontend-only mobile (390px, is_mobile) audit. 33/33 checks pass (the one failed check, gold focus border, came from the test reading the color during the 150ms transition; rechecked: rgb(237,201,90) on keyboard and tap focus). Login: noValidate, role=alert errors 'Enter a valid email address.' / 'Enter your password.', wrong creds show 'Invalid email or password', 'Logging in…' spinner and disabled button, exactly 1 /auth/login request on double click, demo customer goes to /account. Password toggle switches password->text->password. Register: name / email format / min 8 errors, toggle works, terms checkbox still gates submit (no account created). Inputs: 48px high, bg rgb(14,24,48), 1px visible border. Kundli: date/time missing, year 1850 -> 'Birth year must be between 1900 and 2049.', missing place error, valid calc works with a single POST, place input stays in view after focus. Horoscope: overview text readable (rgb 248,247,242), Hindi toggle works. Discover: 'View profile & book' gold filled (rgb 212,175,55) and goes to the profile, last card clears the bottom nav. Regression: 5 bottom tabs, drawer opens and __nvBack closes it without navigating, no horizontal overflow at 360/390 on / /login /register /discover /kundli /horoscope, no page errors.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "AstroCard", "issues": ["The button span uses group-hover:bg-amber-300, but the parent Link has no 'group' class, so the hover color never applies. Add 'group' to the Link className"]}
+    ]
+  },
+  "test_report_links": ["/app/tests/ui_iter17_mobile_forms.py"],
+  "action_items": ["Optional: add 'group' class to the AstroCard Link so the hover state works"],
+  "critical_code_review_comments": [
+    "BirthForm: the busy guard runs after validation, so a click during busy can still show validation errors. Harmless.",
+    "Not verified: the Horoscope 'pending' AI spinner, because the AI reading was already cached. The code path (Loader2 animate-spin inside horoscope-ai-status) looks correct.",
+    "Discover had only 2 demo cards, so the bottom-nav clearance check passed easily. Padding was not stress-tested with a long list."
+  ],
+  "updated_files": ["/app/tests/ui_iter17_mobile_forms.py"],
+  "success_rate": {"backend": "skipped", "frontend": "100%"},
+  "seed_data_creation": "None; no accounts created",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run python /app/tests/ui_iter17_mobile_forms.py for mobile form regression (390px). When checking a focus border color, wait more than 200ms because of transition-colors."
+}

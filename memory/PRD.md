@@ -88,6 +88,13 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - No backend change and no AI cost; Devanagari letter-spacing fix. Tested in iteration_16; leftovers fixed afterwards
 - Not translated by design: header, menus, booking and account pages
 
+## Implemented (2026-10-20), Mobile UI fixes and functional audit
+- Login/Register: in-app validation (noValidate, role=alert), password show/hide toggle, spinner, double-submit guard
+- Inputs: 48px mobile height, darker field background, stronger border, gold focus border, dark date/time pickers
+- Global focusin handler keeps the focused field above the Android keyboard (<768px)
+- Kundli: birth-year range validation; Horoscope: spinner while AI is pending and brighter calculated text; AstroCard: gold primary "View profile & book"
+- Tests: iteration_17 33/33 (mobile); the user's screenshots were not attached, so the audit was done at 390px
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)

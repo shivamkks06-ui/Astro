@@ -33,7 +33,7 @@ export function Avatar({ a, className = "h-14 w-14 text-lg" }) {
 export function AstroCard({ a, i = 0 }) {
   return (
     <Link to={`/astrologers/${a.id}`} data-testid={`astrologer-card-${a.id}`} style={{ animationDelay: `${i * 60}ms` }}
-      className="fade-up glass gold-border rounded-2xl p-5 sm:p-6 flex flex-col gap-3.5 sm:gap-4 hover:-translate-y-1 active:scale-[0.99] transition-transform duration-200">
+      className="group fade-up glass gold-border rounded-2xl p-5 sm:p-6 flex flex-col gap-3.5 sm:gap-4 hover:-translate-y-1 active:scale-[0.99] transition-transform duration-200">
       <div className="flex items-center gap-4">
         <Avatar a={a} />
         <div className="min-w-0">
