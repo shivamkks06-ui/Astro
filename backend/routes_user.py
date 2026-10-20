@@ -1,12 +1,13 @@
 from datetime import datetime
 from typing import Optional, Literal
 
-from fastapi import APIRouter, Request, HTTPException, Depends, Query
+from fastapi import APIRouter, Request, HTTPException, Depends, Query, Response
 from pydantic import BaseModel, Field
 from pymongo.errors import DuplicateKeyError
 
 from core import db, now, new_id, out, current_user, require_roles, audit, rate_limit, get_settings, rx, public_filter, LANGUAGES, EXPERTISE, MODES, SLOT_DURATIONS
 from finance import get_provider, call_provider_status
+from storage import get_object
 
 router = APIRouter(prefix="/api")
 
@@ -14,9 +15,14 @@ PUBLIC_FIELDS = ["display_name", "bio", "languages", "expertise", "experience_ye
                  "identity_status", "credential_status", "credential_summary", "rating_avg", "rating_count"]
 
 
+def photo_url(p):
+    return f"/api/astrologers/{p['_id']}/photo?v={p['photo_version']}" if p.get("photo_version") else None
+
+
 def public_profile(p):
     d = {k: p.get(k) for k in PUBLIC_FIELDS}
     d["id"] = p["_id"]
+    d["photo_url"] = photo_url(p)
     d["identity_verified"] = p.get("identity_status") == "approved"
     d["credential_verified"] = p.get("credential_status") == "approved"
     d.pop("identity_status")
@@ -74,6 +80,19 @@ async def get_astrologer(aid: str):
     return {**public_profile(p),
             "slots": [{"id": s["_id"], "start_at": s["start_at"], "duration_min": s["duration_min"]} for s in slots],
             "reviews": [{"id": r["_id"], "rating": r["rating"], "comment": r["comment"], "customer_name": r["customer_name"], "created_at": r["created_at"]} for r in reviews]}
+
+
+@router.get("/astrologers/{aid}/photo")
+async def astrologer_photo(aid: str):
+    # profile photos are public by design; identity documents never use this path
+    p = await db.astrologer_profiles.find_one({"_id": aid, "account_status": "active"}, {"photo_path": 1})
+    if not p or not p.get("photo_path"):
+        raise HTTPException(404, "No photo")
+    try:
+        data, ctype = get_object(p["photo_path"])
+    except Exception:
+        raise HTTPException(502, "Photo temporarily unavailable")
+    return Response(content=data, media_type=ctype, headers={"Cache-Control": "public, max-age=31536000, immutable"})
 
 
 # ---------- Birth profiles ----------

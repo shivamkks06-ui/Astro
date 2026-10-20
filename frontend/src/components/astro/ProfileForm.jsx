@@ -5,6 +5,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Textarea } from "../ui/textarea";
 import { api, errMsg } from "../../lib/api";
+import { PhotoUpload } from "./PhotoUpload";
 
 const Chips = ({ items, value, onChange, testid }) => (
   <div className="flex flex-wrap gap-2">
@@ -43,6 +44,7 @@ export function ProfileForm({ profile, cfg, calls, reload }) {
   return (
     <form onSubmit={save} className="grid grid-cols-1 lg:grid-cols-2 gap-8" data-testid="astro-profile-form">
       <div className="space-y-4">
+        <PhotoUpload profile={profile} onChange={reload} />
         <div className="space-y-1.5"><Label>Display name</Label><Input data-testid="astro-display-name" value={f.display_name} onChange={(e) => setF({ ...f, display_name: e.target.value })} className="bg-background" /></div>
         <div className="space-y-1.5"><Label>About you</Label><Textarea data-testid="astro-bio" rows={6} maxLength={2000} value={f.bio} onChange={(e) => setF({ ...f, bio: e.target.value })} placeholder="Your approach and background. Don't promise outcomes." /></div>
         <div className="space-y-1.5"><Label>Years of experience</Label><Input data-testid="astro-experience" type="number" inputMode="numeric" min="0" max="70" value={f.experience_years} onChange={(e) => setF({ ...f, experience_years: e.target.value })} className="bg-background" /></div>

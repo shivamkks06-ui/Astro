@@ -18,17 +18,21 @@ export const Badges = ({ a, size = "sm" }) => (
 );
 
 export const Initials = ({ name, className = "h-14 w-14 text-lg" }) => (
-  <div className={`rounded-full bg-gradient-to-br from-amber-500/30 to-indigo-900 border border-amber-500/30 flex items-center justify-center font-display text-amber-100 ${className}`}>
+  <div className={`rounded-full shrink-0 bg-gradient-to-br from-amber-500/30 to-indigo-900 border border-amber-500/30 flex items-center justify-center font-display text-amber-100 ${className}`}>
     {(name || "?").replace(/\[.*?\]/g, "").trim().split(" ").map((p) => p[0]).slice(0, 2).join("")}
   </div>
 );
+
+export const Avatar = ({ a, className = "h-14 w-14 text-lg" }) => (a.photo_url
+  ? <img src={`${process.env.REACT_APP_BACKEND_URL}${a.photo_url}`} alt={a.display_name} loading="lazy" decoding="async" data-testid="astrologer-photo" className={`rounded-full object-cover border border-amber-500/30 shrink-0 ${className}`} />
+  : <Initials name={a.display_name} className={className} />);
 
 export function AstroCard({ a, i = 0 }) {
   return (
     <Link to={`/astrologers/${a.id}`} data-testid={`astrologer-card-${a.id}`} style={{ animationDelay: `${i * 60}ms` }}
       className="fade-up glass gold-border rounded-2xl p-5 sm:p-6 flex flex-col gap-3.5 sm:gap-4 hover:-translate-y-1 transition-transform duration-300">
       <div className="flex items-center gap-4">
-        {a.photo_url ? <img src={a.photo_url} alt={a.display_name} loading="lazy" className="h-14 w-14 rounded-full object-cover border border-amber-500/30" /> : <Initials name={a.display_name} />}
+        <Avatar a={a} />
         <div className="min-w-0">
           <h3 className="text-lg leading-snug truncate">{a.display_name}</h3>
           <p className="text-[13px] text-muted-foreground">{a.experience_years} yrs experience · {a.languages.slice(0, 3).join(", ")}</p>

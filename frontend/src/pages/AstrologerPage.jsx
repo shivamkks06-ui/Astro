@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { MessageCircle, Phone, Video, Star, Flag, Ban } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
-import { Badges, Initials } from "../components/AstroCard";
+import { Badges, Avatar } from "../components/AstroCard";
 import { Loading, ErrorState, Empty } from "../components/States";
 import { Disclaimer } from "../components/Layout";
 import { BookDialog } from "../components/BookDialog";
@@ -71,7 +71,7 @@ export default function AstrologerPage() {
     <div className="max-w-6xl mx-auto px-5 sm:px-8 py-6 sm:py-12 grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 sm:gap-10">
       <div className="space-y-8">
         <div className="flex items-start gap-5">
-          <Initials name={a.display_name} className="h-20 w-20 text-2xl" />
+          <Avatar a={a} className="h-20 w-20 text-2xl" />
           <div className="space-y-2">
             <h1 data-testid="astrologer-name" className="text-3xl sm:text-4xl">{a.display_name}</h1>
             <p className="text-sm text-muted-foreground">{a.experience_years} years · {a.languages.join(", ")}</p>

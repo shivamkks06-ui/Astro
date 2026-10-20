@@ -1,7 +1,9 @@
+import io
 import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Optional, Literal, List, Dict
 
+from PIL import Image, ImageOps
 from fastapi import APIRouter, Request, HTTPException, Depends, UploadFile, File, Form, Header
 from pydantic import BaseModel, Field
 from pymongo.errors import DuplicateKeyError
@@ -10,12 +12,15 @@ from core import db, now, new_id, out, require_roles, audit, rate_limit, get_set
 from finance import create_payment, call_provider_status
 from ledger import astrologer_balances
 from storage import put_object, APP_NAME
+from routes_user import photo_url
 
 router = APIRouter(prefix="/api/astrologer")
 astro = require_roles("astrologer")
 
 ALLOWED_DOC_TYPES = {"application/pdf": "pdf", "image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
 MAX_DOC_BYTES = 8 * 1024 * 1024
+PHOTO_TYPES = {"image/jpeg", "image/png", "image/webp"}
+MAX_PHOTO_BYTES = 5 * 1024 * 1024
 
 
 class PayoutAccount(BaseModel):
@@ -45,7 +50,9 @@ async def get_profile(user=Depends(astro)):
     docs = await db.documents.find({"owner_id": user["_id"], "is_deleted": False}).sort("created_at", -1).to_list(50)
     subs = await db.listing_subscriptions.find({"astrologer_id": user["_id"]}).sort("created_at", -1).to_list(50)
     listed = p["identity_status"] == "approved" and p.get("listing_expires_at") and p["listing_expires_at"] > now() and p["account_status"] == "active"
-    return {"profile": out(p), "cases": [out(c) for c in cases], "subscriptions": [out(s) for s in subs], "is_publicly_listed": bool(listed),
+    prof = out(p, "photo_path")
+    prof["photo_url"] = photo_url(p)
+    return {"profile": prof, "cases": [out(c) for c in cases], "subscriptions": [out(s) for s in subs], "is_publicly_listed": bool(listed),
             "documents": [{"id": d["_id"], "kind": d["kind"], "doc_type": d["doc_type"], "original_filename": d["original_filename"], "size": d["size"], "created_at": d["created_at"]} for d in docs],
             "calls": call_provider_status()}
 
@@ -88,6 +95,47 @@ async def upload_document(request: Request, kind: Literal["identity", "credentia
     await db.documents.insert_one(doc)
     await audit(user, "document_uploaded", "document", doc["_id"], {"kind": kind}, request)
     return {"id": doc["_id"], "kind": kind, "doc_type": doc["doc_type"], "original_filename": doc["original_filename"]}
+
+
+def _normalise_photo(data: bytes) -> bytes:
+    # re-encode: proves it's a real image, strips EXIF/GPS, and gives cards a small square file
+    try:
+        img = Image.open(io.BytesIO(data))
+        img = ImageOps.exif_transpose(img).convert("RGB")
+    except Exception:
+        raise HTTPException(415, "That file isn't a readable image")
+    if min(img.size) < 200:
+        raise HTTPException(422, "Photo must be at least 200×200 pixels")
+    img = ImageOps.fit(img, (512, 512), Image.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, "WEBP", quality=82)
+    return buf.getvalue()
+
+
+@router.post("/photo")
+async def upload_photo(request: Request, file: UploadFile = File(...), user=Depends(astro)):
+    await rate_limit(f"photo:{user['_id']}", 10, 3600)
+    if (file.content_type or "") not in PHOTO_TYPES:
+        raise HTTPException(415, "Use a JPG, PNG or WEBP photo")
+    data = await file.read()
+    if not data or len(data) > MAX_PHOTO_BYTES:
+        raise HTTPException(413, "Photo must be under 5 MB")
+    webp = _normalise_photo(data)
+    version = new_id()[:12]
+    try:
+        res = put_object(f"{APP_NAME}/public/avatars/{user['_id']}/{version}.webp", webp, "image/webp")
+    except Exception:
+        raise HTTPException(502, "Storage is temporarily unavailable. Please retry.")
+    await db.astrologer_profiles.update_one({"_id": user["_id"]}, {"$set": {"photo_path": res["path"], "photo_version": version, "photo_updated_at": now()}})
+    await audit(user, "profile_photo_uploaded", "astrologer_profile", user["_id"], {"version": version}, request)
+    return {"photo_url": f"/api/astrologers/{user['_id']}/photo?v={version}"}
+
+
+@router.delete("/photo")
+async def delete_photo(request: Request, user=Depends(astro)):
+    await db.astrologer_profiles.update_one({"_id": user["_id"]}, {"$unset": {"photo_path": "", "photo_version": ""}})
+    await audit(user, "profile_photo_removed", "astrologer_profile", user["_id"], {}, request)
+    return {"ok": True}
 
 
 @router.post("/verification/{kind}/submit")

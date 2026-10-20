@@ -232,6 +232,16 @@ class ReasonIn(BaseModel):
     reason: str = Field(min_length=3, max_length=500)
 
 
+@router.post("/admin/astrologers/{aid}/photo/remove")
+async def remove_photo(aid: str, body: ReasonIn, request: Request, user=Depends(admin)):
+    r = await db.astrologer_profiles.update_one({"_id": aid, "photo_path": {"$exists": True}}, {"$unset": {"photo_path": "", "photo_version": ""}, "$set": {"photo_removed_reason": body.reason, "photo_removed_at": now()}})
+    if not r.modified_count:
+        raise HTTPException(404, "No photo to remove")
+    await audit(user, "profile_photo_removed_by_admin", "astrologer_profile", aid, {"reason": body.reason}, request)
+    return {"ok": True}
+
+
+
 @router.post("/admin/subscriptions/{sid}/refund")
 async def refund_sub(sid: str, body: ReasonIn, request: Request, user=Depends(admin)):
     sub = await db.listing_subscriptions.find_one_and_update({"_id": sid, "status": {"$in": ["active", "cancelled"]}}, {"$set": {"status": "refunded", "refund_status": "processing", "refund_reason": body.reason}})
