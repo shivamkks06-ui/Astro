@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { CheckCircle2, MinusCircle, AlertTriangle, Sparkles, Calculator, ChevronDown } from "lucide-react";
+import { CheckCircle2, MinusCircle, AlertTriangle, Sparkles, Calculator, ChevronDown, Loader2 } from "lucide-react";
 import { Loading, ErrorState } from "../components/States";
 import { useApi } from "../lib/useApi";
 import { useLang } from "../lib/i18n";
@@ -42,7 +42,7 @@ function Category({ id, label, c, ai }) {
     <article data-testid={`horoscope-cat-${id}`} className="rounded-2xl border bg-card/60 p-4 sm:p-5 space-y-2.5">
       <div className="flex items-center justify-between gap-2"><h3 className="text-lg">{t(label)}</h3><Tone t={c.tone} /></div>
       {ai && <div className="space-y-1"><AiLabel /><p data-testid={`horoscope-ai-${id}`} className="text-sm leading-relaxed">{ai}</p></div>}
-      <div className="space-y-1"><CalcLabel /><p className="text-sm text-muted-foreground leading-relaxed">{t(c.text)}</p></div>
+      <div className="space-y-1"><CalcLabel /><p className="text-sm text-slate-300 leading-relaxed">{t(c.text)}</p></div>
       <button type="button" aria-expanded={open} onClick={() => setOpen(!open)} className="inline-flex items-center gap-1 min-h-10 text-xs text-amber-200">{t("Why")}<ChevronDown className={`h-3.5 w-3.5 ${open ? "rotate-180" : ""}`} /></button>
       {open && <ul className="text-xs text-muted-foreground list-disc pl-4">{c.basis.map((b) => <li key={b}>{basisT(b, t)}</li>)}</ul>}
     </article>
@@ -95,7 +95,7 @@ export default function Horoscope() {
               <div className="flex items-center gap-2"><span data-testid="horoscope-date" className="text-xs text-muted-foreground">{new Date(`${h.data.date}T12:00:00`).toLocaleDateString(locale, { weekday: "long", day: "numeric", month: "long" })}</span><Tone t={r.tone} /></div>
             </div>
             {r.ai ? <div className="space-y-1"><AiLabel note /><p data-testid="horoscope-ai-overview" className="leading-relaxed">{r.ai.overview}</p></div>
-              : <p data-testid="horoscope-ai-status" className="text-xs text-muted-foreground">{t(h.data.ai_status === "pending" ? "AI interpretation is being written. The calculated reading is shown meanwhile." : "AI interpretation is unavailable right now; showing the calculated reading.")}</p>}
+              : <p data-testid="horoscope-ai-status" className="flex items-center gap-2 text-xs text-muted-foreground">{h.data.ai_status === "pending" && <Loader2 className="h-3.5 w-3.5 animate-spin text-amber-300" />}{t(h.data.ai_status === "pending" ? "AI interpretation is being written. The calculated reading is shown meanwhile." : "AI interpretation is unavailable right now; showing the calculated reading.")}</p>}
             <div className="space-y-1"><CalcLabel /><p className="text-sm text-muted-foreground">{t(r.overview)} {t("The Moon is in house {n} from your sign.", { n: r.moon_house })}</p></div>
           </section>
           <div className="grid sm:grid-cols-2 gap-4">{CATS.map(([id, l]) => <Category key={id} id={id} label={l} c={r.categories[id]} ai={r.ai?.[id]} />)}</div>

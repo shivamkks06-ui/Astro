@@ -72,7 +72,7 @@ const HI = {
   // form
   Name: "नाम", "(optional)": "(वैकल्पिक)", "Date of birth": "जन्म तिथि", "Time of birth (local)": "जन्म समय (स्थानीय)", "Place of birth": "जन्म स्थान",
   "Calculate Kundli": "कुंडली बनाएँ", "Start typing a city, e.g. Varanasi": "शहर लिखें, जैसे वाराणसी", "Search worldwide (OpenStreetMap)": "दुनिया भर में खोजें (OpenStreetMap)",
-  "Enter the birth date and time.": "जन्म तिथि और समय भरें।", "Choose the birthplace from the list.": "सूची से जन्म स्थान चुनें।",
+  "Enter the birth date and time.": "जन्म तिथि और समय भरें।", "Birth year must be between 1900 and 2049.": "जन्म वर्ष 1900 से 2049 के बीच होना चाहिए।", "Choose the birthplace from the list.": "सूची से जन्म स्थान चुनें।",
   "Your birth details are used only to calculate the chart. They are stored only if you save the chart to your account.": "आपका जन्म विवरण केवल कुंडली बनाने में उपयोग होता है। कुंडली सहेजने पर ही यह आपके खाते में रखा जाता है।",
   // horoscope
   "Daily horoscope": "दैनिक राशिफल", "Today under the stars": "आज का राशिफल", "Yesterday under the stars": "बीते कल का राशिफल", "Tomorrow under the stars": "आने वाले कल का राशिफल",

@@ -22,6 +22,14 @@ const queryClient = new QueryClient({
   },
 });
 
+// keep the focused field visible above the Android soft keyboard
+document.addEventListener("focusin", (e) => {
+  const el = e.target;
+  if (window.innerWidth < 768 && el.matches?.("input:not([type=checkbox]):not([type=radio]), textarea")) {
+    setTimeout(() => el.scrollIntoView({ block: "center", behavior: "smooth" }), 300);
+  }
+});
+
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
   <React.StrictMode>

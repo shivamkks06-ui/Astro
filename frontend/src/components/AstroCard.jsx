@@ -50,7 +50,7 @@ export function AstroCard({ a, i = 0 }) {
         <span className="flex items-center gap-1 text-amber-300"><Star className="h-4 w-4 fill-amber-400 text-amber-400" />{a.rating_count ? `${a.rating_avg} (${a.rating_count})` : "New"}</span>
         <span className="text-slate-200">Chat {inr(a.rates.chat)}/min</span>
       </div>
-      <span className="inline-flex items-center justify-center gap-1 h-11 rounded-full border border-amber-500/30 text-amber-200 text-sm">View profile & book<ChevronRight className="h-4 w-4" /></span>
+      <span className="inline-flex items-center justify-center gap-1 h-11 rounded-full bg-primary text-primary-foreground font-semibold text-sm transition-colors group-hover:bg-amber-300">View profile & book<ChevronRight className="h-4 w-4" /></span>
     </Link>
   );
 }

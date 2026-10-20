@@ -16,7 +16,10 @@ export function BirthForm({ initial, busy, onSubmit, submitLabel = "Calculate Ku
   const submit = (e) => {
     e.preventDefault();
     if (!f.date || !f.time) return setErr(t("Enter the birth date and time."));
+    const y = Number(f.date.slice(0, 4));
+    if (!(y >= 1900 && y <= 2049)) return setErr(t("Birth year must be between 1900 and 2049."));
     if (!place) return setErr(t("Choose the birthplace from the list."));
+    if (busy) return;
     setErr("");
     onSubmit({ name: f.name.trim() || null, date: f.date, time: f.time, place: place.label, lat: place.lat, lon: place.lon, tz: place.tz });
   };
@@ -42,7 +45,7 @@ export function BirthForm({ initial, busy, onSubmit, submitLabel = "Calculate Ku
         <PlaceSearch value={place} onChange={setPlace} />
       </div>
       {err && <p role="alert" data-testid="kundli-form-error" className="text-sm text-red-300">{err}</p>}
-      <Button type="submit" data-testid="kundli-submit" disabled={busy} className="w-full sm:w-auto rounded-full h-12 px-8 text-base">
+      <Button type="submit" data-testid="kundli-submit" disabled={busy} className="w-full sm:w-auto rounded-full h-12 px-8 text-base font-semibold">
         {busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{t(submitLabel)}
       </Button>
       <p className="text-xs text-muted-foreground">{t("Your birth details are used only to calculate the chart. They are stored only if you save the chart to your account.")}</p>
