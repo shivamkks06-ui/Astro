@@ -1,0 +1,30 @@
+{
+  "summary": "Iteration 13, frontend only: branding and regression checks. Branding: the title is 'NakshatraVeda | Verified Vedic Astrologers'. The meta description, og:title, og:image (/og-image.jpg) and twitter:card are present. /favicon.png, /apple-touch-icon.png, /brand-mark.png and /og-image.jpg all return 200 with the correct image content types. The header brand-logo links to '/', shows the mandala img (natural width 96, rendered at 32px) and the NAKSHATRAVEDA wordmark. The tagline is visible at 1920 and hidden at 390. The drawer shows the mark, wordmark, nav links, Log in/Join and drawer-trust-card. Escape closes it, and __nvBack returns 'overlay' (regression suite). Primary buttons are rgb(212,175,53) (#D4AF35, about #D4AF37) with navy text. There are no #0B0F19 leftovers in src/public. Regression: /app/tests/ui_iter11_native_back.py passes 101/101. Manual checks: Discover search (2 -> 0 results on no match), the credential filter (2 -> 1), the profile opens, and demo-customer login reaches /account with bookings and a 3-item bottom nav. No horizontal overflow at 360, 390 or 1920 on landing, discover, login, profile or account. The only console errors are expected 401s from logged-out /auth/me and refresh, plus one React warning. ErrorBoundary only changed in colours; its logic is untouched.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Landing hero img", "issue": "React console warning: 'Invalid DOM property fetchpriority. Did you mean fetchPriority?'. Use fetchPriority=\"high\" (camelCase).", "selector": "pages/Landing.jsx:19", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Global CSS vars", "issues": ["--background is 224 54% 9%, which renders as rgb(11,17,35) (#0B1123) and not the approved #0B1225 rgb(11,18,37). Use 223 54% 9.4% (or the exact hex) for an exact match. --primary 46 65% 52% renders #D4AF35, which is close enough, but 46 65% 52.4% is exact."]},
+      {"screen": "Web browser Back with drawer open", "issues": ["On the web build (not native), browser history Back while the drawer is open navigates to the previous route and the drawer stays open on the new page. Native Back via __nvBack works correctly. This existed before this change; it's optional to close the drawer on location change."]}
+    ]
+  },
+  "test_report_links": ["/app/tests/ui_iter11_native_back.py"],
+  "action_items": [
+    "Landing.jsx: rename the fetchpriority attribute to fetchPriority",
+    "index.css: adjust --background HSL to exactly #0B1225 (223 54% 9.4%) if an exact palette match is required",
+    "Optional: /manifest.json doesn't exist (it returns the SPA HTML). Add a manifest with the new icons and theme colour if you want PWA/home-screen metadata.",
+    "Optional: close the mobile drawer on route change (useLocation effect) for web browser Back"
+  ],
+  "critical_code_review_comments": [
+    "Header bg-[#0B1225]/85 and the drawer card bg-[#0B1225]/60 hardcode hex instead of using the bg-background token. That's fine, but it duplicates the palette."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "skipped (frontend only)", "frontend": "100% functional (101/101 regression + all branding checks); 2 low-priority cosmetic/console issues"},
+  "seed_data_creation": "None. Logged in as demo.customer only.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run python /app/tests/ui_iter11_native_back.py for the regression check (about 2-3 min). The branding assets are in frontend/public. Browser history back is not intercepted on web; Android Back uses window.__nvBack."
+}

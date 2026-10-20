@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, NavLink, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Menu, LogOut, ShieldCheck } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
 import { Button } from "./ui/button";
@@ -41,6 +41,8 @@ function AuthButtons({ user, onNav, drawer }) {
 export function Header() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const { pathname } = useLocation();
+  useEffect(() => { setOpen(false); }, [pathname]);
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#0B1225]/85 border-b border-amber-500/10 pt-[env(safe-area-inset-top)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 h-14 sm:h-16 flex items-center justify-between gap-4">

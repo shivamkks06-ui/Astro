@@ -62,6 +62,14 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - useApi ignores out-of-order responses; Avatar falls back to initials on error; image width/height set
 - Audit: no immersive/fullscreen flags, Recent Apps untouched; dev-only window.__nvBack for QA (not in the production bundle)
 
+## Implemented (2026-10-20), Brand system & Android icon/splash
+- Exact palette tokens (#0B1225/#111B32/#16223B, gold #D4AF37/#F4D675, text #F8F7F2/#B9C2D3); Tailwind amber scale remapped to brand gold; Noto Sans Devanagari fallback; gold focus ring
+- Title/description/OG/Twitter meta, favicon, apple-touch-icon, manifest.json, og-image
+- Header/drawer: mandala mark + NAKSHATRAVEDA wordmark + tagline; drawer closes on route change
+- Assets built from the user's logo artwork (playstore/build_assets.py): simplified yantra mark for favicon/launcher/adaptive foreground; splash = full mandala + wordmark + tagline; Android resources regenerated via @capacitor/assets; Play Store kit zip + screenshots regenerated
+- Hero image compressed (829KB -> 389KB)
+- Deferred by user: Daily Horoscope, Kundli, compatibility, AI reports, premium plans (future phase)
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)
