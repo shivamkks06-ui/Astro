@@ -9,7 +9,9 @@ const fromFile = (f) => {
   return m ? m[1].trim() : null;
 };
 
-const url = process.env.REACT_APP_BACKEND_URL || fromFile(".env.production.local") || fromFile(".env.production") || fromFile(".env");
+const envSet = Object.prototype.hasOwnProperty.call(process.env, "REACT_APP_BACKEND_URL");
+// CRA won't override an existing (even empty) env var with .env, so an empty one means an empty build
+const url = envSet ? process.env.REACT_APP_BACKEND_URL : fromFile(".env.production.local") || fromFile(".env.production") || fromFile(".env");
 if (!url || !/^https:\/\/[^\s]+$/.test(url) || /localhost|127\.0\.0\.1/.test(url)) {
   console.error("\n[build:android] REACT_APP_BACKEND_URL is missing or invalid.");
   console.error("Create frontend/.env with:  REACT_APP_BACKEND_URL=https://<your-live-domain>\n");

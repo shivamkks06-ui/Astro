@@ -1,0 +1,24 @@
+{
+  "summary": "Iteration 4 (frontend only): checked the fix for the Android crash caused by a missing REACT_APP_BACKEND_URL. Made two local production builds, one with an empty URL and one pointing at an SPA static server that returns HTML for /api. Served both with a Python SPA-fallback server, the same way Capacitor serves files, and opened them with local Playwright at 390px. (1) The no-env build shows data-testid=app-config-error ('This build is missing its server address.') and no app-crash-screen. (2) With the HTML backend, landing 'Available astrologers' shows an ErrorState with the message 'Could not reach the NakshatraVeda server (got a web page instead of data)...' and a Retry button. Clicking Retry does not crash. Discover shows the same ErrorState and Retry. The login page renders. No page errors. (3) Preview regression: landing and discover show the [DEMO] astrologer cards. Demo customer login goes to /account ('Namaste, Demo'). At 390px there is no horizontal overflow (scrollWidth 390). (4) check-android-env.js exits 0 with the current .env. It exits 1 from a temp copy with no .env and an empty env var. It also exits 1 for a localhost URL. (5) The Android bundle main.c3ff3117.js contains the preview URL (1 match), has 0 'undefined/api' matches, and includes the HTML-guard message. The ConfigError markup is not in this bundle because the minifier removed it as dead code (BACKEND_MISSING is a build-time constant). That is expected.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Optional (minor): with .env present, 'REACT_APP_BACKEND_URL= yarn build:android' passes check-android-env.js, because an empty env var falls back to reading .env. CRA/dotenv does not override a variable that already exists in the environment, even when it is empty, so the built app still gets an empty URL (verified: that build showed app-config-error). Fix: in the script, if 'REACT_APP_BACKEND_URL' in process.env and it is empty, treat it as missing.",
+    "Optional hardening: the DataTable, Earnings, Listing, Payments and Discover components use data.items/payouts/... .length without optional chaining. The HTML guard covers the reported case. A 200 JSON with a different shape (e.g. a proxy error JSON) would still crash."
+  ],
+  "critical_code_review_comments": [
+    "api.js HTML guard only matches string bodies starting with '<'. This is fine for an SPA fallback.",
+    "check-android-env.js requires https and rejects localhost. Good for release builds, but it blocks LAN/emulator dev builds; mention this in ANDROID.md if needed."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "100%"},
+  "seed_data_creation": "None. Used existing demo customer from /app/memory/test_credentials.md",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Builds were made with BUILD_PATH=/tmp/... so /app/frontend/build was never created. /tmp builds, the SPA servers on 5055/5056 and the temp copy of scripts were all removed. frontend/.env was not touched. The Android asset bundle is main.c3ff3117.js."
+}
