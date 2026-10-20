@@ -1,0 +1,1 @@
+GeoNames data (CC BY 4.0) https://www.geonames.org; JPL DE421 ephemeris (public domain)

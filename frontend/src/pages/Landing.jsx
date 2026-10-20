@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ShieldCheck, ScrollText, Scale } from "lucide-react";
+import { ShieldCheck, ScrollText, Scale, Sun, Orbit, Users, ChevronRight } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { AstroCard } from "../components/AstroCard";
 import { CardSkeletons, ErrorState, Empty } from "../components/States";
@@ -10,6 +10,24 @@ const PILLARS = [
   { icon: ScrollText, t: "Credentials reviewed separately", d: "Qualification documents get a separate review. We only show that badge after the check is done." },
   { icon: Scale, t: "Clear prices and refunds", d: "You see the full price and refund terms before you pay. Unconnected sessions are not charged." },
 ];
+
+const QUICK = [
+  { to: "/horoscope", icon: Sun, t: "Daily horoscope", d: "Today's reading for your Moon sign, from real planet positions" },
+  { to: "/kundli", icon: Orbit, t: "Free Kundli", d: "Birth chart with Lagna, nakshatras and dasha periods" },
+  { to: "/discover", icon: Users, t: "Consult an astrologer", d: "Identity-checked astrologers with clear prices" },
+];
+
+const QuickAccess = () => (
+  <section aria-label="Explore" className="max-w-7xl mx-auto px-5 sm:px-8 pt-2 sm:pt-10 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
+    {QUICK.map(({ to, icon: I, t, d }) => (
+      <Link key={to} to={to} data-testid={`quick-${to.slice(1)}`} className="group rounded-2xl border border-amber-400/25 bg-card/70 p-4 sm:p-6 flex items-center gap-4 transition-colors hover:border-amber-400/60">
+        <span className="h-11 w-11 shrink-0 rounded-full bg-amber-400/10 inline-flex items-center justify-center"><I className="h-5 w-5 text-amber-300" /></span>
+        <span className="min-w-0 flex-1"><span className="block font-serif text-lg text-amber-100">{t}</span><span className="block text-xs sm:text-sm text-muted-foreground">{d}</span></span>
+        <ChevronRight className="h-5 w-5 text-amber-300/70 transition-transform group-hover:translate-x-0.5" />
+      </Link>
+    ))}
+  </section>
+);
 
 export default function Landing() {
   const { data, loading, error, reload } = useApi("/astrologers?limit=3");
@@ -30,6 +48,8 @@ export default function Landing() {
           </div>
         </div>
       </section>
+
+      <QuickAccess />
 
       <section className="max-w-7xl mx-auto px-5 sm:px-8 pt-2 pb-10 sm:py-20 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
         {PILLARS.map(({ icon: I, t, d }, i) => (

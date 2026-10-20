@@ -19,6 +19,7 @@ import routes_user
 import routes_astrologer
 import routes_bookings
 import routes_admin
+import routes_astro
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
@@ -39,7 +40,7 @@ async def origin_guard(request: Request, call_next):
         return JSONResponse({"detail": "Something went wrong. Please retry."}, status_code=500)
 
 
-for r in (routes_auth, routes_user, routes_astrologer, routes_bookings, routes_admin):
+for r in (routes_auth, routes_user, routes_astrologer, routes_bookings, routes_admin, routes_astro):
     app.include_router(r.router)
 
 

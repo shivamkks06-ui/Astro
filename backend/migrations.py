@@ -6,6 +6,7 @@ from core import db, now, new_id, DEFAULT_SETTINGS, hash_password, verify_passwo
 
 async def m001_indexes():
     await db.users.create_index("email", unique=True)
+    await db.kundlis.create_index([("user_id", 1), ("created_at", -1)])
     await db.users.create_index([("role", 1), ("status", 1)])
     await db.login_attempts.create_index("identifier")
     await db.login_attempts.create_index("expires_at", expireAfterSeconds=0)

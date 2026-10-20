@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { Home, Compass, CalendarCheck, LayoutDashboard, Shield, LogIn } from "lucide-react";
+import { Home, Compass, CalendarCheck, LayoutDashboard, Shield, LogIn, Sun, Orbit } from "lucide-react";
 import { useAuth, homeFor } from "../context/AuthContext";
 import { haptic } from "../lib/native";
 
@@ -18,16 +18,16 @@ export function BottomNav() {
     : user.role === "admin" ? { to: "/admin", label: "Admin", icon: Shield }
       : user.role === "astrologer" ? { to: "/studio", label: "Studio", icon: LayoutDashboard }
         : { to: homeFor(user), label: "Bookings", icon: CalendarCheck };
-  const items = [{ to: "/", label: "Home", icon: Home, end: true }, { to: "/discover", label: "Discover", icon: Compass }, own];
+  const items = [{ to: "/", label: "Home", icon: Home, end: true }, { to: "/horoscope", label: "Horoscope", icon: Sun }, { to: "/kundli", label: "Kundli", icon: Orbit }, { to: "/discover", label: "Discover", icon: Compass }, own];
   return (
     <>
     <div aria-hidden="true" className="md:hidden h-[65px] pb-[env(safe-area-inset-bottom)] box-content" />
     <nav data-testid="bottom-nav" aria-label="Main" className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-amber-500/15 bg-[#0B1225]/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
-      <div className="grid grid-cols-3 h-16">
+      <div className="grid grid-cols-5 h-16">
         {items.map(({ to, label, icon: I, end }) => (
           <NavLink key={to} to={to} end={end} replace={pathname === to} onClick={() => haptic()} data-testid={`bottom-nav-${label.toLowerCase().replace(/\s/g, "-")}`}
-            className={({ isActive }) => `flex flex-col items-center justify-center gap-1 text-xs select-none transition-colors duration-150 active:bg-amber-500/10 ${isActive ? "text-amber-300" : "text-slate-400"}`}>
-            {({ isActive }) => (<><span className={`rounded-full px-4 py-1 transition-colors duration-150 ${isActive ? "bg-amber-500/15" : ""}`}><I className="h-5 w-5" /></span>{label}</>)}
+            className={({ isActive }) => `flex flex-col items-center justify-center gap-1 text-[11px] min-w-0 select-none transition-colors duration-150 active:bg-amber-500/10 ${isActive ? "text-amber-300" : "text-slate-400"}`}>
+            {({ isActive }) => (<><span className={`rounded-full px-3 py-1 transition-colors duration-150 ${isActive ? "bg-amber-500/15" : ""}`}><I className="h-5 w-5" /></span><span className="truncate max-w-full">{label}</span></>)}
           </NavLink>
         ))}
       </div>

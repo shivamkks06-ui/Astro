@@ -17,6 +17,8 @@ import BookingPage from "./pages/BookingPage";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import AstrologerDashboard from "./pages/AstrologerDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import Horoscope from "./pages/Horoscope";
+import Kundli from "./pages/Kundli";
 
 function Protected({ roles, children }) {
   const { user } = useAuth();
@@ -34,6 +36,9 @@ function Screens() {
       <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/discover" element={<Discover />} />
+              <Route path="/horoscope" element={<Horoscope />} />
+              <Route path="/kundli" element={<Kundli />} />
+              <Route path="/kundli/:id" element={<Protected><Kundli /></Protected>} />
               <Route path="/astrologers/:id" element={<AstrologerPage />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />

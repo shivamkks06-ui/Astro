@@ -10,7 +10,7 @@ export const BrandMark = ({ className = "" }) => <img src="/brand-mark.png" alt=
 const DISCLAIMER = "Astrology services are offered as interpretive guidance, not guaranteed outcomes. They are not a substitute for professional medical, legal or financial advice.";
 
 function NavLinks({ user, onNav, drawer }) {
-  const links = [{ to: "/discover", label: "Find Astrologers" }, { to: "/legal/guidelines", label: "Safety & Guidelines" }];
+  const links = [{ to: "/horoscope", label: "Horoscope" }, { to: "/kundli", label: "Kundli" }, { to: "/discover", label: "Find Astrologers" }, { to: "/legal/guidelines", label: "Safety & Guidelines" }];
   if (user) links.push({ to: homeFor(user), label: user.role === "admin" ? "Admin Console" : user.role === "astrologer" ? "Astrologer Studio" : "My Account" });
   return links.map((l) => (
     <NavLink key={l.to} to={l.to} onClick={onNav} data-testid={`nav-${l.to.replace(/\//g, "-").slice(1)}`}
