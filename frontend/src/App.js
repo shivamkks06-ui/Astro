@@ -5,6 +5,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { Toaster } from "./components/ui/sonner";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import { Header, Footer } from "./components/Layout";
+import { BottomNav } from "./components/BottomNav";
 import { Loading } from "./components/States";
 import Landing from "./pages/Landing";
 import Discover from "./pages/Discover";
@@ -26,16 +27,11 @@ function Protected({ roles, children }) {
   return children;
 }
 
-function App() {
+function Screens() {
+  const { pathname } = useLocation();
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <NativeShell />
-        <div className="min-h-screen flex flex-col">
-          <Header />
-          <NetworkBanner />
-          <main className="flex-1">
-            <Routes>
+    <main key={pathname} className="flex-1 page-enter">
+      <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/discover" element={<Discover />} />
               <Route path="/astrologers/:id" element={<AstrologerPage />} />
@@ -47,10 +43,23 @@ function App() {
               <Route path="/account" element={<Protected roles={["customer"]}><CustomerDashboard /></Protected>} />
               <Route path="/studio" element={<Protected roles={["astrologer"]}><AstrologerDashboard /></Protected>} />
               <Route path="/admin" element={<Protected roles={["admin"]}><AdminDashboard /></Protected>} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </main>
+            <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </main>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <BrowserRouter>
+        <NativeShell />
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <NetworkBanner />
+          <Screens />
           <Footer />
+          <BottomNav />
         </div>
         <Toaster richColors position="top-center" />
       </BrowserRouter>

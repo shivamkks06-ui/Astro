@@ -8,6 +8,27 @@ export const Loading = ({ text = "Loading" }) => (
   </div>
 );
 
+const Bar = ({ className }) => <div className={`rounded-md bg-muted/60 ${className}`} />;
+
+export const CardSkeletons = ({ n = 3 }) => (
+  <div data-testid="cards-skeleton" aria-busy="true" aria-label="Loading astrologers" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+    {Array.from({ length: n }, (_, i) => (
+      <div key={i} className="rounded-2xl border p-5 space-y-4 animate-pulse motion-reduce:animate-none">
+        <div className="flex items-center gap-4"><div className="h-14 w-14 rounded-full bg-muted/60" /><div className="flex-1 space-y-2"><Bar className="h-4 w-2/3" /><Bar className="h-3 w-1/2" /></div></div>
+        <Bar className="h-3 w-full" /><Bar className="h-3 w-4/5" /><Bar className="h-11 w-full rounded-full" />
+      </div>
+    ))}
+  </div>
+);
+
+export const ProfileSkeleton = () => (
+  <div data-testid="profile-skeleton" aria-busy="true" className="max-w-6xl mx-auto px-5 sm:px-8 py-6 sm:py-12 space-y-5 animate-pulse motion-reduce:animate-none">
+    <div className="flex items-center gap-4"><div className="h-20 w-20 rounded-full bg-muted/60" /><div className="flex-1 space-y-2"><Bar className="h-6 w-1/2" /><Bar className="h-3 w-1/3" /></div></div>
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">{[0, 1, 2, 3].map((i) => <Bar key={i} className="h-16" />)}</div>
+    <Bar className="h-24 w-full" />
+  </div>
+);
+
 export const ErrorState = ({ error, onRetry }) => (
   <div data-testid="error-state" className="glass rounded-xl p-6 flex flex-col sm:flex-row sm:items-center gap-4">
     <AlertTriangle className="h-6 w-6 text-red-400 shrink-0" />

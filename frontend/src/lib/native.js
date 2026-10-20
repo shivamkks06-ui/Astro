@@ -3,6 +3,16 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
 import { App as CapApp } from "@capacitor/app";
+import { Haptics, ImpactStyle, NotificationType } from "@capacitor/haptics";
+
+// subtle confirmation feedback on key actions; silently no-op on web or unsupported devices
+export function haptic(kind = "light") {
+  if (!Capacitor.isNativePlatform()) return;
+  const p = kind === "success" ? Haptics.notification({ type: NotificationType.Success })
+    : kind === "error" ? Haptics.notification({ type: NotificationType.Error })
+      : Haptics.impact({ style: ImpactStyle.Light });
+  p.catch(() => {});
+}
 
 export const isNative = Capacitor.isNativePlatform();
 

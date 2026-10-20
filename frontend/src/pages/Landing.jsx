@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { ShieldCheck, ScrollText, Scale } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { AstroCard } from "../components/AstroCard";
-import { Loading, ErrorState, Empty } from "../components/States";
+import { CardSkeletons, ErrorState, Empty } from "../components/States";
 import { useApi } from "../lib/useApi";
 
 const PILLARS = [
@@ -48,7 +48,7 @@ export default function Landing() {
           <div><p className="overline mb-2">Listed now</p><h2 className="text-[1.375rem] sm:text-3xl">Available astrologers</h2></div>
           <Link to="/discover" data-testid="landing-view-all" className="text-sm text-amber-300 hover:underline py-3 shrink-0">View all</Link>
         </div>
-        {loading ? <Loading /> : error ? <ErrorState error={error} onRetry={reload} /> : !data?.items?.length ? (
+        {loading ? <CardSkeletons /> : error ? <ErrorState error={error} onRetry={reload} /> : !data?.items?.length ? (
           <Empty title="No astrologers listed yet" hint="Verified astrologers will appear here once their listing is active." />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">{data.items.map((a, i) => <AstroCard key={a.id} a={a} i={i} />)}</div>

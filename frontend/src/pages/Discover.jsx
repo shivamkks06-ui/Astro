@@ -5,7 +5,7 @@ import { Switch } from "../components/ui/switch";
 import { Button } from "../components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { AstroCard } from "../components/AstroCard";
-import { Loading, ErrorState, Empty } from "../components/States";
+import { CardSkeletons, ErrorState, Empty } from "../components/States";
 import { useApi } from "../lib/useApi";
 
 const ANY = "any";
@@ -57,7 +57,7 @@ export default function Discover() {
           <SelectContent><SelectItem value="rating">Top rated</SelectItem><SelectItem value="experience">Most experienced</SelectItem><SelectItem value="price">Lowest chat rate</SelectItem></SelectContent>
         </Select>
       </div>
-      {list.loading ? <Loading /> : list.error ? <ErrorState error={list.error} onRetry={list.reload} /> : list.data.items.length === 0 ? (
+      {list.loading && !list.data ? <CardSkeletons n={6} /> : list.error ? <ErrorState error={list.error} onRetry={list.reload} /> : list.data.items.length === 0 ? (
         <Empty title="No astrologers match these filters" hint="Try removing a filter." />
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">{list.data.items.map((a, i) => <AstroCard key={a.id} a={a} i={i} />)}</div>

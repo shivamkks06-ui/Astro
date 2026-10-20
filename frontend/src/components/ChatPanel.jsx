@@ -3,6 +3,7 @@ import { Send, RotateCw, AlertCircle } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { api, errMsg, idem } from "../lib/api";
+import { haptic } from "../lib/native";
 
 export function ChatPanel({ booking, canSend }) {
   const [msgs, setMsgs] = useState([]);
@@ -47,6 +48,7 @@ export function ChatPanel({ booking, canSend }) {
     e.preventDefault();
     if (!text.trim()) return;
     send({ client_msg_id: idem(), text: text.trim(), sender_role: me, created_at: new Date().toISOString() });
+    haptic();
     setText("");
   };
 

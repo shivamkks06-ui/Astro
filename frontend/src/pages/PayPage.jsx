@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { FlaskConical } from "lucide-react";
 import { toast } from "sonner";
+import { haptic } from "../lib/native";
 import { Button } from "../components/ui/button";
 import { Loading, ErrorState, StatusPill } from "../components/States";
 import { useApi } from "../lib/useApi";
@@ -21,6 +22,7 @@ export default function PayPage() {
     setBusy(true);
     try {
       const { data } = await api.post(`/payments/${id}/mock-checkout`, { outcome });
+      haptic(data.status === "captured" ? "success" : "error");
       toast[data.status === "captured" ? "success" : "error"](`Payment ${data.status}. The server checked the signed webhook.`);
       reload();
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }

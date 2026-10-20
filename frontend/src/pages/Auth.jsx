@@ -64,7 +64,7 @@ export function RegisterPage() {
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true); setErr("");
-    try { const u = await register(f); nav(homeFor(u), { replace: true }); } catch (e2) { setErr(errMsg(e2)); } finally { setBusy(false); }
+    try { const u = await register(f); const next = sp.get("next"); nav(next && next.startsWith("/") && u.role === "customer" ? next : homeFor(u), { replace: true }); } catch (e2) { setErr(errMsg(e2)); } finally { setBusy(false); }
   };
   return (
     <Shell title="Create your account" sub="Choose how you'll use the platform.">

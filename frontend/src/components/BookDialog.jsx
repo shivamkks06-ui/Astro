@@ -7,11 +7,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { toast } from "sonner";
 import { api, errMsg, inr, fmtDate } from "../lib/api";
 import { useApi } from "../lib/useApi";
+import { haptic } from "../lib/native";
 
 const Row = ({ k, v, testid }) => (<div className="flex justify-between text-sm"><span className="text-muted-foreground">{k}</span><span data-testid={testid}>{v}</span></div>);
 
-export function BookDialog({ a, slot, mode, policy, onBooked }) {
-  const [open, setOpen] = useState(false);
+export function BookDialog({ a, slot, mode, policy, onBooked, open, onOpenChange: setOpen }) {
   const [bp, setBp] = useState("none");
   const [note, setNote] = useState("");
   const [agree, setAgree] = useState(false);
@@ -20,12 +20,16 @@ export function BookDialog({ a, slot, mode, policy, onBooked }) {
   const total = a.rates[mode] * slot.duration_min;
 
   const submit = async () => {
+    if (busy) return;
     setBusy(true);
     try {
       const { data } = await api.post("/bookings", { slot_id: slot.id, mode, birth_profile_id: bp === "none" ? null : bp, note, accept_terms: agree });
+      haptic("success");
       toast.success("Request sent. You'll pay once the astrologer accepts.");
+      setOpen(false);
       onBooked(data);
     } catch (e) {
+      haptic("error");
       toast.error(errMsg(e));
     } finally {
       setBusy(false);
@@ -33,10 +37,9 @@ export function BookDialog({ a, slot, mode, policy, onBooked }) {
   };
   return (
     <>
-      <Button data-testid="book-now-button" className="w-full rounded-full" onClick={() => setOpen(true)}>Review &amp; request booking</Button>
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent data-testid="booking-dialog" className="bg-card max-h-[90vh] overflow-y-auto">
-          <DialogHeader><DialogTitle className="font-serif">Confirm consultation request</DialogTitle></DialogHeader>
+      <Dialog open={open && !!slot} onOpenChange={setOpen}>
+        <DialogContent data-testid="booking-dialog" className="bg-card sm:max-h-[90vh] overflow-y-auto">
+          <DialogHeader className="text-left pr-10"><DialogTitle className="font-serif">Confirm consultation request</DialogTitle></DialogHeader>
           <div className="space-y-2 rounded-xl border p-4">
             <Row k="Astrologer" v={a.display_name} />
             <Row k="When" v={fmtDate(slot.start_at)} />
@@ -64,7 +67,7 @@ export function BookDialog({ a, slot, mode, policy, onBooked }) {
             I understand the price and refund terms, and that astrology is interpretive guidance, not a guaranteed outcome or professional advice.
           </label>
           <DialogFooter>
-            <Button data-testid="booking-submit" disabled={!agree || busy} onClick={submit}>{busy ? "Sending…" : "Send request"}</Button>
+            <Button data-testid="booking-submit" className="w-full sm:w-auto rounded-full h-12 sm:h-9" disabled={!agree || busy} onClick={submit}>{busy ? "Sending…" : "Send request"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
