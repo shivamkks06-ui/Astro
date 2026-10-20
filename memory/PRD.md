@@ -56,6 +56,12 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - Root cause: Chrome <87 WebViews ignore the CSS `inset` shorthand, so the hero image, drawer and overlays weren't anchored. Fixed with scripts/postcss-inset-fallback.js, appended to CRA's postcss-loader in craco.config.js webpack.configure
 - Drawer: min(84vw,320px), brand row, 48px aligned links, stacked full-width Log in/Join, trust card at the bottom, safe-area insets, black/50 backdrop, no focus ring on open
 
+## Implemented (2026-10-20), Android Back exit + Discover state
+- Root-screen double-press exit: the first Back shows "Press back again to exit" (bottom, above the nav); a second press within 2 s calls App.exitApp(); after 2 s it re-arms. Nested screens with no history go home and never exit
+- Discover filters, sort and page live in the URL (replace), so Back from a profile restores them; clear-filters; singular/plural count
+- useApi ignores out-of-order responses; Avatar falls back to initials on error; image width/height set
+- Audit: no immersive/fullscreen flags, Recent Apps untouched; dev-only window.__nvBack for QA (not in the production bundle)
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)

@@ -1,0 +1,17 @@
+{
+  "summary": "Iteration 12 targeted frontend retest of iteration-11 issues. All fixed. Race check: q=A request actually fired and was delayed 3s, q=Ac response won, results-count='1 astrologer' (server q=Ac total=1, q=A total=2). Exit-hint toast: 360 -> toast bottom 696 <= nav top 715; 390x844 -> toast bottom 760 <= nav top 779; no overlap. Landing hero img has width=1800 height=1200 (DOM verified). ui_iter11_native_back.py 101/101 PASS (Back logic, Discover URL state, pagination, error/retry, avatar fallback, responsive 360/390/1920 regressions).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/tests/ui_iter11_race_check.py", "/app/tests/ui_iter11_toast_check.py", "/app/tests/ui_iter11_native_back.py", "/app/tests/ui_iter12_extra.py"],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "useApi ticket ref is correct: both success and error paths are gated on ticket === latest.current; silent refreshes also take a ticket, so a resume refresh in flight during a filter change is correctly superseded.",
+    "Top-center toasts not exercised at runtime (login errors are inline, not toasts); by config, Toaster position=top-center and mobileOffset only sets bottom, so top toasts are unaffected."
+  ],
+  "updated_files": ["/app/tests/ui_iter12_extra.py"],
+  "success_rate": {"backend": "skipped (frontend only)", "frontend": "100%"},
+  "seed_data_creation": "None. No data created, no DB deletes.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Run suites one at a time with local headless_shell at /pw-browsers/chromium_headless_shell-1208/*/headless_shell. ui_iter12_extra.py verifies the race test really issues the delayed q=A request (no debounce masking) and hero img attrs."
+}
