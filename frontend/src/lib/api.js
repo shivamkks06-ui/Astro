@@ -1,10 +1,13 @@
 import axios from "axios";
 import { isNative, tokens } from "./native";
 
-export const API = `${process.env.REACT_APP_BACKEND_URL}/api`;
+const BACKEND = process.env.REACT_APP_BACKEND_URL;
+export const BACKEND_MISSING = !BACKEND || BACKEND === "undefined";
+export const API = `${BACKEND}/api`;
 export const api = axios.create({ baseURL: API, withCredentials: true, timeout: 30000 });
 
 api.interceptors.request.use((cfg) => {
+  if (BACKEND_MISSING) throw new Error("App is not configured: REACT_APP_BACKEND_URL was missing when this build was made.");
   if (isNative) {
     cfg.headers["X-Client"] = "native";
     if (tokens.access()) cfg.headers.Authorization = `Bearer ${tokens.access()}`;
@@ -22,7 +25,13 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 let refreshing = null;
 const NO_REFRESH = ["/auth/login", "/auth/register", "/auth/refresh"];
 api.interceptors.response.use(
-  (r) => r,
+  (r) => {
+    // an HTML page instead of JSON means the request never reached the API server
+    if (typeof r.data === "string" && /^\s*</.test(r.data)) {
+      return Promise.reject(Object.assign(new Error("Could not reach the NakshatraVeda server (got a web page instead of data). Check the backend URL in this build."), { config: r.config }));
+    }
+    return r;
+  },
   async (err) => {
     const cfg = err.config;
     // flaky mobile networks: retry idempotent GETs with backoff
@@ -46,7 +55,7 @@ api.interceptors.response.use(
 );
 
 export function errMsg(e) {
-  if (!e?.response) return "Network problem. Check your connection and retry.";
+  if (!e?.response) return e?.code === "ERR_NETWORK" || !e?.message ? "Network problem. Check your connection and retry." : e.message;
   const d = e.response.data?.detail;
   if (d == null) return "Something went wrong. Please retry.";
   if (typeof d === "string") return d;

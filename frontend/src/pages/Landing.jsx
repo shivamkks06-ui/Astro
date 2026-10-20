@@ -46,7 +46,7 @@ export default function Landing() {
           <div><p className="overline mb-2">Listed now</p><h2 className="text-2xl sm:text-3xl">Available astrologers</h2></div>
           <Link to="/discover" data-testid="landing-view-all" className="text-sm text-amber-300 hover:underline">View all</Link>
         </div>
-        {loading ? <Loading /> : error ? <ErrorState error={error} onRetry={reload} /> : data.items.length === 0 ? (
+        {loading ? <Loading /> : error ? <ErrorState error={error} onRetry={reload} /> : !data?.items?.length ? (
           <Empty title="No astrologers listed yet" hint="Verified astrologers will appear here once their listing is active." />
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">{data.items.map((a, i) => <AstroCard key={a.id} a={a} i={i} />)}</div>

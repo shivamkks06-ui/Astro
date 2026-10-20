@@ -68,6 +68,7 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build",
+    "build:android": "node scripts/check-android-env.js && craco build && npx cap sync android",
     "test": "craco test"
   },
   "browserslist": {
