@@ -12,7 +12,7 @@ const Chips = ({ items, value, onChange, testid }) => (
       const on = value.includes(i);
       return (
         <button type="button" key={i} data-testid={`${testid}-${i.replace(/\s/g, "-").toLowerCase()}`} onClick={() => onChange(on ? value.filter((x) => x !== i) : [...value, i])}
-          className={`rounded-full border px-3 py-1 text-xs transition-colors duration-200 ${on ? "border-amber-400 bg-amber-500/15 text-amber-200" : "hover:border-amber-400/50"}`}>{i}</button>
+          className={`min-h-11 sm:min-h-0 rounded-full border px-3 py-1 text-xs transition-colors duration-200 ${on ? "border-amber-400 bg-amber-500/15 text-amber-200" : "hover:border-amber-400/50"}`}>{i}</button>
       );
     })}
   </div>

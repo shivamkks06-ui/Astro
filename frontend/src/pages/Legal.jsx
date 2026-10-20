@@ -40,7 +40,7 @@ export default function Legal() {
       <p className="overline mb-2">Policies</p>
       <h1 data-testid="legal-title" className="text-3xl sm:text-4xl mb-8">{doc[0]}</h1>
       <div className="space-y-4">{doc[1].map((p, i) => <p key={i} className="text-slate-300 leading-relaxed">{p}</p>)}</div>
-      <div className="flex flex-wrap gap-4 mt-12 text-sm">{Object.entries(DOCS).map(([k, v]) => <Link key={k} to={`/legal/${k}`} className="text-amber-300 hover:underline">{v[0]}</Link>)}</div>
+      <div className="flex flex-wrap gap-4 mt-12 text-sm">{Object.entries(DOCS).map(([k, v]) => <Link key={k} to={`/legal/${k}`} className="inline-flex items-center min-h-11 text-amber-300 hover:underline">{v[0]}</Link>)}</div>
     </div>
   );
 }

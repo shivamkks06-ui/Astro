@@ -1,0 +1,35 @@
+{
+  "summary": "Iteration 5 (Android/mobile optimisation). Backend: test_marketplace_e2e.py 27/27 passed, then cleanup_test_data.py was run. GET /api/astrologers returns next_slot_at on every item. Responsive: Playwright ran at 320/360/375/390/412/430x844 and 1920x800 on /, /discover, /astrologers/{id}, /login, /register, /legal/terms, /account (customer) and /studio (astro1), plus /bookings/{id} at 390. scrollWidth equalled the viewport width on every page, no element overflowed, and there were 0 page errors. Hero h1 is 30px on mobile. Both hero buttons are full width and 48px tall. The mobile menu button is 44x44. Trust pillars span 20 to vw-20. Cards show availability ('Next slot …' matches next_slot_at), the 'View profile & book' CTA, rating/New and the chat rate. History on the web: home->discover (via the sheet)->profile->book dialog->booking, then pay->success->'Go to booking' returns to the booking (history -1). After that, back goes booking->profile->discover->home with no duplicate entries. Login from profile: the redirect to /login?next works, after login you return to the profile, and one back goes to /discover. Overlay-first: the synthetic Escape (the same event closeTopOverlay dispatches) closes only the topmost layer each time (sheet; sort select listbox; the birth-profile select inside the book dialog, then the dialog itself) and the route never changes. app:resume and app:reconnect keep the typed search value and show no spinner. app:resume on the booking page picked up the astrologer accept (the Pay button appeared). Forms: email inputs have type=email, autocomplete=email and inputMode=email. Passwords have current-password/new-password. min_exp has inputMode=numeric. Login fires a single request and its button is disabled while busy. Register is disabled until terms are accepted. Regression: register, logout (/auth/me returns 401 afterwards), all 7 studio tabs, astrologer accept and mock payment -> confirmed all work. Native config was reviewed statically and is correct: adjustMarginsForEdgeToEdge 'auto'; values-v35 sets windowOptOutEdgeToEdgeEnforcement=true and nv_night bar colours; targetSdk 35; adjustResize and singleTask; CapApp.addListener is called only in NativeShell (NetworkBanner uses the separate Network plugin listener).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Layout AuthButtons logout", "issue": "Logging out while on a protected page (/account or /studio, desktop or mobile) lands on /login?next=%2Faccount instead of '/'. From a public page it correctly goes to '/'. RCA: react-router-dom 7 wraps navigation updates in startTransition. setUser(false) inside logout() renders first, at the old location, so Protected renders <Navigate to=/login?next=...> and that overrides nav('/'). Fix: call nav('/', {replace:true}) before awaiting logout(), or make Protected skip the redirect during logout.", "selector": "[data-testid=logout-button]", "priority": "LOW"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Mobile touch targets below 44px", "issues": [
+        "/account tabs (tab-bookings, tab-birth, tab-payments, tab-safety, tab-privacy) and /studio tabs (studio-tab-*) are 28px tall. The TabsTrigger component was not raised to h-11 on mobile.",
+        "Slot chips on the astrologer profile (slot-{id}) are 38px tall (px-3 py-2 text-xs)",
+        "Language chips in the studio profile form (astro-lang-*) are 30px tall",
+        "The Close (X) button in the mobile sheet is about 16px. The logout-button (size sm) is 40px in the sheet",
+        "Legal page side links (Terms of Service / Privacy Policy etc.) are 20px tall. The brand-logo link is 28px tall"
+      ]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_marketplace_e2e.py", "/app/tests/iter5_responsive.py", "/app/tests/iter5_history.py", "/app/tests/iter5_regression.py", "/app/tests/iter5_logout.py", "/app/tests/iter5_cleanup_bookings.py", "/app/test_reports/pytest/iter5.xml"],
+  "action_items": [
+    "LOW: logout from a protected route ends on /login?next=... (see RCA). Navigate to '/' before calling logout().",
+    "LOW: give TabsTrigger h-11 (sm:h-auto) on mobile; give slot chips and studio language chips min-h-11; make the sheet Close button 44px; give the logout sm button and the legal nav links min-h-11 on mobile"
+  ],
+  "critical_code_review_comments": [
+    "handleBack, closeTopOverlay, Login nav(-1) when state.from===next, and PayPage goBack() using history idx are all correct on the web. On a cold deep link (idx 0), PayPage replaces with the booking/studio route, which is correct.",
+    "OVERLAY selector in native.js includes role=menu and listbox. Popover content (role=dialog) is also covered. A sonner toast is not an overlay, so it is correctly ignored.",
+    "useApi silent refresh keeps the stale data when a background refresh fails. Good."
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "100% (27/27)", "frontend": "~97% (1 low-priority logout redirect bug and some minor sub-44px targets)"},
+  "seed_data_creation": "No seed data. One demo-customer booking (1aa56bf4...) was created, paid and then removed with its payment, journal, ledger entries and mock record; slot 233625006ec5... was re-opened (status open). One TEST_ user and all backend-suite TEST_ data were removed by cleanup_test_data.py. DB check afterwards: 0 bookings, 0 non-open slots, 0 test_ users.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "The local Python Playwright scripts in /app/tests/iter5_*.py cover the responsive audit, the back-history flow, regression and logout. iter5_cleanup_bookings.py <booking_id...> removes UI-created demo bookings and re-opens their slots. The container clock reads Oct 2026 and demo slots are 20 Oct 2026."
+}

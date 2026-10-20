@@ -41,7 +41,7 @@ function Slots({ slots, slot, setSlot }) {
     <div className="flex flex-wrap gap-2">
       {slots.map((s) => (
         <button key={s.id} data-testid={`slot-${s.id}`} onClick={() => setSlot(s)}
-          className={`rounded-lg border px-3 py-2 text-xs transition-colors duration-200 ${slot?.id === s.id ? "border-amber-400 bg-amber-500/10 text-amber-200" : "bg-card hover:border-amber-400/60"}`}>
+          className={`min-h-11 rounded-lg border px-3 py-2 text-[13px] transition-colors duration-200 ${slot?.id === s.id ? "border-amber-400 bg-amber-500/10 text-amber-200" : "bg-card hover:border-amber-400/60"}`}>
           {fmtDate(s.start_at)} · {s.duration_min}m
         </button>
       ))}

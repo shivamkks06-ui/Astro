@@ -23,7 +23,7 @@ function AuthButtons({ user, onNav }) {
   const nav = useNavigate();
   if (user) {
     return (
-      <Button data-testid="logout-button" variant="outline" size="sm" onClick={async () => { await logout(); onNav?.(); nav("/", { replace: true }); }}>
+      <Button data-testid="logout-button" variant="outline" size="sm" className="h-11 sm:h-8" onClick={async () => { onNav?.(); nav("/", { replace: true }); await logout(); }}>
         <LogOut className="h-4 w-4 mr-2" />Log out
       </Button>
     );
@@ -42,7 +42,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#0B0F19]/80 border-b border-amber-500/10 pt-[env(safe-area-inset-top)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 h-14 sm:h-16 flex items-center justify-between gap-4">
-        <Link to="/" data-testid="brand-logo" className="flex items-center gap-2">
+        <Link to="/" data-testid="brand-logo" className="flex items-center gap-2 min-h-11">
           <Sparkles className="h-5 w-5 text-amber-400" />
           <span className="font-display text-lg tracking-wider text-amber-100">NakshatraVeda</span>
         </Link>
