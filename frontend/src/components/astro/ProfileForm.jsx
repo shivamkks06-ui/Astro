@@ -41,11 +41,11 @@ export function ProfileForm({ profile, cfg, calls, reload }) {
     } catch (e2) { toast.error(errMsg(e2)); } finally { setBusy(false); }
   };
   return (
-    <form onSubmit={save} className="grid lg:grid-cols-2 gap-8" data-testid="astro-profile-form">
+    <form onSubmit={save} className="grid grid-cols-1 lg:grid-cols-2 gap-8" data-testid="astro-profile-form">
       <div className="space-y-4">
         <div className="space-y-1.5"><Label>Display name</Label><Input data-testid="astro-display-name" value={f.display_name} onChange={(e) => setF({ ...f, display_name: e.target.value })} className="bg-background" /></div>
         <div className="space-y-1.5"><Label>About you</Label><Textarea data-testid="astro-bio" rows={6} maxLength={2000} value={f.bio} onChange={(e) => setF({ ...f, bio: e.target.value })} placeholder="Your approach and background. Don't promise outcomes." /></div>
-        <div className="space-y-1.5"><Label>Years of experience</Label><Input data-testid="astro-experience" type="number" min="0" max="70" value={f.experience_years} onChange={(e) => setF({ ...f, experience_years: e.target.value })} className="bg-background" /></div>
+        <div className="space-y-1.5"><Label>Years of experience</Label><Input data-testid="astro-experience" type="number" inputMode="numeric" min="0" max="70" value={f.experience_years} onChange={(e) => setF({ ...f, experience_years: e.target.value })} className="bg-background" /></div>
         <div className="space-y-1.5"><Label>Stated qualifications (shown as "not yet reviewed" until credentials are approved)</Label><Input data-testid="astro-credential-summary" maxLength={300} value={f.credential_summary} onChange={(e) => setF({ ...f, credential_summary: e.target.value })} className="bg-background" /></div>
         <div className="space-y-2"><Label>Languages</Label><Chips testid="astro-lang" items={cfg.languages} value={f.languages} onChange={(v) => setF({ ...f, languages: v })} /></div>
         <div className="space-y-2"><Label>Expertise</Label><Chips testid="astro-exp" items={cfg.expertise} value={f.expertise} onChange={(v) => setF({ ...f, expertise: v })} /></div>
@@ -58,7 +58,7 @@ export function ProfileForm({ profile, cfg, calls, reload }) {
               <input type="checkbox" data-testid={`astro-mode-${m}`} className="accent-amber-400" checked={f.modes_enabled.includes(m)}
                 onChange={(e) => setF({ ...f, modes_enabled: e.target.checked ? [...f.modes_enabled, m] : f.modes_enabled.filter((x) => x !== m) })} />
               <span className="capitalize w-14 text-sm">{m}</span>
-              <Input data-testid={`astro-rate-${m}`} type="number" min="0" step="0.5" value={f.rates[m]} onChange={(e) => setF({ ...f, rates: { ...f.rates, [m]: e.target.value } })} className="bg-background w-32" />
+              <Input data-testid={`astro-rate-${m}`} type="number" inputMode="decimal" min="0" step="0.5" value={f.rates[m]} onChange={(e) => setF({ ...f, rates: { ...f.rates, [m]: e.target.value } })} className="bg-background w-32" />
             </div>
           ))}
           {!calls.operational && <p className="text-xs text-muted-foreground">Customers can't book audio/video yet because calling isn't live.</p>}

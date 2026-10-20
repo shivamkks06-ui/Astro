@@ -51,7 +51,7 @@ function KindCard({ kind, kase, docs, reload }) {
 export function Verification({ data, reload }) {
   const byKind = Object.fromEntries(data.cases.map((c) => [c.kind, c]));
   return (
-    <div className="grid lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       <KindCard kind="identity" kase={byKind.identity} docs={data.documents} reload={reload} />
       <KindCard kind="credential" kase={byKind.credential} docs={data.documents} reload={reload} />
       <p className="text-xs text-muted-foreground lg:col-span-2">Documents stay in private storage. Only authorised reviewers can open them, through 5-minute links, and every access is logged.</p>

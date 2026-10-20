@@ -22,7 +22,7 @@ export function Listing({ data, plans, reload }) {
         {p.listing_expires_at && new Date(p.listing_expires_at) > new Date() ? <>Listing active until <b className="text-amber-300">{fmtDate(p.listing_expires_at)}</b>. Buying again extends it from that date.</> : "No active listing. Customers can't find or book you until you have one."}
       </div>
       {p.identity_status !== "approved" && <p className="text-sm text-amber-200" data-testid="listing-requires-kyc">Your identity verification has to be approved before you can buy a listing.</p>}
-      <div className="grid sm:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
         {plans.map((pl) => (
           <div key={pl.id} className="glass gold-border rounded-2xl p-6 space-y-3" data-testid={`plan-${pl.code}`}>
             <p className="overline">{pl.code}</p>

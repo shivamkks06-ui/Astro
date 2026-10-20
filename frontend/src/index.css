@@ -30,10 +30,13 @@
 
 @layer base {
     * { @apply border-border; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body {
         @apply bg-background text-foreground;
         font-family: "Plus Jakarta Sans", sans-serif;
         -webkit-font-smoothing: antialiased;
+        -webkit-tap-highlight-color: transparent;
+        overflow-wrap: break-word;
     }
     h1, h2, h3, .font-serif { font-family: "Playfair Display", serif; letter-spacing: -0.01em; }
     ::selection { background: rgba(230, 179, 37, 0.35); }
@@ -43,6 +46,8 @@
 .font-mono { font-family: "JetBrains Mono", monospace; }
 .overline { @apply text-xs uppercase font-medium text-amber-400/90; letter-spacing: 0.2em; }
 .glass { background: rgba(19, 25, 43, 0.72); backdrop-filter: blur(18px); border: 1px solid rgba(230, 179, 37, 0.16); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.37); }
+/* many blurred cards scroll poorly on mid-range phones; keep the look with an opaque fill */
+@media (max-width: 640px) { .glass { background: rgba(19, 25, 43, 0.94); backdrop-filter: none; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3); } }
 .gold-border { position: relative; }
 .gold-border::before { content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; background: linear-gradient(135deg, rgba(230,179,37,.7), rgba(245,158,11,.05) 40%, rgba(230,179,37,.4)); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
 .starfield { background-image: radial-gradient(1px 1px at 20% 30%, rgba(255,255,255,.5), transparent), radial-gradient(1px 1px at 70% 80%, rgba(255,255,255,.35), transparent), radial-gradient(1.5px 1.5px at 40% 60%, rgba(230,179,37,.5), transparent), radial-gradient(1px 1px at 85% 20%, rgba(255,255,255,.4), transparent); background-size: 340px 340px; }

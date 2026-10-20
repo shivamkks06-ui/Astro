@@ -18,7 +18,7 @@ export function Slots({ durations }) {
   };
   const del = async (id) => { try { await api.delete(`/astrologer/slots/${id}`); reload(); } catch (e) { toast.error(errMsg(e)); } };
   return (
-    <div className="grid lg:grid-cols-[1fr_1.5fr] gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.5fr] gap-8">
       <form onSubmit={add} className="rounded-2xl border p-6 space-y-4 bg-card/60 h-fit">
         <h3 className="text-lg">Add an availability slot</h3>
         <Input data-testid="slot-start" type="datetime-local" value={start} onChange={(e) => setStart(e.target.value)} className="bg-background" />

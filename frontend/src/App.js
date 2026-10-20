@@ -1,6 +1,5 @@
 import "@/App.css";
-import { useEffect } from "react";
-import { initNativeShell } from "./lib/native";
+import { NativeShell } from "./lib/native";
 import { NetworkBanner } from "./components/NetworkBanner";
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { Toaster } from "./components/ui/sonner";
@@ -28,10 +27,10 @@ function Protected({ roles, children }) {
 }
 
 function App() {
-  useEffect(() => initNativeShell(), []);
   return (
     <AuthProvider>
       <BrowserRouter>
+        <NativeShell />
         <div className="min-h-screen flex flex-col">
           <Header />
           <NetworkBanner />

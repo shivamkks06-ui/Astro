@@ -58,7 +58,10 @@ async def list_astrologers(language: Optional[str] = None, expertise: Optional[s
     order = {"rating": [("rating_avg", -1)], "experience": [("experience_years", -1)], "price": [("rates.chat", 1)]}.get(sort, [("rating_avg", -1)])
     total = await db.astrologer_profiles.count_documents(f)
     items = await db.astrologer_profiles.find(f).sort(order).skip((page - 1) * limit).limit(limit).to_list(limit)
-    return {"items": [public_profile(p) for p in items], "total": total, "page": page}
+    nxt = {r["_id"]: r["at"] async for r in db.slots.aggregate([
+        {"$match": {"astrologer_id": {"$in": [p["_id"] for p in items]}, "status": "open", "start_at": {"$gt": now()}}},
+        {"$group": {"_id": "$astrologer_id", "at": {"$min": "$start_at"}}}])}
+    return {"items": [{**public_profile(p), "next_slot_at": nxt.get(p["_id"])} for p in items], "total": total, "page": page}
 
 
 @router.get("/astrologers/{aid}")

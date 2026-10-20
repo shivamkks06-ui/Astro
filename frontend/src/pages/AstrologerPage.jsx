@@ -62,13 +62,13 @@ export default function AstrologerPage() {
   const calls = cfg.data?.calls || { operational: false };
 
   const startBooking = () => {
-    if (!user) return nav(`/login?next=/astrologers/${id}`);
+    if (!user) return nav(`/login?next=/astrologers/${id}`, { state: { from: `/astrologers/${id}` } });
     if (user.role !== "customer") return toast.error("Only customer accounts can book consultations");
     if (!slot) return toast.error("Please choose a time slot");
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-8 py-12 grid lg:grid-cols-[1.4fr_1fr] gap-10">
+    <div className="max-w-6xl mx-auto px-5 sm:px-8 py-6 sm:py-12 grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-6 sm:gap-10">
       <div className="space-y-8">
         <div className="flex items-start gap-5">
           <Initials name={a.display_name} className="h-20 w-20 text-2xl" />

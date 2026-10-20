@@ -26,7 +26,7 @@ export function BirthProfiles() {
   };
   const del = async (id) => { try { await api.delete(`/me/birth-profiles/${id}`); reload(); } catch (e) { toast.error(errMsg(e)); } };
   return (
-    <div className="grid lg:grid-cols-2 gap-8">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       <form onSubmit={save} className="rounded-2xl border p-6 space-y-4 bg-card/60" data-testid="birth-profile-form">
         <h3 className="text-lg">Add a birth profile</h3>
         {[["label", "Label (e.g. Self, Mother)", "text"], ["full_name", "Full name", "text"], ["birth_date", "Date of birth", "date"], ["birth_time", "Time of birth (optional)", "time"], ["birth_place", "Place of birth", "text"]].map(([k, l, t]) => (

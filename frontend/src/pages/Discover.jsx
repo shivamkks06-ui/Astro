@@ -37,18 +37,18 @@ export default function Discover() {
   const pages = list.data ? Math.max(1, Math.ceil(list.data.total / 12)) : 1;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-8 py-12">
+    <div className="max-w-7xl mx-auto px-5 sm:px-8 py-8 sm:py-12">
       <p className="overline mb-2">Discover</p>
-      <h1 className="text-3xl sm:text-4xl mb-8">Find your astrologer</h1>
-      <div className="glass rounded-2xl p-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-6 items-center mb-10">
+      <h1 className="text-[1.75rem] sm:text-4xl mb-5 sm:mb-8">Find your astrologer</h1>
+      <div className="glass rounded-2xl p-4 sm:p-5 grid grid-cols-1 gap-3 sm:gap-4 sm:grid-cols-2 lg:grid-cols-6 items-center mb-6 sm:mb-10">
         <div className="relative lg:col-span-2">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input data-testid="filter-search" className="pl-9 bg-card" placeholder="Search by name" value={f.q} onChange={(e) => set("q")(e.target.value)} />
         </div>
         <Pick testid="filter-language" value={f.language} onChange={set("language")} items={cfg.data?.languages || []} placeholder="Any language" />
         <Pick testid="filter-expertise" value={f.expertise} onChange={set("expertise")} items={cfg.data?.expertise || []} placeholder="Any expertise" />
-        <Input data-testid="filter-min-exp" type="number" min="0" className="bg-card" placeholder="Min. years" value={f.min_exp} onChange={(e) => set("min_exp")(e.target.value)} />
-        <label className="flex items-center gap-2 text-sm"><Switch data-testid="filter-credential-verified" checked={f.verified_credential} onCheckedChange={set("verified_credential")} />Credentials reviewed</label>
+        <Input data-testid="filter-min-exp" type="number" inputMode="numeric" min="0" className="bg-card" placeholder="Min. years" value={f.min_exp} onChange={(e) => set("min_exp")(e.target.value)} />
+        <label className="flex items-center gap-2 text-sm min-h-11"><Switch data-testid="filter-credential-verified" checked={f.verified_credential} onCheckedChange={set("verified_credential")} />Credentials reviewed</label>
       </div>
       <div className="flex justify-between items-center mb-6 text-sm text-muted-foreground">
         <span data-testid="results-count">{list.data ? `${list.data.total} astrologers` : ""}</span>
@@ -60,7 +60,7 @@ export default function Discover() {
       {list.loading ? <Loading /> : list.error ? <ErrorState error={list.error} onRetry={list.reload} /> : list.data.items.length === 0 ? (
         <Empty title="No astrologers match these filters" hint="Try removing a filter." />
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">{list.data.items.map((a, i) => <AstroCard key={a.id} a={a} i={i} />)}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">{list.data.items.map((a, i) => <AstroCard key={a.id} a={a} i={i} />)}</div>
       )}
       {pages > 1 && (
         <div className="flex justify-center gap-3 mt-10">

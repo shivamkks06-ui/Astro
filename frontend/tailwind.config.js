@@ -9,6 +9,9 @@ module.exports = {
   ],
   theme: {
     extend: {
+      fontSize: {
+        xs: ['0.8125rem', { lineHeight: '1.25rem' }]
+      },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',

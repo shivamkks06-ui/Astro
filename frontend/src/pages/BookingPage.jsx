@@ -72,7 +72,7 @@ export default function BookingPage() {
   const p = b.price;
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-8 py-10 grid lg:grid-cols-[1fr_1.2fr] gap-8">
+    <div className="max-w-6xl mx-auto px-5 sm:px-8 py-6 sm:py-10 grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-6 sm:gap-8">
       <div className="space-y-6">
         <div>
           <p className="overline mb-2">Booking</p>
