@@ -62,7 +62,7 @@ const go = (id) => document.getElementById(id)?.scrollIntoView({ behavior: windo
 
 function SectionNav({ reviews }) {
   return (
-    <nav aria-label="Profile sections" className="sticky top-14 sm:top-16 z-30 -mx-5 px-5 py-2 bg-[#0B0F19]/95 border-b border-amber-500/10 flex gap-2 lg:hidden">
+    <nav aria-label="Profile sections" className="sticky top-14 sm:top-16 z-30 -mx-5 px-5 py-2 bg-[#0B1225]/95 border-b border-amber-500/10 flex gap-2 lg:hidden">
       {[["about", "About"], ["reviews", `Reviews (${reviews})`], ["book", "Book"]].map(([k, l]) => (
         <button key={k} data-testid={`profile-tab-${k}`} onClick={() => go(k)} className="min-h-10 rounded-full border px-4 text-[13px] active:bg-amber-500/10">{l}</button>
       ))}
@@ -151,7 +151,7 @@ export default function AstrologerPage() {
         <Button data-testid="book-now-button" className="w-full rounded-full h-12 sm:h-10" onClick={startBooking}>{cta}</Button>
         {slot && <p className="text-[13px] text-center text-muted-foreground" data-testid="selected-slot-summary">{fmtDate(slot.start_at)} · {slot.duration_min} min · {inr(a.rates[mode] * slot.duration_min)} total</p>}
       </aside>
-      <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-amber-500/15 bg-[#0B0F19]/95 backdrop-blur px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-4">
+      <div className="lg:hidden fixed inset-x-0 bottom-0 z-40 border-t border-amber-500/15 bg-[#0B1225]/95 backdrop-blur px-5 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex items-center gap-4">
         <div className="min-w-0 flex-1">
           <p className="text-[13px] text-muted-foreground"><span className="capitalize">{mode}</span> {a.rates[mode] > 0 ? `· ${inr(a.rates[mode])}/min` : ""}</p>
           <p className="text-sm truncate">{slot ? `${fmtDate(slot.start_at)} · ${slot.duration_min}m` : a.slots.length ? "Pick a time slot" : "No open slots"}</p>

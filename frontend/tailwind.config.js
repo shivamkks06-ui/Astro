@@ -18,6 +18,9 @@ module.exports = {
         sm: 'calc(var(--radius) - 4px)'
       },
       colors: {
+        // brand Royal Gold scale; every amber-* utility in the app resolves to it
+        amber: { 50: '#FCF8EA', 100: '#F9EFCB', 200: '#F4D675', 300: '#EDC95A', 400: '#D4AF37', 500: '#D4AF37', 600: '#B08F2A', 700: '#8A6F20', 800: '#66521A', 900: '#463813', 950: '#2A210B' },
+        navy: { DEFAULT: '#0B1225', 2: '#111B32', card: '#16223B' },
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {

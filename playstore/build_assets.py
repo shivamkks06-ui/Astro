@@ -5,7 +5,8 @@ from PIL import Image, ImageDraw, ImageFilter, ImageFont
 ROOT = Path(__file__).parent
 SRC, OUT = ROOT / "src", ROOT / "output"
 APP_ASSETS = ROOT.parent / "frontend" / "assets"
-NAVY, GOLD, MUTED = (11, 15, 25), (230, 179, 37), (203, 213, 225)
+NAVY, GOLD, MUTED = (11, 18, 37), (212, 175, 55), (185, 194, 211)
+PUBLIC = ROOT.parent / "frontend" / "public"
 for d in (OUT / "store", APP_ASSETS):
     d.mkdir(parents=True, exist_ok=True)
 
@@ -40,6 +41,19 @@ def mandala():
     return out
 
 
+def mark():
+    """Small-size mark: central yantra and petals only, the fine planet ring is dropped."""
+    im = Image.open(SRC / "icon_full.jpg").convert("RGB").resize((1024, 1024), Image.LANCZOS)
+    r = 300
+    im = im.crop((512 - r, 512 - r, 512 + r, 512 + r)).resize((1024, 1024), Image.LANCZOS)
+    bg = radial_bg(1024, 1024)
+    mask = Image.new("L", (1024, 1024), 0)
+    ImageDraw.Draw(mask).ellipse((40, 40, 984, 984), fill=255)
+    out = Image.composite(im, bg, mask.filter(ImageFilter.GaussianBlur(10)))
+    ImageDraw.Draw(out).ellipse((40, 40, 984, 984), outline=GOLD, width=22)
+    return out
+
+
 def place(canvas, art, size, center):
     a = art.resize((size, size), Image.LANCZOS)
     canvas.paste(a, (center[0] - size // 2, center[1] - size // 2), a)
@@ -51,16 +65,27 @@ def centered(draw, text, y, f, fill, width):
 
 
 m = mandala()
+k = mark()
+
+# web: favicon, header mark, touch icon
+k.resize((48, 48), Image.LANCZOS).save(PUBLIC / "favicon.png", optimize=True)
+k.resize((96, 96), Image.LANCZOS).save(PUBLIC / "brand-mark.png", optimize=True)
+k.resize((180, 180), Image.LANCZOS).save(PUBLIC / "apple-touch-icon.png", optimize=True)
+k.resize((512, 512), Image.LANCZOS).save(OUT / "store" / "favicon-512.png")
 
 # app icon (full-bleed square; Android/Play apply their own mask)
 icon = radial_bg(1024, 1024)
-place(icon, m, 980, (512, 512))
+kc = k.copy().convert("RGBA")
+cm = Image.new("L", (1024, 1024), 0)
+ImageDraw.Draw(cm).ellipse((40, 40, 984, 984), fill=255)
+kc.putalpha(cm)
+place(icon, kc, 880, (512, 512))
 icon.save(APP_ASSETS / "icon-only.png")
 icon.resize((512, 512), Image.LANCZOS).save(OUT / "store" / "play-icon-512.png")
 
 # adaptive icon layers: foreground kept inside the 66% safe zone
 fg = Image.new("RGBA", (1024, 1024), (0, 0, 0, 0))
-place(fg, m, 700, (512, 512))
+place(fg, kc, 640, (512, 512))
 fg.save(APP_ASSETS / "icon-foreground.png")
 radial_bg(1024, 1024).save(APP_ASSETS / "icon-background.png")
 

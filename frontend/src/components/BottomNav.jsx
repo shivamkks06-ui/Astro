@@ -22,7 +22,7 @@ export function BottomNav() {
   return (
     <>
     <div aria-hidden="true" className="md:hidden h-[65px] pb-[env(safe-area-inset-bottom)] box-content" />
-    <nav data-testid="bottom-nav" aria-label="Main" className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-amber-500/15 bg-[#0B0F19]/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
+    <nav data-testid="bottom-nav" aria-label="Main" className="md:hidden fixed inset-x-0 bottom-0 z-40 border-t border-amber-500/15 bg-[#0B1225]/95 backdrop-blur pb-[env(safe-area-inset-bottom)]">
       <div className="grid grid-cols-3 h-16">
         {items.map(({ to, label, icon: I, end }) => (
           <NavLink key={to} to={to} end={end} replace={pathname === to} onClick={() => haptic()} data-testid={`bottom-nav-${label.toLowerCase().replace(/\s/g, "-")}`}

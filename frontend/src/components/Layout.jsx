@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Menu, Sparkles, LogOut, ShieldCheck } from "lucide-react";
+import { Menu, LogOut, ShieldCheck } from "lucide-react";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
 import { Button } from "./ui/button";
 import { useAuth, homeFor } from "../context/AuthContext";
+
+export const BrandMark = ({ className = "" }) => <img src="/brand-mark.png" alt="" aria-hidden="true" width={64} height={64} className={`${className} rounded-full shrink-0`} />;
 
 const DISCLAIMER = "Astrology services are offered as interpretive guidance, not guaranteed outcomes. They are not a substitute for professional medical, legal or financial advice.";
 
@@ -40,11 +42,14 @@ export function Header() {
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
   return (
-    <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#0B0F19]/80 border-b border-amber-500/10 pt-[env(safe-area-inset-top)]">
+    <header className="sticky top-0 z-50 backdrop-blur-xl bg-[#0B1225]/85 border-b border-amber-500/10 pt-[env(safe-area-inset-top)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-8 h-14 sm:h-16 flex items-center justify-between gap-4">
-        <Link to="/" data-testid="brand-logo" className="flex items-center gap-2 min-h-11">
-          <Sparkles className="h-5 w-5 text-amber-400" />
-          <span className="font-display text-lg tracking-wider text-amber-100">NakshatraVeda</span>
+        <Link to="/" data-testid="brand-logo" aria-label="NakshatraVeda home" className="flex items-center gap-2.5 min-h-11">
+          <BrandMark className="h-8 w-8" />
+          <span className="flex flex-col leading-none">
+            <span className="font-display text-[15px] sm:text-lg tracking-[0.14em] text-amber-200">NAKSHATRAVEDA</span>
+            <span className="hidden sm:block mt-1 text-[10px] uppercase tracking-[0.22em] text-muted-foreground">Verified Vedic Astrologers</span>
+          </span>
         </Link>
         <nav className="hidden md:flex items-center gap-8"><NavLinks user={user} /></nav>
         <div className="hidden md:block"><AuthButtons user={user} /></div>
@@ -54,11 +59,11 @@ export function Header() {
           </SheetTrigger>
           <SheetContent data-testid="mobile-drawer" aria-describedby={undefined} onOpenAutoFocus={(e) => e.preventDefault()} className="bg-card flex flex-col gap-0 p-0 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
             <SheetTitle className="flex items-center gap-2 h-16 px-5 pr-14 border-b border-amber-500/10 text-left">
-              <Sparkles className="h-5 w-5 text-amber-400" /><span className="font-display text-base tracking-wider text-amber-100">NakshatraVeda</span>
+              <BrandMark className="h-7 w-7" /><span className="font-display text-base tracking-[0.14em] text-amber-200">NAKSHATRAVEDA</span>
             </SheetTitle>
             <nav aria-label="Main" className="flex flex-col gap-1 p-3"><NavLinks drawer user={user} onNav={() => setOpen(false)} /></nav>
             <div className="px-3 pt-2"><AuthButtons drawer user={user} onNav={() => setOpen(false)} /></div>
-            <div data-testid="drawer-trust-card" className="mt-auto m-3 rounded-xl border border-amber-500/20 bg-[#0B0F19]/60 p-4 space-y-1.5">
+            <div data-testid="drawer-trust-card" className="mt-auto m-3 rounded-xl border border-amber-500/20 bg-[#0B1225]/60 p-4 space-y-1.5">
               <p className="flex items-center gap-2 text-sm text-amber-200"><ShieldCheck className="h-4 w-4" />Identity-checked astrologers</p>
               <p className="text-xs leading-relaxed text-muted-foreground">Guidance only, never guaranteed outcomes. Clear per-minute prices and refund terms.</p>
             </div>
