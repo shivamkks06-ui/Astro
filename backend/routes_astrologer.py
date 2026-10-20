@@ -12,6 +12,7 @@ from core import db, now, new_id, out, require_roles, audit, rate_limit, get_set
 from finance import create_payment, call_provider_status
 from ledger import astrologer_balances
 from storage import put_object, APP_NAME
+from starlette.concurrency import run_in_threadpool
 from routes_user import photo_url
 
 router = APIRouter(prefix="/api/astrologer")
@@ -101,6 +102,8 @@ def _normalise_photo(data: bytes) -> bytes:
     # re-encode: proves it's a real image, strips EXIF/GPS, and gives cards a small square file
     try:
         img = Image.open(io.BytesIO(data))
+        if img.width * img.height > 40_000_000:
+            raise ValueError("too many pixels")
         img = ImageOps.exif_transpose(img).convert("RGB")
     except Exception:
         raise HTTPException(415, "That file isn't a readable image")
@@ -120,13 +123,13 @@ async def upload_photo(request: Request, file: UploadFile = File(...), user=Depe
     data = await file.read()
     if not data or len(data) > MAX_PHOTO_BYTES:
         raise HTTPException(413, "Photo must be under 5 MB")
-    webp = _normalise_photo(data)
+    webp = await run_in_threadpool(_normalise_photo, data)
     version = new_id()[:12]
     try:
-        res = put_object(f"{APP_NAME}/public/avatars/{user['_id']}/{version}.webp", webp, "image/webp")
+        res = await run_in_threadpool(put_object, f"{APP_NAME}/public/avatars/{user['_id']}/{version}.webp", webp, "image/webp")
     except Exception:
         raise HTTPException(502, "Storage is temporarily unavailable. Please retry.")
-    await db.astrologer_profiles.update_one({"_id": user["_id"]}, {"$set": {"photo_path": res["path"], "photo_version": version, "photo_updated_at": now()}})
+    await db.astrologer_profiles.update_one({"_id": user["_id"]}, {"$set": {"photo_path": res["path"], "photo_version": version, "photo_updated_at": now()}, "$unset": {"photo_removed_reason": "", "photo_removed_at": ""}})
     await audit(user, "profile_photo_uploaded", "astrologer_profile", user["_id"], {"version": version}, request)
     return {"photo_url": f"/api/astrologers/{user['_id']}/photo?v={version}"}
 

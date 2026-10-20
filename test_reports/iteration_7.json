@@ -1,0 +1,34 @@
+{
+  "summary": "Iteration 7: tested the astrologer profile photo feature on the backend and the frontend. Backend: 17/17 pytest checks pass (tests/test_astrologer_photo.py). Upload returns photo_url /api/astrologers/{id}/photo?v=... The GET returns a 512x512 image/webp. EXIF (camera Make/Model) is stripped. The JSON for the profile, the list and the details never exposes photo_path. 'Change photo' produces a new version. PDF, text and a renamed non-image all return 415. A 100x100 image returns 422. Over 5 MB returns 413. A customer gets 403 and a logged-out user gets 401. When suspended, the photo returns 404, and after reactivation it returns 200. A non-admin (customer or astrologer) calling admin remove gets 403. Admin remove returns 200, the photo then returns 404, audit_logs gets profile_photo_removed_by_admin, and a second remove returns 404. DELETE also makes the photo return 404. The profile PUT regression passes. Frontend: the studio Profile tab upload of a JPG shows the toast 'Photo updated'. The avatar loads (naturalWidth 512) and is round (object-cover, 9999px radius). The button switches to 'Change photo'. A PNG change gives a new src. A 100x100 file shows the toast 'Photo must be at least 200×200 pixels'. Remove goes back to initials and hides the Remove button. 'Save profile' still works and keeps the photo. On landing, discover and the profile page at 1920 and 390, astro1 shows the img at 54x54 on cards and 78x78 on the profile, square and round. astro2 still shows initials. There is no horizontal overflow (scrollWidth equals the viewport) and no page errors. Admin: the Astrologers tab has a Photo column with a thumbnail. 'Remove photo' with a reason works, the row updates, and the public photo_url becomes null.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "GET /api/astrologers/{id}/photo", "issue": "The backend sends 'Cache-Control: public, max-age=31536000, immutable' (checked on :8001). The preview ingress rewrites it to 'no-store, no-cache, must-revalidate'. This is an environment matter, not an app bug, and it needs re-checking in production."},
+      {"endpoint": "GET /api/astrologers/{id}/photo", "issue": "The 'v' query param is ignored, so an old versioned URL serves the current photo. Combined with the immutable cache, a photo removed by an admin can stay cached in browsers and CDNs for up to a year under its old URL. Consider a shorter max-age, or 404 when v != photo_version."},
+      {"endpoint": "POST /api/astrologer/photo, GET photo", "issue": "storage put_object/get_object use synchronous requests inside async routes, which blocks the event loop. Every card view triggers a storage fetch on cache miss. Use run_in_threadpool or an async client."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [{"screen": "Admin Astrologers > Remove photo", "issues": ["The success toast is a generic 'Done'. 'Photo removed' would be clearer."]}]
+  },
+  "test_report_links": ["/app/backend/tests/test_astrologer_photo.py", "/app/test_reports/pytest/iter7_photo.xml"],
+  "action_items": [
+    "Optional: make the photo GET 404 (or redirect) when the v param doesn't match photo_version, or reduce max-age, so that admin-removed photos don't persist in caches.",
+    "Optional: wrap the sync storage calls in run_in_threadpool.",
+    "Optional: the astrologer isn't told about an admin removal or its reason. photo_removed_reason is stored but never surfaced in the studio. They can also re-upload immediately."
+  ],
+  "critical_code_review_comments": [
+    "The rate_limit (10/hour) runs before validation, so rejected uploads also use up the quota. That is fine, but QA can hit it quickly.",
+    "The full file is read into memory before the 5 MB check. Pillow's decompression-bomb protection only warns between about 89M and 178M pixels, so a small PNG with huge dimensions could use a lot of RAM. Consider checking img.size right after Image.open, before convert/exif_transpose.",
+    "Old avatar objects are never deleted from storage when a photo is replaced or removed, so orphaned public objects build up.",
+    "The admin list returns photo_path (storage_path is in HIDE, but photo_path isn't). This is admin-only, so it is low risk."
+  ],
+  "updated_files": ["/app/backend/tests/test_astrologer_photo.py"],
+  "success_rate": {"backend": "100% (17/17)", "frontend": "100%"},
+  "seed_data_creation": "Created 3 TEST_ astrologers (test_photo_*@testmail.in) and removed them with tests/cleanup_test_data.py. Photos were deleted from demo.astro1 and demo.astro2 (photo_url is null for both). The leftover photo_removed_reason, photo_removed_at and photo_updated_at fields were unset on demo profiles. Audit log rows remain.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Run with: pytest tests/test_astrologer_photo.py -n 0 (pytest.ini adds xdist, and -n 0 keeps the upload and delete order deterministic). The rejection tests use a fresh TEST_ astrologer because of the 10 uploads/hour rate limit. Demo IDs: astro1 9406cb50672f439488f811596dcd39d7, astro2 7ef9b83aa9d943a2aec95d21d85899ab."
+}

@@ -37,7 +37,7 @@ LISTS = {
     "deletion_requests": (["email"], ["status"]),
     "webhook_events": ([], ["type", "status"]),
 }
-HIDE = ("password_hash", "idempotency_key", "storage_path", "history")
+HIDE = ("password_hash", "idempotency_key", "storage_path", "photo_path", "history")
 
 
 def _coerce(v: str):

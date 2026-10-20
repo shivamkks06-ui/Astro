@@ -8,6 +8,7 @@ from pymongo.errors import DuplicateKeyError
 from core import db, now, new_id, out, current_user, require_roles, audit, rate_limit, get_settings, rx, public_filter, LANGUAGES, EXPERTISE, MODES, SLOT_DURATIONS
 from finance import get_provider, call_provider_status
 from storage import get_object
+from starlette.concurrency import run_in_threadpool
 
 router = APIRouter(prefix="/api")
 
@@ -83,13 +84,14 @@ async def get_astrologer(aid: str):
 
 
 @router.get("/astrologers/{aid}/photo")
-async def astrologer_photo(aid: str):
+async def astrologer_photo(aid: str, v: Optional[str] = None):
     # profile photos are public by design; identity documents never use this path
-    p = await db.astrologer_profiles.find_one({"_id": aid, "account_status": "active"}, {"photo_path": 1})
-    if not p or not p.get("photo_path"):
+    p = await db.astrologer_profiles.find_one({"_id": aid, "account_status": "active"}, {"photo_path": 1, "photo_version": 1})
+    # old versioned URLs stop working once a photo is replaced or removed, so immutable caching is safe
+    if not p or not p.get("photo_path") or v != p.get("photo_version"):
         raise HTTPException(404, "No photo")
     try:
-        data, ctype = get_object(p["photo_path"])
+        data, ctype = await run_in_threadpool(get_object, p["photo_path"])
     except Exception:
         raise HTTPException(502, "Photo temporarily unavailable")
     return Response(content=data, media_type=ctype, headers={"Cache-Control": "public, max-age=31536000, immutable"})

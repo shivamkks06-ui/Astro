@@ -25,6 +25,9 @@ export function PhotoUpload({ profile, onChange }) {
       <div className="space-y-2 min-w-0">
         <p className="text-sm font-medium">Profile photo</p>
         <p className="text-xs text-muted-foreground">A clear, recent photo of your face. JPG, PNG or WEBP under 5 MB. We crop it to a square and remove location data. Customers see it on your card.</p>
+        {!profile.photo_url && profile.photo_removed_reason && (
+          <p data-testid="photo-removed-notice" className="text-xs text-red-300">Our team removed your last photo: {profile.photo_removed_reason}. Please upload one that follows the guidelines.</p>
+        )}
         <input ref={input} type="file" accept="image/jpeg,image/png,image/webp" className="hidden" data-testid="photo-file-input" onChange={(e) => upload(e.target.files?.[0])} />
         <div className="flex flex-wrap gap-2">
           <Button type="button" size="sm" data-testid="photo-choose-button" disabled={busy} onClick={() => input.current?.click()}>

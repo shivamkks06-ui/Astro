@@ -41,6 +41,10 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - Cards show next_slot_at availability (new API field) and a book CTA
 - Native: values-v35 edge-to-edge opt-out with dark bars, adjustMarginsForEdgeToEdge auto, adjustResize; silent data refresh on resume/reconnect
 
+## Implemented (2026-10-20), Astrologer profile photos
+- POST/DELETE /api/astrologer/photo: JPG/PNG/WEBP up to 5 MB, at least 200px; re-encoded to a 512px WEBP with EXIF stripped; versioned public URL /api/astrologers/{id}/photo?v= (old versions 404)
+- Cards, profile page and studio show the photo (Avatar), falling back to initials; admin can remove a photo with a reason (audited), and the astrologer sees the reason
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)
