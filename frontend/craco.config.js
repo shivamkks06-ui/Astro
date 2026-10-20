@@ -123,6 +123,18 @@ let webpackConfig = {
         ],
       };
 
+      // Append the inset longhand fallback to CRA's own postcss-loader (keeps tailwind + preset-env intact)
+      const insetFallback = require("./scripts/postcss-inset-fallback");
+      const walk = (rules) => (rules || []).forEach((r) => {
+        if (r.oneOf) walk(r.oneOf);
+        (Array.isArray(r.use) ? r.use : []).forEach((u) => {
+          const opts = u && u.loader && u.loader.includes("postcss-loader") && u.options && u.options.postcssOptions;
+          if (opts && Array.isArray(opts.plugins)) opts.plugins.push(insetFallback);
+          else if (opts && typeof opts.plugins === "function") { const base = opts.plugins; opts.plugins = (...a) => [...base(...a), insetFallback]; }
+        });
+      });
+      walk(webpackConfig.module && webpackConfig.module.rules);
+
       // Add health check plugin to webpack if enabled
       if (config.enableHealthCheck && healthPluginInstance) {
         webpackConfig.plugins.push(healthPluginInstance);

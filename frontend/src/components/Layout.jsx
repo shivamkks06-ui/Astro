@@ -1,37 +1,37 @@
 import { useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { Menu, Sparkles, LogOut } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger } from "./ui/sheet";
+import { Menu, Sparkles, LogOut, ShieldCheck } from "lucide-react";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "./ui/sheet";
 import { Button } from "./ui/button";
 import { useAuth, homeFor } from "../context/AuthContext";
 
 const DISCLAIMER = "Astrology services are offered as interpretive guidance, not guaranteed outcomes. They are not a substitute for professional medical, legal or financial advice.";
 
-function NavLinks({ user, onNav }) {
+function NavLinks({ user, onNav, drawer }) {
   const links = [{ to: "/discover", label: "Find Astrologers" }, { to: "/legal/guidelines", label: "Safety & Guidelines" }];
   if (user) links.push({ to: homeFor(user), label: user.role === "admin" ? "Admin Console" : user.role === "astrologer" ? "Astrologer Studio" : "My Account" });
   return links.map((l) => (
     <NavLink key={l.to} to={l.to} onClick={onNav} data-testid={`nav-${l.to.replace(/\//g, "-").slice(1)}`}
-      className={({ isActive }) => `text-base md:text-sm py-3 md:py-0 whitespace-nowrap transition-colors duration-200 ${isActive ? "text-amber-300" : "text-slate-300 hover:text-amber-200"}`}>
+      className={({ isActive }) => `${drawer ? "flex items-center min-h-12 px-3 rounded-lg text-base active:bg-amber-500/10" : "text-sm"} whitespace-nowrap transition-colors duration-200 ${isActive ? "text-amber-300" + (drawer ? " bg-amber-500/10" : "") : "text-slate-200 hover:text-amber-200"}`}>
       {l.label}
     </NavLink>
   ));
 }
 
-function AuthButtons({ user, onNav }) {
+function AuthButtons({ user, onNav, drawer }) {
   const { logout } = useAuth();
   const nav = useNavigate();
   if (user) {
     return (
-      <Button data-testid="logout-button" variant="outline" size="sm" className="h-11 sm:h-8" onClick={async () => { onNav?.(); nav("/", { replace: true }); await logout(); }}>
+      <Button data-testid="logout-button" variant="outline" size="sm" className={drawer ? "w-full h-12 rounded-full" : "h-11 sm:h-8"} onClick={async () => { onNav?.(); nav("/", { replace: true }); await logout(); }}>
         <LogOut className="h-4 w-4 mr-2" />Log out
       </Button>
     );
   }
   return (
-    <div className="flex gap-2">
-      <Button asChild variant="ghost" size="sm"><Link data-testid="nav-login" to="/login" onClick={onNav}>Log in</Link></Button>
-      <Button asChild size="sm" className="rounded-full"><Link data-testid="nav-register" to="/register" onClick={onNav}>Join</Link></Button>
+    <div className={drawer ? "flex flex-col gap-3" : "flex gap-2"}>
+      <Button asChild variant={drawer ? "outline" : "ghost"} size="sm" className={drawer ? "w-full h-12 rounded-full" : ""}><Link data-testid="nav-login" to="/login" onClick={onNav}>Log in</Link></Button>
+      <Button asChild size="sm" className={`rounded-full ${drawer ? "w-full h-12" : ""}`}><Link data-testid="nav-register" to="/register" onClick={onNav}>Join</Link></Button>
     </div>
   );
 }
@@ -52,9 +52,16 @@ export function Header() {
           <SheetTrigger asChild className="md:hidden">
             <Button data-testid="mobile-menu-button" aria-label="Open menu" variant="ghost" size="icon"><Menu className="h-6 w-6" /></Button>
           </SheetTrigger>
-          <SheetContent className="bg-card flex flex-col gap-2 pt-14 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-            <NavLinks user={user} onNav={() => setOpen(false)} />
-            <div className="pt-4"><AuthButtons user={user} onNav={() => setOpen(false)} /></div>
+          <SheetContent data-testid="mobile-drawer" aria-describedby={undefined} className="bg-card flex flex-col gap-0 p-0 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+            <SheetTitle className="flex items-center gap-2 h-16 px-5 pr-14 border-b border-amber-500/10 text-left">
+              <Sparkles className="h-5 w-5 text-amber-400" /><span className="font-display text-base tracking-wider text-amber-100">NakshatraVeda</span>
+            </SheetTitle>
+            <nav aria-label="Main" className="flex flex-col gap-1 p-3"><NavLinks drawer user={user} onNav={() => setOpen(false)} /></nav>
+            <div className="px-5 pt-2"><AuthButtons drawer user={user} onNav={() => setOpen(false)} /></div>
+            <div data-testid="drawer-trust-card" className="mt-auto m-4 rounded-xl border border-amber-500/20 bg-[#0B0F19]/60 p-4 space-y-1.5">
+              <p className="flex items-center gap-2 text-sm text-amber-200"><ShieldCheck className="h-4 w-4" />Identity-checked astrologers</p>
+              <p className="text-xs leading-relaxed text-muted-foreground">Guidance only, never guaranteed outcomes. Clear per-minute prices and refund terms.</p>
+            </div>
           </SheetContent>
         </Sheet>
       </div>
