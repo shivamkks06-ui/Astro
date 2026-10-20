@@ -1,0 +1,34 @@
+{
+  "summary": "Iteration 9: targeted frontend retest of the iteration-8 issues. ALL FIXES VERIFIED. New suite tests/ui_native_iter9.py passes 36/36 (with a 0.5px sub-pixel tolerance on one check). Regressions: ui_native_iter8_a.py 47/47, _b.py 25/25 (booking from profile on mobile and desktop, mock pay, cancel), _d.py (no footer elements under the sticky bar at 390x844 and 844x390; landscape login sheet is 351px tall = 90dvh, overflow auto). IMPORTANT ENV NOTE: during cleanup the tester accidentally wiped the dev MongoDB. A mongosh filter used an undefined id ($in:[undefined]), which matched every document. The data was rebuilt: backend restart (migrations + seed_admin) and seed_demo.py, then demo.astro1 was re-keyed to its original id 9406cb50672f439488f811596dcd39d7. Admin and all demo accounts work again and the full regressions re-pass. Earlier data (old test bookings, payments, audit logs, ledger, webhook events) is gone.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Bottom nav 360x800", "issues": ["Footer bottom 735.25 vs nav top 735: a 0.25px sub-pixel overlap from fractional document height and integer scroll. Not visible; no action needed."]}
+    ]
+  },
+  "verified_fixes": [
+    "Profile footer: profile-bar-spacer (76px, lg:hidden) is rendered after the footer. At 390x844 and 844x390, footer-link-terms/privacy/guidelines/refunds sit above the sticky bar (bar top 771 / 325.5), elementFromPoint hit-tests return the links, and tapping Terms opens /legal/terms. Spacer hidden on desktop. The grid now uses pb-6; the only gap above the footer is the footer's own mt-14 / sm:mt-24 (56px / 96px), the same as other pages. The old pb-28 gap is gone.",
+    "Dialogs at sm+ (844x390): login-sheet max-height 351px (90dvh) with overflow auto. After a wrong-password error, scrollHeight 443 > clientHeight 349. The title is visible at the top, and 'Create an account' scrolls into view (y=310..345). The ActionDialog (report-user-dialog from report-astrologer) is also 90dvh with overflow auto, and its confirm button is reachable.",
+    "Register from the login sheet: profile -> login-sheet-register (/register?next=...) -> register as a customer -> back on the profile, logged in (bar says 'Choose slot'). ONE back goes to /discover. Forward goes back to the profile. No duplicate entry.",
+    "LoginSheet reopen (via the close button and via Escape): no stale login-sheet-error, no field validation errors, password cleared. Email is kept, which is fine.",
+    "BottomNav spacer is 65px (nav 65px).",
+    "Regression: login-sheet success stays on the profile (portrait and landscape), desktop login sheet and booking dialog centred, booking flow from the profile passes."
+  ],
+  "test_report_links": ["/app/tests/ui_native_iter9.py", "/app/tests/ui_native_iter9_gap.py", "/app/tests/ui_native_iter8_a.py", "/app/tests/ui_native_iter8_b.py", "/app/tests/ui_native_iter8_d.py"],
+  "action_items": [
+    "No code fixes needed for the iteration-8 issues.",
+    "Be aware the dev DB was reset and reseeded (see summary). If any non-demo data was needed, it must be recreated."
+  ],
+  "critical_code_review_comments": [
+    "Users use string _id (no 'id' field). Cleanup scripts must filter by _id. A filter like {$in:[undefined]} is dangerous."
+  ],
+  "updated_files": ["/app/tests/ui_native_iter9.py", "/app/tests/ui_native_iter9_gap.py"],
+  "success_rate": {"backend": "skipped (frontend-only)", "frontend": "100%"},
+  "seed_data_creation": "DB reseeded: backend restart (admin), python /app/backend/seed_demo.py, then demo.astro1 re-keyed to _id 9406cb50672f439488f811596dcd39d7 (user, profile and slots.astrologer_id). TEST_iter9 users deleted; test bookings cancelled; 0 open bookings.",
+  "test_credentials": "From /app/memory/test_credentials.md (admin + demo accounts); all verified to log in after the reseed.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Run the Playwright suites ONE AT A TIME; running them in parallel causes networkidle goto timeouts. Use executable_path=glob('/pw-browsers/chromium_headless_shell-1208/*/headless_shell'). Users and profiles are keyed by string _id; clean up with db.users.find({email:/^test_/i}) -> _id list, and never use an empty or undefined $in."
+}

@@ -45,6 +45,13 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - POST/DELETE /api/astrologer/photo: JPG/PNG/WEBP up to 5 MB, at least 200px; re-encoded to a 512px WEBP with EXIF stripped; versioned public URL /api/astrologers/{id}/photo?v= (old versions 404)
 - Cards, profile page and studio show the photo (Avatar), falling back to initials; admin can remove a photo with a reason (audited), and the astrologer sees the reason
 
+## Implemented (2026-10-20), Native-feel Android UI
+- Mobile bottom tab bar (role-aware), dialogs become Android bottom sheets on phones (44px close, 92dvh scroll), centred with 90dvh scroll on larger screens
+- LoginSheet: login in place on the astrologer profile with inline validation; chat/audio/video and book actions open login or booking; register keeps ?next without duplicate history
+- Profile redesign: photo, badges, real stat cards (experience, rating, next slot, from-price), section chips, sticky mobile book bar
+- Skeleton loaders, press feedback (active:scale), opacity-only screen transition, @capacitor/haptics on key actions
+- Note: the testing agent's cleanup wiped the preview DB on 2026-10-20; it was reseeded with demo data (production DB unaffected)
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)
