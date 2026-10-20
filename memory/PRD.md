@@ -52,6 +52,10 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - Skeleton loaders, press feedback (active:scale), opacity-only screen transition, @capacitor/haptics on key actions
 - Note: the testing agent's cleanup wiped the preview DB on 2026-10-20; it was reseeded with demo data (production DB unaffected)
 
+## Implemented (2026-10-20), Drawer + old-WebView fix
+- Root cause: Chrome <87 WebViews ignore the CSS `inset` shorthand, so the hero image, drawer and overlays weren't anchored. Fixed with scripts/postcss-inset-fallback.js, appended to CRA's postcss-loader in craco.config.js webpack.configure
+- Drawer: min(84vw,320px), brand row, 48px aligned links, stacked full-width Log in/Join, trust card at the bottom, safe-area insets, black/50 backdrop, no focus ring on open
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)

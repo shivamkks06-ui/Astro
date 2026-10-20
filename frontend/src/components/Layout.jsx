@@ -52,13 +52,13 @@ export function Header() {
           <SheetTrigger asChild className="md:hidden">
             <Button data-testid="mobile-menu-button" aria-label="Open menu" variant="ghost" size="icon"><Menu className="h-6 w-6" /></Button>
           </SheetTrigger>
-          <SheetContent data-testid="mobile-drawer" aria-describedby={undefined} className="bg-card flex flex-col gap-0 p-0 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
+          <SheetContent data-testid="mobile-drawer" aria-describedby={undefined} onOpenAutoFocus={(e) => e.preventDefault()} className="bg-card flex flex-col gap-0 p-0 overflow-y-auto pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]">
             <SheetTitle className="flex items-center gap-2 h-16 px-5 pr-14 border-b border-amber-500/10 text-left">
               <Sparkles className="h-5 w-5 text-amber-400" /><span className="font-display text-base tracking-wider text-amber-100">NakshatraVeda</span>
             </SheetTitle>
             <nav aria-label="Main" className="flex flex-col gap-1 p-3"><NavLinks drawer user={user} onNav={() => setOpen(false)} /></nav>
-            <div className="px-5 pt-2"><AuthButtons drawer user={user} onNav={() => setOpen(false)} /></div>
-            <div data-testid="drawer-trust-card" className="mt-auto m-4 rounded-xl border border-amber-500/20 bg-[#0B0F19]/60 p-4 space-y-1.5">
+            <div className="px-3 pt-2"><AuthButtons drawer user={user} onNav={() => setOpen(false)} /></div>
+            <div data-testid="drawer-trust-card" className="mt-auto m-3 rounded-xl border border-amber-500/20 bg-[#0B0F19]/60 p-4 space-y-1.5">
               <p className="flex items-center gap-2 text-sm text-amber-200"><ShieldCheck className="h-4 w-4" />Identity-checked astrologers</p>
               <p className="text-xs leading-relaxed text-muted-foreground">Guidance only, never guaranteed outcomes. Clear per-minute prices and refund terms.</p>
             </div>

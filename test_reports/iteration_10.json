@@ -1,0 +1,27 @@
+{
+  "summary": "Iteration 10: frontend-only test of the mobile drawer redesign, scroll lock/restore, Escape/back behaviour, the homepage hero containment and the CSS inset fallback. New suite /app/tests/ui_iter10_drawer.py: 111/111 pass. Drawer at 320/360/390/430: width is exactly min(84vw,320px) (268.8/302.4/320/320), anchored right at full height. Close button is 44x44 at the top-right (8px from the top and right edges). Title row is 64px. Nav links are 48px, left-aligned in one column. Log in/Join are full-width 48px and stacked. The trust card sits 16px above the bottom, below the links, with no overlap. No overflow at 320. Backdrop is a fixed full-screen rgba(0,0,0,0.5). Logged-in demo customer: the drawer shows My Account (nav-account) and a full-width 48px logout. Logout lands on '/' and the drawer then shows Log in. Scroll lock: with the page at y=400 and the drawer open, body overflow is hidden with data-scroll-locked, and a wheel event doesn't move the page. Escape and the close button both restore scrollY to 400. Back emulation (closeTopOverlay dispatch): the first press closes only the drawer and the URL stays on /discover; history back then goes to '/'. A drawer link navigates and closes the drawer, and one back returns. Homepage at 320/360/390/412: the hero img box equals the hero section box and ends 8px above trust-pillar-0. CTAs are full-width (w-40). No horizontal overflow, and astrologer cards fit. CSS: the android main.0532598c.css (65KB, .flex present) has '.inset-0{bottom:0;top:0;inset:0}' plus '.inset-0,.inset-x-0{left:0;right:0}', and .inset-y-0 has top/bottom. The dev server's injected style text has top/right/bottom/left before inset:0px, and Tailwind still applies. The android bundle is newer than the Layout/sheet sources and contains drawer-trust-card. Regressions: the profile login sheet is anchored at the bottom, full width, and closes on Escape. The booking dialog bottom sheet is anchored (after selecting a slot). At 1920 the desktop header nav/login/join are visible and the menu button is hidden.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Mobile drawer", "issues": [
+        "When the drawer opens, Radix auto-focuses sheet-close-button, so a visible amber focus ring appears on every open. Consider onOpenAutoFocus={e=>e.preventDefault()} or focus-visible:ring instead of focus:ring.",
+        "Small inset mismatch: the nav-link highlight box starts at drawer x+12 (p-3), but the Log in/Join/Log out buttons start at x+20 (px-5). It's cosmetic only."
+      ]}
+    ]
+  },
+  "test_report_links": ["/app/tests/ui_iter10_drawer.py", "/app/tests/ui_iter10_devcss.py"],
+  "action_items": ["Optional: suppress the auto-focus ring on the drawer close button when it opens", "Optional: align the drawer's link and button horizontal insets"],
+  "critical_code_review_comments": [
+    "postcss-inset-fallback: cloneBefore runs on every inset declaration, including inset inside @supports or with var(), which is fine. cssnano merges rules in production, but the longhands survive (verified).",
+    "Layout AuthButtons logout: navigates before await logout(). This works. Without a try/catch, a failed logout leaves no error toast."
+  ],
+  "updated_files": ["/app/tests/ui_iter10_drawer.py", "/app/tests/ui_iter10_devcss.py"],
+  "success_rate": {"backend": "skipped (frontend only)", "frontend": "100% (112/112 checks)"},
+  "seed_data_creation": "None. No DB writes or deletes. Only logged in as demo.customer, then logged out.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "Run python /app/tests/ui_iter10_drawer.py (about 2-3 minutes, one suite at a time, local headless_shell). The booking dialog requires clicking a [data-testid^=slot-] before mobile-book-bar-button. In modern Chromium the CSSOM collapses the longhands back into 'inset', so check the raw <style> text (dev) or the built CSS file instead. Native Android Back and old WebView rendering weren't tested here.",
+  "test_credentials": "demo.customer@nakshatraveda.test / DemoPass@123 (from /app/memory/test_credentials.md) works"
+}
