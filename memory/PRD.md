@@ -76,6 +76,12 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - Frontend: /horoscope (sign picker persisted, day tabs, AI vs calculated labels, tone badges, transit list), /kundli (birth form, place search, North SVG + South grid charts, planet table, dasha, save/history, /kundli/:id), 5-tab bottom nav, header links, landing quick tiles
 - Tests: iteration_14 (backend 17/17, frontend all flows, 101/101 regression); low-priority follow-ups fixed afterwards
 
+## Implemented (2026-10-20), Kundli extras
+- astro_extras.py: Navamsa (D9) chart, Panchang at birth (tithi/paksha, vara by sunrise, yoga, karana, sunrise via Skyfield almanac), Manglik check (Lagna and Moon, own sign/exalted cancellations), Ashtakoota 36 Guna Milan (8 kootas, Nadi/Bhakoot dosha)
+- API: chart now includes navamsa/panchang/manglik; POST /api/kundli/match
+- Frontend: D1/D9 toggle, Panchang + Manglik cards, Share (native share or clipboard), Print/PDF (web only, print CSS), /kundli/match two-step page
+- Tests: iteration_15 (backend 29/29, all flows); then fixed the Gana Ardra data, prefill when editing the boy's details, and the mobile match table
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)

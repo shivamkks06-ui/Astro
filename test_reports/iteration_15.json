@@ -1,0 +1,39 @@
+{
+  "summary": "Iteration 15 (one combined round) tested the Kundli extras: Navamsa, Panchang, Manglik, Ashtakoota match, share and print. Backend: 29/29 pytest pass. That is the 17 from iteration 14 plus 12 new ones in backend/tests/test_astro_kundli_horoscope.py. Reference chart: Navamsa Lagna Scorpio (sign_index 7), 9 planets with house = (sign - asc) % 12 + 1, 12 houses. Panchang: Krishna Dashami (tithi_number 25), Budhavara (Wednesday), Vyaghata, Vanija, Rohini, sunrise 05:31. A 04:00 birth gives Mangalavara (Tuesday) and 05:45 gives Wednesday. Manglik: Mars is in house 7 from the Lagna and house 12 from the Moon, so manglik is true with the cancellation 'Mars is in its own sign'. A saved GET /api/kundlis/{id} includes navamsa, panchang and manglik. Match with the reference pair: 8 kootas in order with the right maxima, total 18, band Average, Nadi and Bhakoot doshas true; boy Taurus/Rohini, girl Capricorn/Shravana (Mars exalted). Matching the same person twice gives Nadi 0 with nadi_dosha true. Validation errors return 422 (bad tz, lat 80, 1899, 25:00, girl null). Frontend: the D1/D9 toggle swaps chart-north and chart-north-d9, and the South grid center switches RASHI and NAVAMSA in both directions. The panchang and manglik cards show the correct values; the status reads 'Manglik, traditionally cancelled'. Share falls back to the clipboard with a toast and the correct summary text. Print calls window.print, and under print media the header and share bar are hidden. The match link goes to /kundli/match. Match flow: step 1 then step 2, the empty-form error, the back button, and the result with the total 18 / Average, 8 koota rows, boy and girl cards, doshas, and reset back to step 1. No page overflow at 390 on the kundli result, the match result or /horoscope. Regression: logged-in save, Saved, the saved list, opening the saved chart (D9 works), and delete all work; /horoscope loads.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "astro_extras.GANA", "issue": "Data bug: Ardra (index 5) is marked 'R' (Rakshasa), but traditionally it is Manushya. The current string gives 9 Deva, 8 Manushya and 10 Rakshasa instead of 9/9/9. The fix is GANA = \"DMRMDMDDRRMMDRDRDRRMMDRRMMD\". This affects Gana koota scores for any match involving an Ardra Moon. The reference pair isn't affected."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Match 'Edit boy's details'", "issue": "match-back sets boy to null and remounts BirthForm with initial=undefined, so all the boy's entered details (name, date, time, place) are lost and the form is blank. Keep the previous boy input in a separate state and pass it as initial.", "selector": "[data-testid=match-back]", "priority": "MEDIUM"},
+      {"component": "Match table at 390px", "issue": "The table has min-w-[460px] inside overflow-x-auto, so at 390 the Score column (the key information) sits off-screen in an inner scroll. The page itself doesn't overflow. Drop the min-width or stack the detail under the koota name on mobile.", "selector": "[data-testid=match-table]", "priority": "MEDIUM"}
+    ],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Kundli result D9", "issues": ["The planet table always shows D1 signs and houses while the D9 chart is selected. Consider a caption ('Table shows Rashi positions') or D9 columns.", "The South caption 'Signs are fixed; Asc marks the Lagna' is fine. The North caption no longer leaks into South mode (fixed since iteration 14)."]},
+      {"screen": "Match result boy/girl cards", "issues": ["The cards say only 'Manglik (cancelled)' and don't name the reason (own sign or exalted), while the Kundli card shows it."]}
+    ]
+  },
+  "test_report_links": ["/app/backend/tests/test_astro_kundli_horoscope.py", "/app/test_reports/pytest/pytest_iter15.xml"],
+  "action_items": [
+    "Fix the GANA string for Ardra (index 5: R -> M) in backend/astro_extras.py",
+    "Prefill the boy's form when the user clicks match-back (Match.jsx)",
+    "Make the match table's Score column visible at 390 without an inner horizontal scroll"
+  ],
+  "critical_code_review_comments": [
+    "Checked the other Ashtakoota tables against the standard references: Varna, Vashya (including the split Sagittarius and Capricorn), Yoni nakshatra mapping and enemy pairs, Nadi mapping, planetary friendships, the Maitri scoring, Tara and Bhakoot are all correct. Only Gana has the Ardra error.",
+    "The GANA_TABLE orientation (girl Deva + boy Manushya = 6, girl Manushya + boy Deva = 5) varies between sources. Confirm the intended convention.",
+    "The manglik cancellation list is filled even when Mars isn't in a dosha house. The UI only uses it when manglik is true, so this is harmless, but API consumers could misread it.",
+    "panchang._sunrise returns None at polar latitudes. The latitude is limited to ±66.5, so this is safe, and the UI falls back to a dash.",
+    "/kundli/match counts as one rate-limit hit but does two chart computations plus two sunrise searches. That's acceptable at 30/min."
+  ],
+  "updated_files": ["/app/backend/tests/test_astro_kundli_horoscope.py"],
+  "success_rate": {"backend": "100% (29/29)", "frontend": "100% of requested flows work; 2 medium UX bugs"},
+  "seed_data_creation": "None persisted. TEST_Iter15 and TEST_UI15 kundlis were deleted (db.kundlis count is 0). db.rate_limits was cleared.",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Run REACT_APP_BACKEND_URL=... pytest backend/tests/test_astro_kundli_horoscope.py -n0 -s. The place input is [data-testid=kundli-place-input] and the options are kundli-place-option-<i>. The login submit button is get_by_role('button', name='Log in').last. The reference match pair is Varanasi 1990-08-15 10:30 and Delhi 1992-03-02 05:10 (total 18)."
+}

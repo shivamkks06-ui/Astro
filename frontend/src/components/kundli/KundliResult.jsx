@@ -71,7 +71,7 @@ export function KundliResult({ input, chart, style, onStyle, actions, onEdit }) 
             ))}
           </div>
           {s === "north" ? <NorthChart chart={view} testid={div === "d1" ? "chart-north" : "chart-north-d9"} /> : <SouthChart chart={view} label={div === "d1" ? "RASHI" : "NAVAMSA"} />}
-          <p className="text-[11px] text-muted-foreground text-center">{s === "north" ? "Numbers are sign numbers (1 = Aries); house 1 is the top diamond. " : "Signs are fixed; Asc marks the Lagna. "}(R) = retrograde.</p>
+          <p className="text-[11px] text-muted-foreground text-center">{s === "north" ? "Numbers are sign numbers (1 = Aries); house 1 is the top diamond. " : "Signs are fixed; Asc marks the Lagna. "}(R) = retrograde.{div === "d9" && " The table below shows Rashi (D1) positions."}</p>
         </div>
         <div className="space-y-6 min-w-0"><PlanetTable chart={chart} /><div className="grid sm:grid-cols-2 gap-4"><PanchangCard p={chart.panchang} /><ManglikCard m={chart.manglik} /></div><DashaPanel dasha={chart.dasha} /></div>
       </div>

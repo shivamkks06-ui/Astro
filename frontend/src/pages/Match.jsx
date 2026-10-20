@@ -6,7 +6,7 @@ import { BirthForm } from "../components/kundli/BirthForm";
 import { api, errMsg } from "../lib/api";
 
 const BAND = { Excellent: "text-emerald-300", Good: "text-emerald-300", Average: "text-amber-200", Low: "text-orange-300" };
-const mStatus = (m) => (!m.manglik ? "Not Manglik" : m.cancellations.length ? "Manglik (cancelled)" : "Manglik");
+const mStatus = (m) => (!m.manglik ? "Not Manglik" : m.cancellations.length ? `Manglik, cancelled (${m.cancellations.join("; ")})` : "Manglik");
 
 function Result({ data, onReset }) {
   const r = data.result;
@@ -20,14 +20,14 @@ function Result({ data, onReset }) {
         </div>
         <button type="button" data-testid="match-reset" onClick={onReset} className="inline-flex items-center gap-1.5 min-h-11 px-3 text-sm text-amber-200"><RotateCcw className="h-4 w-4" />New match</button>
       </div>
-      <div className="overflow-x-auto rounded-xl border">
-        <table data-testid="match-table" className="w-full min-w-[460px] text-sm">
-          <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wider text-muted-foreground"><tr><th className="px-3 py-2.5">Koota</th><th className="px-3 py-2.5">Boy / Girl</th><th className="px-3 py-2.5 text-right">Score</th></tr></thead>
+      <div className="rounded-xl border overflow-hidden">
+        <table data-testid="match-table" className="w-full text-sm">
+          <thead className="bg-secondary/60 text-left text-xs uppercase tracking-wider text-muted-foreground"><tr><th className="px-3 py-2.5">Koota <span className="normal-case tracking-normal">(boy / girl)</span></th><th className="px-3 py-2.5 text-right">Score</th></tr></thead>
           <tbody>
             {r.kootas.map((k) => (
               <tr key={k.name} data-testid={`match-koota-${k.name.toLowerCase().replace(/\s/g, "-")}`} className="border-t border-border/60">
-                <td className="px-3 py-2.5 font-medium">{k.name}</td><td className="px-3 py-2.5 text-muted-foreground">{k.detail}</td>
-                <td className={`px-3 py-2.5 text-right font-mono ${k.score === 0 ? "text-orange-300" : ""}`}>{k.score} / {k.max}</td>
+                <td className="px-3 py-2.5"><span className="font-medium">{k.name}</span><span className="block text-xs text-muted-foreground">{k.detail}</span></td>
+                <td className={`px-3 py-2.5 text-right font-mono whitespace-nowrap ${k.score === 0 ? "text-orange-300" : ""}`}>{k.score} / {k.max}</td>
               </tr>
             ))}
           </tbody>
@@ -50,6 +50,7 @@ function Result({ data, onReset }) {
 
 export default function Match() {
   const [boy, setBoy] = useState(null);
+  const [draft, setDraft] = useState(null);
   const [data, setData] = useState(null);
   const [busy, setBusy] = useState(false);
   const run = async (girl) => {
@@ -64,11 +65,11 @@ export default function Match() {
         <h1 className="text-[1.875rem] leading-tight sm:text-5xl">36 Guna Milan</h1>
         <p className="mt-3 text-sm sm:text-base text-muted-foreground">Enter both birth details. Traditional Ashtakoota uses the boy's and the girl's roles.</p>
       </header>
-      {data ? <Result data={data} onReset={() => { setData(null); setBoy(null); }} /> : (
+      {data ? <Result data={data} onReset={() => { setData(null); setBoy(null); setDraft(null); }} /> : (
         <div className="space-y-3">
           <p data-testid="match-step" className="text-sm font-semibold text-amber-200">Step {boy ? "2 of 2: Girl's details" : "1 of 2: Boy's details"}</p>
-          {boy && <button type="button" data-testid="match-back" onClick={() => setBoy(null)} className="text-sm text-muted-foreground underline min-h-11">Edit boy's details ({boy.date}, {boy.place.split(",")[0]})</button>}
-          <BirthForm key={boy ? "girl" : "boy"} initial={boy ? null : undefined} busy={busy} submitLabel={boy ? "Check match" : "Next: girl's details"} onSubmit={boy ? run : setBoy} />
+          {boy && <button type="button" data-testid="match-back" onClick={() => { setDraft(boy); setBoy(null); }} className="text-sm text-muted-foreground underline min-h-11">Edit boy's details ({boy.date}, {boy.place.split(",")[0]})</button>}
+          <BirthForm key={boy ? "girl" : "boy"} initial={boy ? null : draft} busy={busy} submitLabel={boy ? "Check match" : "Next: girl's details"} onSubmit={boy ? run : setBoy} />
         </div>
       )}
     </div>

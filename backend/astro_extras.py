@@ -54,9 +54,9 @@ def manglik(chart):
     from_moon = (mars["sign_index"] - moon["sign_index"]) % 12 + 1
     lagna, chandra = mars["house"] in bad, from_moon in bad
     cancel = []
-    if mars["sign"] in ("Aries", "Scorpio"):
+    if (lagna or chandra) and mars["sign"] in ("Aries", "Scorpio"):
         cancel.append("Mars is in its own sign")
-    if mars["sign"] == "Capricorn":
+    if (lagna or chandra) and mars["sign"] == "Capricorn":
         cancel.append("Mars is exalted")
     return {"mars_house_from_lagna": mars["house"], "mars_house_from_moon": from_moon, "from_lagna": lagna, "from_moon": chandra,
             "manglik": lagna or chandra, "cancellations": cancel,
@@ -79,7 +79,7 @@ FRIENDS = {"Sun": ({"Moon", "Mars", "Jupiter"}, {"Venus", "Saturn"}), "Moon": ({
            "Mars": ({"Sun", "Moon", "Jupiter"}, {"Mercury"}), "Mercury": ({"Sun", "Venus"}, {"Moon"}),
            "Jupiter": ({"Sun", "Moon", "Mars"}, {"Mercury", "Venus"}), "Venus": ({"Mercury", "Saturn"}, {"Sun", "Moon"}),
            "Saturn": ({"Mercury", "Venus"}, {"Sun", "Moon", "Mars"})}
-GANA = "DMRMDRDDRRMMDRDRDRRMMDRRMMD"  # Deva / Manushya / Rakshasa per nakshatra
+GANA = "DMRMDMDDRRMMDRDRDRRMMDRRMMD"  # Deva / Manushya / Rakshasa per nakshatra
 GANA_TABLE = {"D": {"D": 6, "M": 6, "R": 1}, "M": {"D": 5, "M": 6, "R": 0}, "R": {"D": 1, "M": 0, "R": 6}}  # [girl][boy]
 NADI = "AMNNMAAMNNMAAMNNMAAMNNMAAMN"  # Adi / Madhya / Antya per nakshatra
 NADI_NAMES = {"A": "Adi", "M": "Madhya", "N": "Antya"}
