@@ -45,8 +45,8 @@ function Result({ data, onReset }) {
           </div>
         ))}
       </div>
-      {(r.nadi_dosha || r.bhakoot_dosha) && <p data-testid="match-doshas" className="text-sm text-orange-200">{t("Traditional doshas present")}: {[r.nadi_dosha && t("Nadi dosha"), r.bhakoot_dosha && t("Bhakoot dosha")].filter(Boolean).join(", ")}. {t("Astrologers often check further rules before reading these.")}</p>}
-      <p className="text-xs text-muted-foreground">{t("Guna Milan is a traditional compatibility score calculated from both Moon positions. It is guidance, not a prediction about any marriage.")} {t("For a full reading,")} <Link to="/discover" className="text-amber-200 underline">{t("consult a verified astrologer")}</Link>.</p>
+      {(r.nadi_dosha || r.bhakoot_dosha) && <p data-testid="match-doshas" className="text-sm text-orange-200">{t("Traditional doshas present")}: {[r.nadi_dosha && t("Nadi dosha"), r.bhakoot_dosha && t("Bhakoot dosha")].filter(Boolean).join(", ")}{t(".")} {t("Astrologers often check further rules before reading these.")}</p>}
+      <p className="text-xs text-muted-foreground">{t("Guna Milan is a traditional compatibility score calculated from both Moon positions. It is guidance, not a prediction about any marriage.")} {t("For a full reading,")} <Link to="/discover" className="text-amber-200 underline">{t("consult a verified astrologer")}</Link>{t(".")}</p>
     </section>
   );
 }

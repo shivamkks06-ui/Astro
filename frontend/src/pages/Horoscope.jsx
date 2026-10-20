@@ -87,7 +87,7 @@ export default function Horoscope() {
             className={`min-h-10 px-4 rounded-full text-sm capitalize ${day === d ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground"}`}>{t(d)}</button>
         ))}
       </div>
-      {h.error ? <ErrorState error={h.error} onRetry={h.reload} /> : !r ? <Loading text="Reading the transits" /> : (
+      {h.error ? <ErrorState error={h.error} onRetry={h.reload} /> : !r ? <Loading text={t("Reading the transits")} /> : (
         <div className="space-y-5">
           <section data-testid="horoscope-overview" className="glass rounded-2xl p-5 sm:p-7 space-y-3">
             <div className="flex flex-wrap items-center justify-between gap-2">

@@ -52,7 +52,7 @@ export function PlaceSearch({ value, onChange }) {
               {p.label}<span className="block text-[11px] text-muted-foreground">{p.tz}{p.source === "openstreetmap" ? " · OpenStreetMap" : ""}</span>
             </button>
           ))}
-          {!items.length && !busy && <p className="px-3 py-3 text-sm text-muted-foreground">No city in the offline list.</p>}
+          {!items.length && !busy && <p className="px-3 py-3 text-sm text-muted-foreground">{t("No city in the offline list.")}</p>}
           <Button type="button" variant="ghost" data-testid="kundli-place-online" disabled={busy || q.trim().length < 3} onClick={() => search(true)} className="w-full h-11 rounded-none text-amber-200">
             <Globe className="h-4 w-4 mr-2" />{t("Search worldwide (OpenStreetMap)")}
           </Button>

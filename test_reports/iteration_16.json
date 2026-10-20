@@ -1,0 +1,38 @@
+{
+  "summary": "Frontend-only test of Hindi mode (i18n dictionary + LangToggle) on /kundli, /kundli/match, /horoscope at 1920 and 390px. Core feature works: toggle persists in localStorage nv:lang across reload/pages, html[lang]=hi, Kundli (Lagna तुला 4°27′, चंद्र राशि वृषभ, रोहिणी पद 3, गुरु / शुक्र), planet table, North chart abbreviations + लग्न, South chart Hindi sign names + राशि/नवांश center, Panchang (कृष्ण दशमी, बुधवार, व्याघात, वणिज, सूर्योदय 05:31), Manglik Hindi sentences, Dasha panel with Hindi month names, form labels/errors in Hindi. Match: 18/36 मध्यम मिलान, all 8 kootas and details (सर्प / वानर, मनुष्य / देव ...), cards, steps, buttons in Hindi. Horoscope: chips Hindi + English below, day tabs, tone badges, category titles, calculated text, Why lines, transits, method, disclaimer in Hindi; AI note shown once (overview only). Switching to English restores all text (only 'हिन्दी' toggle label remains). No horizontal overflow at 390px. A few small leftovers found (below).",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Kundli South chart center (Charts.jsx line 46)", "issues": ["The center label uses tracking-[0.14em] (letter-spacing 1.82px), so the Hindi 'नवांश' / 'राशि' shows with gaps between letters ('न वां श'). Drop the tracking when lang==='hi'"]},
+      {"screen": "Untranslated strings in Hindi mode", "issues": [
+        "Kundli 'पद्धति:' line: the method text from the backend stays English ('Sidereal zodiac, Lahiri ayanamsa (23.72°), Whole sign houses, Mean node, JPL DE421 ephemeris')",
+        "PlaceSearch empty state 'No city in the offline list.' is not wrapped in t()",
+        "Loading text 'Reading the transits' (Horoscope) and any Kundli loading/error text are not wrapped in t()"
+      ]},
+      {"screen": "Hindi grammar/punctuation", "issues": [
+        "Ordinal numbers like '1वें', '2वें', '3वें', '4वें', '6वें भाव' are not correct Hindi (should be पहले/दूसरे/तीसरे/चौथे/छठे) or use 'भाव 3'. Shows in Horoscope Why lines, Moon-house sentence and Manglik sentence",
+        "A Latin '.' is used where Hindi needs '।': Manglik 'निरस्ति: मंगल अपनी राशि में है.', match doshas 'नाड़ी दोष, भकूट दोष.', and the match footer after 'परामर्श करें'",
+        "'कल का राशिफल' (tomorrow) is ambiguous because कल means both yesterday and tomorrow; the tab says 'आने वाला कल', so the heading could say 'आने वाले कल का राशिफल'"
+      ]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [
+    "Charts.jsx: remove the letter-spacing on the South chart center label in Hindi mode",
+    "Wrap 'No city in the offline list.' and the loading texts in t() and add their Hindi",
+    "Translate the Kundli method line (map known parts or add one fixed Hindi sentence)",
+    "Fix the Hindi ordinals ({n}वें -> proper ordinal) and use '।' instead of '.' in Hindi sentences"
+  ],
+  "critical_code_review_comments": [
+    "Horoscope basisT regex /^(\\w+) in house (\\d+) from (\\w+)$/ needs one-word planet and sign names. That works now, but the line would fall back to English if the backend ever changes its wording",
+    "Header/nav/bottom nav stay English in Hindi mode. This is expected because the scope only covers results"
+  ],
+  "updated_files": [],
+  "success_rate": {"backend": "N/A (skipped)", "frontend": "95% (all requested flows pass; minor translation/typography leftovers)"},
+  "seed_data_creation": "None",
+  "retest_needed": false,
+  "should_main_agent_self_test": true,
+  "context_for_next_testing_agent": "Hindi mode verified with reference inputs (boy 1990-08-15 10:30 Varanasi, girl 1992-03-02 05:10 New Delhi). In Playwright, the chart toggles are not role=button. Use get_by_text('दक्षिण भारतीय', exact=True). Scope 'Why' buttons to article[data-testid^=horoscope-cat-] because the nav menu button also has aria-expanded."
+}

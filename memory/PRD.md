@@ -82,6 +82,12 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - Frontend: D1/D9 toggle, Panchang + Manglik cards, Share (native share or clipboard), Print/PDF (web only, print CSS), /kundli/match two-step page
 - Tests: iteration_15 (backend 29/29, all flows); then fixed the Gana Ardra data, prefill when editing the boy's details, and the mobile match table
 
+## Implemented (2026-10-20), Hindi mode for astrology results
+- frontend/src/lib/i18n.js: built-in Hindi dictionary (planets, signs, nakshatras, tithis, yogas, karanas, kootas, yoni/gana/nadi, labels, rule-based horoscope sentences); useLang() hook with t()/tp(), saved in localStorage nv:lang, sets html[lang]
+- LangToggle (English | हिन्दी) on /kundli, /kundli/match, /horoscope; charts, tables, panchang, manglik, dasha, match and horoscope fully switch; AI horoscope text stays English (labelled)
+- No backend change and no AI cost; Devanagari letter-spacing fix. Tested in iteration_16; leftovers fixed afterwards
+- Not translated by design: header, menus, booking and account pages
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)

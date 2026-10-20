@@ -28,7 +28,7 @@ export function ManglikCard({ m }) {
       <h3 className="text-lg">{t("Manglik check")}</h3>
       <p data-testid="kundli-manglik-status" className={`inline-flex items-center gap-1.5 text-sm font-semibold ${m.manglik && !cancelled ? "text-orange-300" : "text-emerald-300"}`}><Icon className="h-4 w-4" />{t(status)}</p>
       <p className="text-sm text-muted-foreground">{t("Mars is in house {a} from the Lagna ({x}) and house {b} from the Moon ({y}).", { a: m.mars_house_from_lagna, b: m.mars_house_from_moon, x: t(m.from_lagna ? "counts" : "does not count"), y: t(m.from_moon ? "counts" : "does not count") })}</p>
-      {cancelled && <p className="text-sm text-muted-foreground">{t("Cancellation")}: {m.cancellations.map((c) => t(c)).join("; ")}.</p>}
+      {cancelled && <p className="text-sm text-muted-foreground">{t("Cancellation")}: {m.cancellations.map((c) => t(c)).join("; ")}{t(".")}</p>}
       <p className="text-[11px] text-muted-foreground">{t(m.rule)} {t("Manglik status is a traditional indicator only. It does not decide whether a marriage will work.")}</p>
     </div>
   );

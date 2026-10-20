@@ -15,6 +15,7 @@ import { LangToggle } from "../components/LangToggle";
 const PENDING = "nv:pending-kundli";
 
 function Saved({ reloadKey, currentId }) {
+  const { t } = useLang();
   const nav = useNavigate();
   const { data, loading, error, reload } = useApi(`/kundlis?k=${reloadKey}`);
   const del = async (id) => {
@@ -23,9 +24,9 @@ function Saved({ reloadKey, currentId }) {
       if (id === currentId) nav("/kundli", { replace: true }); else reload();
     } catch (e) { toast.error(errMsg(e)); }
   };
-  if (loading) return <Loading text="Loading saved charts" />;
+  if (loading) return <Loading text={t("Loading saved charts")} />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
-  if (!data.items.length) return <Empty title="No saved charts yet" hint="Calculate a Kundli and tap Save to keep it here." />;
+  if (!data.items.length) return <Empty title={t("No saved charts yet")} hint={t("Calculate a Kundli and tap Save to keep it here.")} />;
   return (
     <ul data-testid="kundli-saved-list" className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {data.items.map((k) => (
@@ -43,9 +44,10 @@ function Saved({ reloadKey, currentId }) {
 }
 
 function SavedView({ id }) {
+  const { t } = useLang();
   const { data, loading, error, reload } = useApi(`/kundlis/${id}`);
   const nav = useNavigate();
-  if (loading) return <Loading text="Calculating chart" />;
+  if (loading) return <Loading text={t("Calculating chart")} />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
   return <KundliResult input={data.input} chart={data.chart} style={data.input.chart_style} onEdit={() => nav("/kundli")} />;
 }
