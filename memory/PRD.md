@@ -34,6 +34,13 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - Offline banner, reload on reconnect/resume, GET retry on network errors, back-button handling, session re-check on resume
 - APK NOT built: the container is ARM64 and Android's aapt2 tool doesn't run on ARM Linux. Build steps are in frontend/ANDROID.md
 
+## Implemented (2026-10-20), Android/mobile optimisation
+- Single Back handler (NativeShell in lib/native.js): closes the top Radix overlay first, then goes back one history step (RR idx), goes to home if there is no history, and minimises at home (never exits)
+- History fixes: login, register and logout use replace; login from a profile steps back instead of duplicating it; PayPage returns with history -1
+- Responsive: 30px hero on mobile, full-width 48px CTAs, tighter spacing, grid-cols-1 fix for the 320px overflow, xs text is 13px, 44px touch targets (buttons, inputs, selects, tabs, chips, sheet close), no blur on mobile
+- Cards show next_slot_at availability (new API field) and a book CTA
+- Native: values-v35 edge-to-edge opt-out with dark bars, adjustMarginsForEdgeToEdge auto, adjustResize; silent data refresh on resume/reconnect
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)

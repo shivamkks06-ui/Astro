@@ -1,0 +1,14 @@
+{
+  "summary": "Iteration 6: targeted frontend retest of the two LOW issues from iteration 5. The script is /app/tests/iter6_retest.py and all 33 checks passed. (1) Logout from a protected page: at 1920x800 (header) and 390x844 (via the sheet), the demo customer from /account and astro1 from /studio all land on '/', and /api/auth/me returns 401 afterwards. (2) Touch targets at 390: account tabs (5) are 44px. Studio tabs (7) are 44px. Slot chips (6) are 44px minimum. astro-lang (11) and astro-exp (9) chips are 44px minimum. The sheet Close button is 44x44. The sheet logout-button is 44px. The legal links (4) are 44px. brand-logo is 44px. (3) Regression at 390 and 1920: scrollWidth equals the viewport width on /, /discover, /astrologers/{id}, /legal/terms, /account and /studio. Every account and studio tab switches to active and shows a non-empty panel. There were no page errors. At 390 the studio tab list wraps cleanly onto 3 rows.",
+  "backend_issues": {"critical": [], "minor": []},
+  "frontend_issues": {"ui_bugs": [], "integration_issues": [], "design_issues": []},
+  "test_report_links": ["/app/tests/iter6_retest.py"],
+  "action_items": [],
+  "critical_code_review_comments": ["Logout now calls nav('/', {replace:true}) before awaiting logout(), which fixes the Protected redirect race. The chips use min-h-11 sm:min-h-0 and the sheet Close is h-11 w-11. Both are correct."],
+  "updated_files": ["/app/tests/iter6_retest.py"],
+  "success_rate": {"backend": "skipped (frontend only)", "frontend": "100% (33/33)"},
+  "seed_data_creation": "None. Only logins and logouts were done, so no data was created.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "iter6_retest.py covers logout landing, the 44px touch targets and the overflow/tab regression. The iter5_* scripts are still valid for the wider audit."
+}
