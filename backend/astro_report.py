@@ -267,8 +267,8 @@ def report(chart, analysis, time_unknown=False):
         "This report does not assess health. For any health concern, consult a qualified doctor and never stop prescribed treatment."])
 
     dfacts, dtext = [], []
-    if cur:
-        m = next(x for x in chart["dasha"]["mahadashas"] if "antardashas" in x)
+    m = next((x for x in chart["dasha"]["mahadashas"] if "antardashas" in x), None) if cur else None
+    if m:
         a = next(x for x in m["antardashas"] if x["current"])
         dfacts = [f"Mahadasha: {m['lord']} {m['start']} to {m['end']}.", f"Antardasha: {a['lord']} {a['start']} to {a['end']}."]
         nxt = [x for x in m["antardashas"] if x["start"] > a["start"]][:2]

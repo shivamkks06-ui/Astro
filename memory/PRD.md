@@ -95,6 +95,14 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - Kundli: birth-year range validation; Horoscope: spinner while AI is pending and brighter calculated text; AstroCard: gold primary "View profile & book"
 - Tests: iteration_17 33/33 (mobile); the user's screenshots were not attached, so the audit was done at 390px
 
+## Implemented (2026-10-21), Detailed Kundli report & remedies
+- astro_report.py: dignity (exalted/debilitated/moolatrikona/own/friend/neutral/enemy), combustion, graha drishti, house lords, conjunctions; yogas (Gajakesari, Budhaditya, Chandra-Mangal, Pancha Mahapurusha, Kemadruma, Raja, Yogakaraka, Dhana, Vipareeta Raja, Neecha Bhanga); doshas (Manglik, Kaal Sarp, Sade Sati from today's Saturn); 16-section rule-based report with remedies (Navagraha beej mantras, charity, free alternatives, optional gemstone only for the Lagna lord) and an action plan
+- "I don't know my exact birth time" (time_unknown; uses 12:00, flags time-sensitive sections, no gemstone)
+- Optional AI interpretation for saved charts only: POST /api/kundlis/{id}/ai-report (owner only, Claude Sonnet 4.5, cached on the doc, lock, 5/hour)
+- FullReport.jsx: summary, Read full report, expandable sections with Calculated / Traditional / AI labels; PREMIUM_LOCK flag present but OFF
+- Not supported (shown as unavailable): Shadbala, Ashtakavarga, D10+, future transit forecasts
+- Tests: iteration_18 (backend 41/41, frontend all flows); minor follow-ups fixed afterwards
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)

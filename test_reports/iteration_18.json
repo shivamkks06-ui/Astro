@@ -1,0 +1,34 @@
+{
+  "summary": "Tested the detailed Kundli report end to end. Backend: 41/41 pytest pass (new tests/test_kundli_report.py with 12 tests, plus the existing 29 regression tests). The reference chart (1990-08-15 10:30 Varanasi) gives yogas [Ruchaka, Hamsa, Yogakaraka planet, Dhana yoga] and dosha Manglik (traditionally cancelled). Moon and Jupiter are exalted, Venus is in an enemy sign. Remedies are Jupiter, Venus and an optional gemstone. The 16 sections come back in the right order. time_unknown forces 12:00, removes the Lagna line from the summary, flags exactly core..family as time sensitive, drops the gemstone and mentions noon. Old inputs without the field still work. Validation still returns 422. Three other birth data sets (Delhi 1985, London 2001, New York 1972) do not crash. For them, the yoga basis text matches the planets' houses and signs, house occupants and lords match, the Kaal Sarp flag matches an independent check of the node arc, and the Sade Sati houses are only 12, 1 or 2. AI endpoint: guest gets 401, another user gets 404, a simulated in-flight request gets 409, and a filled rate bucket gets 429 with ai_pending not left behind. One real Claude call returned 200 in about 20 s with all 7 keys. It was saved on the doc, GET returns it, and a second call comes back from the cache in under 5 s. Frontend (390px and 1920px): the checkbox disables the time field, shows 12:00 and a warning. The report shows overview only, read-full reveals all 16 sections, toggles expand with Calculated and Traditional blocks plus item cards, and 10 sections show the 'Depends on birth time' badge. report-time-warning and report-ai-hint appear when expected. On a saved chart, report-ai-button shows a spinner and 'Writing...' and is disabled; the AI response was MOCKED with Playwright route interception to save LLM cost. After that, the report-ai-* blocks render and the button disappears. On /kundli/<id>, an ai_report put into the DB renders and the button is hidden. Hindi translates section titles and labels. Regression: planet table, chart, save, match page form and delete all work. One mobile overflow bug was found and fixed: the saved charts list overflowed by 15px at 390px.",
+  "backend_issues": {
+    "critical": [],
+    "minor": [
+      {"endpoint": "POST /api/kundlis", "issue": "The duplicate check ignores time_unknown. A chart saved with a known 12:00 time and the same chart with time_unknown=true are treated as duplicates, so the old doc and its flag are returned."},
+      {"endpoint": "POST /api/kundlis/{id}/ai-report", "issue": "rate_limit runs before the ai_pending 409 check, so a concurrent duplicate and a failed (502) LLM call each use up one of the user's 5 hourly slots."}
+    ]
+  },
+  "frontend_issues": {
+    "ui_bugs": [
+      {"component": "Saved charts list (pages/Kundli.jsx)", "issue": "At 390px a grid li with long truncated place text grew the column, so the page scrolled sideways (scrollWidth 405). FIXED by adding min-w-0 to the li; verified scrollWidth 390.", "selector": "[data-testid=kundli-saved-list] li", "priority": "MEDIUM (fixed)"}
+    ],
+    "integration_issues": [],
+    "design_issues": []
+  },
+  "test_report_links": ["/app/backend/tests/test_kundli_report.py", "/app/backend/tests/test_astro_kundli_horoscope.py", "/app/test_reports/pytest/pytest_iter18.xml"],
+  "action_items": [
+    "Optional: include input.time_unknown in the save duplicate query",
+    "Optional: run the ai_pending lock check before rate_limit, or refund the slot on a 409 or 502"
+  ],
+  "critical_code_review_comments": [
+    "astro_report.report: the dasha 'next antardasha' list only looks inside the current mahadasha, so when the current antardasha is the last one, no next antardasha is shown (the next mahadasha is still listed).",
+    "astro_report.report: next(x for x in mahadashas if 'antardashas' in x) assumes only the current mahadasha carries antardashas. This would raise StopIteration if that structure changes; a default value would be safer.",
+    "The report body text stays in English in Hindi mode, as specified (labels and names only). The AI text is English only.",
+    "The ai_report cache never expires, so a cached interpretation does not change when the rule logic changes later. That is acceptable for the cost goal."
+  ],
+  "updated_files": ["/app/backend/tests/test_kundli_report.py", "/app/frontend/src/pages/Kundli.jsx"],
+  "success_rate": {"backend": "100%", "frontend": "100% (after the 1 overflow fix)"},
+  "seed_data_creation": "None kept. TEST_ kundlis were deleted and kundli rate_limits were cleared.",
+  "retest_needed": false,
+  "should_main_agent_self_test": false,
+  "context_for_next_testing_agent": "test_kundli_report.py makes ONE real LLM call (TestAiReport.test_ownership_cache_and_limits); skip it with -k 'not ownership' to save cost. Run with -n0 to see prints (pytest.ini uses xdist). The frontend AI flow was tested with a mocked route; the real LLM call was checked only through the API."
+}

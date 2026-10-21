@@ -30,7 +30,7 @@ function Saved({ reloadKey, currentId }) {
   return (
     <ul data-testid="kundli-saved-list" className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {data.items.map((k) => (
-        <li key={k.id} className="rounded-xl border bg-card/60 p-4 flex items-start justify-between gap-3">
+        <li key={k.id} className="min-w-0 rounded-xl border bg-card/60 p-4 flex items-start justify-between gap-3">
           <Link to={`/kundli/${k.id}`} data-testid={`kundli-saved-${k.id}`} className="min-w-0 flex-1">
             <p className="font-semibold text-amber-100 truncate">{k.name || "Birth chart"}</p>
             <p className="text-xs text-muted-foreground truncate">{k.date} · {k.time} · {k.place}</p>

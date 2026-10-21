@@ -146,7 +146,8 @@ async def list_kundlis(user=Depends(current_user)):
 @router.post("/kundlis")
 async def save_kundli(b: BirthIn, user=Depends(current_user)):
     await rate_limit(f"kundli-save:{user['_id']}", 20, 60)
-    dup = await db.kundlis.find_one({"user_id": user["_id"], "input.date": b.date, "input.time": b.time, "input.lat": b.lat, "input.lon": b.lon, "input.name": b.name})
+    dup = await db.kundlis.find_one({"user_id": user["_id"], "input.date": b.date, "input.time": b.time, "input.lat": b.lat, "input.lon": b.lon, "input.name": b.name,
+                                     "input.time_unknown": True if b.time_unknown else {"$ne": True}})
     if dup:
         return {"id": dup["_id"], "duplicate": True}
     if await db.kundlis.count_documents({"user_id": user["_id"]}) >= MAX_SAVED:
@@ -186,11 +187,11 @@ async def ai_report(kid: str, user=Depends(current_user)):
     r = await _own(kid, user)
     if r.get("ai_report"):
         return r["ai_report"]
-    await rate_limit(f"kundli-ai:{user['_id']}", 5, 3600)
     got = await db.kundlis.find_one_and_update({"_id": kid, "user_id": user["_id"], "ai_pending": {"$ne": True}}, {"$set": {"ai_pending": True}})
     if not got:
         raise HTTPException(409, "The AI interpretation is already being written. Try again in a minute.")
     try:
+        await rate_limit(f"kundli-ai:{user['_id']}", 5, 3600)
         c = await _calc(BirthIn(**r["input"]))
         facts = {"time_unknown": r["input"].get("time_unknown", False), "summary": c["report"]["summary"],
                  "planets": c["analysis"]["planets"], "houses": [{k: h[k] for k in ("house", "sign", "lord", "lord_in_house", "occupants")} for h in c["analysis"]["houses"]],
