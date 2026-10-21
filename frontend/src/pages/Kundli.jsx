@@ -49,7 +49,7 @@ function SavedView({ id }) {
   const nav = useNavigate();
   if (loading) return <Loading text={t("Calculating chart")} />;
   if (error) return <ErrorState error={error} onRetry={reload} />;
-  return <KundliResult input={data.input} chart={data.chart} style={data.input.chart_style} onEdit={() => nav("/kundli")} />;
+  return <KundliResult input={data.input} chart={data.chart} style={data.input.chart_style} onEdit={() => nav("/kundli")} savedId={data.id} aiReport={data.ai_report} />;
 }
 
 export default function Kundli() {
@@ -103,7 +103,7 @@ export default function Kundli() {
         <Link to="/kundli/match" data-testid="kundli-match-link" className="mt-4 inline-flex items-center min-h-11 rounded-full border border-amber-400/40 px-5 text-sm text-amber-200 hover:bg-amber-400/10 print:hidden">{t("Kundli matching (36 Guna Milan)")} →</Link>
       </header>
       {id ? <SavedView id={id} /> : res ? (
-        <KundliResult input={res.input} chart={res.chart} onStyle={setStyle} actions={saveBtn} onEdit={() => setRes(null)} />
+        <KundliResult input={res.input} chart={res.chart} onStyle={setStyle} actions={saveBtn} onEdit={() => setRes(null)} savedId={saved} />
       ) : <BirthForm key={JSON.stringify(last)} initial={last} busy={busy} onSubmit={calc} />}
       {user && (
         <section className="space-y-4 print:hidden">

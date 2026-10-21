@@ -8,20 +8,20 @@ import { useLang } from "../../lib/i18n";
 
 export function BirthForm({ initial, busy, onSubmit, submitLabel = "Calculate Kundli" }) {
   const { t } = useLang();
-  const [f, setF] = useState({ name: initial?.name || "", date: initial?.date || "", time: initial?.time || "" });
+  const [f, setF] = useState({ name: initial?.name || "", date: initial?.date || "", time: initial?.time || "", unknown: !!initial?.time_unknown });
   const [place, setPlace] = useState(initial?.place ? { label: initial.place, lat: initial.lat, lon: initial.lon, tz: initial.tz } : null);
   const [err, setErr] = useState("");
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
   const submit = (e) => {
     e.preventDefault();
-    if (!f.date || !f.time) return setErr(t("Enter the birth date and time."));
+    if (!f.date || (!f.time && !f.unknown)) return setErr(t("Enter the birth date and time."));
     const y = Number(f.date.slice(0, 4));
     if (!(y >= 1900 && y <= 2049)) return setErr(t("Birth year must be between 1900 and 2049."));
     if (!place) return setErr(t("Choose the birthplace from the list."));
     if (busy) return;
     setErr("");
-    onSubmit({ name: f.name.trim() || null, date: f.date, time: f.time, place: place.label, lat: place.lat, lon: place.lon, tz: place.tz });
+    onSubmit({ name: f.name.trim() || null, date: f.date, time: f.unknown ? "12:00" : f.time, time_unknown: f.unknown, place: place.label, lat: place.lat, lon: place.lon, tz: place.tz });
   };
 
   return (
@@ -37,7 +37,12 @@ export function BirthForm({ initial, busy, onSubmit, submitLabel = "Calculate Ku
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="birth-time">{t("Time of birth (local)")}</Label>
-          <Input id="birth-time" type="time" required data-testid="kundli-time-input" value={f.time} onChange={set("time")} className="h-12" />
+          <Input id="birth-time" type="time" required={!f.unknown} disabled={f.unknown} data-testid="kundli-time-input" value={f.unknown ? "12:00" : f.time} onChange={set("time")} className="h-12" />
+          <label className="flex items-center gap-2 min-h-10 text-sm text-muted-foreground cursor-pointer">
+            <input type="checkbox" data-testid="kundli-time-unknown" checked={f.unknown} onChange={(e) => setF({ ...f, unknown: e.target.checked })} className="h-4 w-4 accent-[#D4AF37]" />
+            {t("I don't know my exact birth time")}
+          </label>
+          {f.unknown && <p className="text-xs text-orange-200">{t("The chart will use 12:00 noon. Lagna, houses and dasha dates may be inaccurate.")}</p>}
         </div>
       </div>
       <div className="space-y-1.5">

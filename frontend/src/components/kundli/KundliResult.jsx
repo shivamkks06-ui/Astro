@@ -3,6 +3,7 @@ import { Calculator, RotateCcw } from "lucide-react";
 import { NorthChart, SouthChart } from "./Charts";
 import { DashaPanel } from "./DashaPanel";
 import { PanchangCard, ManglikCard, ShareBar } from "./KundliExtras";
+import { FullReport } from "./FullReport";
 import { useLang } from "../../lib/i18n";
 
 const deg = (d) => `${Math.floor(d)}°${String(Math.floor((d % 1) * 60)).padStart(2, "0")}′`;
@@ -42,7 +43,7 @@ function PlanetTable({ chart }) {
   );
 }
 
-export function KundliResult({ input, chart, style, onStyle, actions, onEdit }) {
+export function KundliResult({ input, chart, style, onStyle, actions, onEdit, savedId, aiReport }) {
   const [s, setS] = useState(style || "north");
   const [div, setDiv] = useState("d1");
   const view = div === "d1" ? chart : chart.navamsa;
@@ -79,6 +80,7 @@ export function KundliResult({ input, chart, style, onStyle, actions, onEdit }) 
         </div>
         <div className="space-y-6 min-w-0"><PlanetTable chart={chart} /><div className="grid sm:grid-cols-2 gap-4"><PanchangCard p={chart.panchang} /><ManglikCard m={chart.manglik} /></div><DashaPanel dasha={chart.dasha} /></div>
       </div>
+      {chart.report && <FullReport key={savedId || "new"} report={chart.report} savedId={savedId} aiReport={aiReport} />}
       <p data-testid="kundli-method" className="text-xs text-muted-foreground">{t("Method")}: {t("Sidereal zodiac, Lahiri ayanamsa ({a}°), Whole sign houses, Mean node, JPL DE421 ephemeris.", { a: chart.system.ayanamsa_degrees.toFixed(2) })} {t("These are astronomical calculations; any reading of them is interpretive guidance, not a prediction.")}</p>
     </section>
   );

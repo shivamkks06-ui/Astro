@@ -1,19 +1,24 @@
 import json
+import os
+import re
 import unicodedata
 from datetime import datetime
 from typing import Optional, Literal
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 from starlette.concurrency import run_in_threadpool
 from timezonefinder import TimezoneFinder
 from zoneinfo import ZoneInfo, available_timezones
 
+from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, StreamDone
+
 import astro_calc
 import astro_extras
+import astro_report
 import horoscope
-from core import db, now, new_id, current_user, rate_limit, client_ip
+from core import db, now, new_id, current_user, rate_limit, client_ip, logger
 
 router = APIRouter(prefix="/api")
 CITIES = json.loads((astro_calc.DATA / "cities.json").read_text(encoding="utf-8"))
@@ -76,6 +81,13 @@ class BirthIn(BaseModel):
     lon: float = Field(..., ge=-180, le=180)
     tz: str
     chart_style: Literal["north", "south"] = "north"
+    time_unknown: bool = False
+
+    @model_validator(mode="after")
+    def _noon(self):
+        if self.time_unknown:
+            self.time = "12:00"
+        return self
 
     @field_validator("tz")
     @classmethod
@@ -95,6 +107,8 @@ def _full(b):
     c["navamsa"] = astro_extras.navamsa(c)
     c["panchang"] = astro_extras.panchang(c, datetime.fromisoformat(c["birth"]["local"]), b.lat, b.lon)
     c["manglik"] = astro_extras.manglik(c)
+    c["analysis"] = astro_report.analyse(c)
+    c["report"] = astro_report.report(c, c["analysis"], b.time_unknown)
     return c
 
 
@@ -158,7 +172,49 @@ async def get_kundli(kid: str, user=Depends(current_user)):
         b = BirthIn(**r["input"])
     except ValueError:
         raise HTTPException(422, "This saved chart has invalid birth details. Delete it and create it again.")
-    return {"id": r["_id"], "input": r["input"], "chart": await _calc(b)}
+    return {"id": r["_id"], "input": r["input"], "chart": await _calc(b), "ai_report": r.get("ai_report")}
+
+
+AI_SYSTEM = ("You are a careful Vedic astrology writer for NakshatraVeda. Use ONLY the calculated facts given. Never invent placements, dates or yogas. "
+             "Write balanced guidance: no guarantees, no fear, no medical diagnosis, no death or illness predictions, no marriage or divorce dates, "
+             "never push gemstones, pujas or paid services. Plain English, warm and respectful.")
+AI_KEYS = ["personality", "career", "finance", "relationships", "education", "wellbeing", "dasha"]
+
+
+@router.post("/kundlis/{kid}/ai-report")
+async def ai_report(kid: str, user=Depends(current_user)):
+    r = await _own(kid, user)
+    if r.get("ai_report"):
+        return r["ai_report"]
+    await rate_limit(f"kundli-ai:{user['_id']}", 5, 3600)
+    got = await db.kundlis.find_one_and_update({"_id": kid, "user_id": user["_id"], "ai_pending": {"$ne": True}}, {"$set": {"ai_pending": True}})
+    if not got:
+        raise HTTPException(409, "The AI interpretation is already being written. Try again in a minute.")
+    try:
+        c = await _calc(BirthIn(**r["input"]))
+        facts = {"time_unknown": r["input"].get("time_unknown", False), "summary": c["report"]["summary"],
+                 "planets": c["analysis"]["planets"], "houses": [{k: h[k] for k in ("house", "sign", "lord", "lord_in_house", "occupants")} for h in c["analysis"]["houses"]],
+                 "yogas": [y["name"] for y in c["analysis"]["yogas"]], "doshas": [d["name"] for d in c["analysis"]["doshas"]], "dasha_current": c["dasha"]["current"]}
+        prompt = ("Calculated chart facts:\n" + json.dumps(facts, default=str) + "\nReturn JSON only: {" + ", ".join(f'\"{k}\": \"...\"' for k in AI_KEYS) +
+                  "}. Each value 3-5 sentences. If time_unknown is true, avoid Lagna and house-based claims and say so.")
+        chat = LlmChat(api_key=os.environ["EMERGENT_LLM_KEY"], session_id=f"kundli-{kid}", system_message=AI_SYSTEM).with_model("anthropic", "claude-sonnet-4-5-20250929")
+        text = ""
+        async for ev in chat.stream_message(UserMessage(text=prompt)):
+            if isinstance(ev, TextDelta):
+                text += ev.content
+            elif isinstance(ev, StreamDone):
+                break
+        data = json.loads(re.search(r"\{.*\}", text, re.S).group(0))
+        out = {"sections": {k: str(data.get(k, ""))[:1500] for k in AI_KEYS}, "model": "claude-sonnet-4-5", "created_at": now()}
+        await db.kundlis.update_one({"_id": kid}, {"$set": {"ai_report": out}})
+        return out
+    except HTTPException:
+        raise
+    except Exception:
+        logger.exception("kundli ai report failed")
+        raise HTTPException(502, "The AI interpretation could not be written right now. Please try again later.")
+    finally:
+        await db.kundlis.update_one({"_id": kid}, {"$unset": {"ai_pending": ""}})
 
 
 @router.delete("/kundlis/{kid}")
