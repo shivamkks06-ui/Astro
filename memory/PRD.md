@@ -116,6 +116,15 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - POST /api/kundli/pdf (rate-limited) and GET /api/kundlis/{id}/pdf (owner only); "Download PDF" button opens the phone's share menu where supported, otherwise downloads
 - Self-checked: 9-page PDF rendered and viewed, browser download works at 390px
 
+## Implemented (2026-11-06), Premium upgrade pass
+- Kundli: birth time accuracy Exact/Approximate/Unknown (time_accuracy); new report sections Personality, Mind and thinking, Emotions, Behaviour, Spirituality (element and dignity rules plus modifiers and practice); planet rows add Dispositor, D9 sign/vargottama, Dasha link; D9 interpretation in charts
+- Home: "How NakshatraVeda works" (4 steps) plus pricing/refund, verification and privacy links; footer disclaimer uses the user's exact wording
+- Legal: new Astrologer Verification Policy and Contact & Support (no email shown, by request); footer links
+- Account: Saved Kundli tab (reuses Saved from Kundli.jsx)
+- Forgot/reset password: email_service.py (Emergent managed Resend, safety gate), POST /api/auth/forgot-password (generic reply, rate-limited, SHA-256 hashed single-use token, 30 min), POST /api/auth/reset-password; pages /forgot-password and /reset-password; login link and success banner
+- Checked: backend reset flow (email 202, short password 422, token reuse rejected, old password 401, new password 200), report tests 11/11. UI testing skipped at the user's request
+- Not done: revoking existing sessions after a reset (tokens are stateless and expire on their own), real payments (MOCKED), audio/video provider
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)
