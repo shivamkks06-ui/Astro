@@ -204,6 +204,11 @@ def _house_item(h, P):
             ["Supportive", "; ".join(pos) or "—"], ["Challenging", "; ".join(neg) or "—"], ["Interpretation", text]]}
 
 
+def _disp(n, r, P):
+    d = LORD[SIGNS.index(r["sign"])]
+    return "itself (own sign)" if d == n else f"{d} (in house {P[d]['house']}, {P[d]['dignity']})"
+
+
 def _routine(focus, l10):
     days = []
     for d in range(1, 31):
@@ -216,7 +221,102 @@ def _routine(focus, l10):
     return days
 
 
-def report(chart, analysis, time_unknown=False):
+ELEM = ["fire", "earth", "air", "water"]
+CORE = {"fire": "confident, independent and quick to take initiative", "earth": "dependable, disciplined and grounded",
+        "air": "sociable, adaptable and fair-minded", "water": "caring, perceptive and protective"}
+MIND = {"fire": ("fast, decisive thinking that learns best by doing", "may decide before all the facts are in"),
+        "earth": ("methodical, practical reasoning that learns step by step", "can be slow to change an opinion once formed"),
+        "air": ("analytical, communicative and idea-rich thinking that learns through discussion", "can overthink options and scatter focus"),
+        "water": ("intuitive, memory-rich thinking that learns through context and feeling", "mood can colour judgement")}
+EMO = {"fire": ("feelings rise fast and are expressed openly, with quick recovery from disappointment; needs recognition and freedom", "may react before reflecting"),
+       "earth": ("steady, reserved feelings shown through practical care; needs security and routine", "may hold on to hurt quietly"),
+       "air": ("feelings processed by talking and reasoning; needs mental connection and personal space", "may detach or intellectualise under stress"),
+       "water": ("deep, sensitive feelings and strong attachment; needs emotional safety", "can absorb other people's moods")}
+ACT = {"fire": ("direct and bold, motivated by challenge; frustration flares fast and cools fast", "impatience in conflicts"),
+       "earth": ("patient, persistent effort motivated by tangible results; anger is slow but stubborn", "rigidity when plans change"),
+       "air": ("drive through ideas and people, motivated by variety and fairness; argues with words", "inconsistency in follow-through"),
+       "water": ("drive through feeling, motivated by protecting people they care about", "holding frustration inside until it spills over")}
+
+
+def _psy(chart, P, A, time_unknown):
+    """Personality, mind, emotions, behaviour: evidence, reasoning, positives, challenges, modifiers, practice."""
+    cp = {p["name"]: p for p in chart["planets"]}
+    el = lambda n: ELEM[cp[n]["sign_index"] % 4]
+    conj = lambda n: [x for c in A["conjunctions"] if n in c["planets"] for x in c["planets"] if x != n]
+    dig = lambda n: P[n]["dignity"]
+    asc_el = ELEM[chart["ascendant"]["sign_index"] % 4]
+    mod = lambda m: ("Modifying factors: " + "; ".join(m) + ".") if m else None
+    out = []
+    m = []
+    if not time_unknown and P[LORD[chart["ascendant"]["sign_index"]]]["house"] in (1, 4, 7, 10):
+        m.append("the Lagna lord sits in a kendra, traditionally a sign of a visible, self-directed life")
+    if dig("Sun") in ("exalted", "own sign", "moolatrikona"):
+        m.append(f"a strong Sun ({dig('Sun')}) adds natural confidence and leadership")
+    if dig("Sun") in ("debilitated", "enemy sign"):
+        m.append(f"the Sun in {dig('Sun')} suggests confidence grows with experience rather than coming automatically")
+    out.append(("personality", "Personality and core nature",
+        [None if time_unknown else f"Lagna {chart['ascendant']['sign']} ({asc_el} sign).", f"Sun in {cp['Sun']['sign']} ({el('Sun')}), house {P['Sun']['house']}, {dig('Sun')}."],
+        [("With the time unknown, this reading leans on the Sun and Moon. " if time_unknown else f"The rising sign gives an outward style that is {CORE[asc_el]}. ")
+         + f"The Sun, your self-image, adds a {el('Sun')} quality: {CORE[el('Sun')]}.",
+         "Traditional reasoning: the Lagna shows how you meet the world, the Sun how you see yourself.", mod(m),
+         "Practice: write down three strengths you used this week and one habit you want to improve; review it every Sunday."]))
+    mp, mn = MIND[el("Mercury")]
+    m = []
+    if P["Mercury"]["combust"]: m.append("Mercury is combust, so thoughts can be tied to pride or haste; pausing before replying helps")
+    if P["Mercury"]["retrograde"]: m.append("Mercury is retrograde, often linked with reflective thinking and revisiting decisions")
+    if "Jupiter" in conj("Mercury"): m.append("Jupiter with Mercury adds judgement and a love of learning")
+    if {"Rahu", "Ketu"} & set(conj("Mercury")): m.append("a node with Mercury can bring unusual ideas and occasional restlessness of thought")
+    if "Moon" in conj("Mercury"): m.append("the Moon with Mercury blends logic and feeling, supporting intuition but feeding overthinking")
+    out.append(("mind", "Mind and thinking", [f"Mercury in {cp['Mercury']['sign']} ({el('Mercury')}), house {P['Mercury']['house']}, {dig('Mercury')}.",
+        None if time_unknown else f"5th house (intellect) lord {A['lord_house'][5]} in house {P[A['lord_house'][5]]['house']}."],
+        [f"Mercury, the planet of reasoning, suggests {mp}.", f"Challenge: it {mn}.",
+         f"In this sign Mercury " + DIGNITY_TEXT.get(dig("Mercury"), "gives mixed results") + ".", mod(m),
+         "Practice: decide with a short written pros-and-cons list and a fixed deadline; one focused 30-minute study block a day builds concentration."]))
+    ep, en = EMO[el("Moon")]
+    c = conj("Moon")
+    m = []
+    if "Jupiter" in c: m.append("Jupiter with the Moon adds optimism and resilience")
+    if "Saturn" in c: m.append("Saturn with the Moon can make feelings serious or private; steady routines help")
+    if {"Rahu", "Ketu"} & set(c): m.append("a node with the Moon is linked with emotional intensity or restlessness; grounding practices help")
+    if "Mars" in c: m.append("Mars with the Moon brings passion and quick emotional reactions")
+    if any(y["name"] == "Kemadruma" for y in A["yogas"]): m.append("Kemadruma conditions suggest actively building a support circle")
+    out.append(("emotions", "Emotions and inner needs", [f"Moon in {cp['Moon']['sign']} ({el('Moon')}), house {P['Moon']['house']}, {dig('Moon')}, nakshatra {cp['Moon']['nakshatra']}.",
+        f"Planets with the Moon: {', '.join(c) or 'none'}."],
+        [f"The Moon describes the emotional mind: {ep}.", f"Challenge: {en}.",
+         "In this sign the Moon " + DIGNITY_TEXT.get(dig("Moon"), "gives mixed results") + ".", mod(m),
+         "Practice: name the feeling before acting on it, keep a regular sleep time, and talk to one trusted person each week. Astrology does not assess mental health; a qualified counsellor can help if stress feels heavy."]))
+    ap, an = ACT[el("Mars")]
+    m = []
+    if not time_unknown and P["Mars"]["house"] in (1, 7): m.append("Mars in the 1st or 7th house makes assertiveness visible in close relationships")
+    if dig("Mars") in ("exalted", "own sign"): m.append(f"a strong Mars ({dig('Mars')}) gives stamina and courage")
+    if dig("Mars") == "debilitated": m.append("a debilitated Mars suggests energy that comes in waves; pacing yourself helps")
+    if dig("Saturn") in ("exalted", "own sign"): m.append(f"a strong Saturn ({dig('Saturn')}) adds discipline and patience")
+    out.append(("behaviour", "Behaviour, drive and social style", [f"Mars in {cp['Mars']['sign']} ({el('Mars')}), house {P['Mars']['house']}, {dig('Mars')}.",
+        f"Saturn in {cp['Saturn']['sign']}, house {P['Saturn']['house']}, {dig('Saturn')}.", f"Venus in {cp['Venus']['sign']}, {dig('Venus')}."],
+        [f"Mars shows drive and how frustration is handled: {ap}.", f"Challenge: {an}.",
+         f"Saturn in {dig('Saturn')} describes discipline; Venus in {dig('Venus')} describes social warmth and cooperation.", mod(m),
+         "Practice: in conflicts, wait ten breaths before responding and restate the other person's point first; daily exercise is the traditional outlet for Mars energy."]))
+    return out
+
+
+def _spirit(P, A, time_unknown):
+    k, j = P["Ketu"], P["Jupiter"]
+    return ([f"Jupiter in {j['sign']}, house {j['house']}, {j['dignity']}.", f"Ketu in house {k['house']}.",
+             None if time_unknown else f"9th lord {A['lord_house'][9]} in house {P[A['lord_house'][9]]['house']}; 12th house occupants: {', '.join(A['houses'][11]['occupants']) or 'none'}."],
+            ["Jupiter, the guide of values and wisdom, " + DIGNITY_TEXT.get(j["dignity"], "gives mixed results") + " here.",
+             None if time_unknown else f"Ketu in house {k['house']} ({HOUSE_THEME[k['house'] - 1]}) is traditionally where you feel natural detachment and karmic familiarity; Rahu opposite shows where growth asks for new effort.",
+             "Practice: a fixed 10-minute daily quiet time (prayer, meditation or reflection) and one act of service a week; values grow through consistency, not intensity."])
+
+
+def _dlink(n, dasha):
+    cur = dasha.get("current") or {}
+    if cur.get("mahadasha") == n: return "current mahadasha lord"
+    if cur.get("antardasha") == n: return "current antardasha lord"
+    nxt = next((m for m in dasha["mahadashas"] if m["lord"] == n and m["start"] > datetime.now(timezone.utc).date().isoformat()), None)
+    return f"its mahadasha starts {nxt['start']}" if nxt else "no mahadasha ahead in the calculated cycle"
+
+
+def report(chart, analysis, time_unknown=False, approximate=False):
     A, P, LH = analysis, analysis["planets"], analysis["lord_house"]
     asc, lagna_lord = chart["ascendant"], LH[1]
     moon = next(p for p in chart["planets"] if p["name"] == "Moon")
@@ -256,9 +356,10 @@ def report(chart, analysis, time_unknown=False):
         f"Local time {b['local'][:16].replace('T', ' ')} ({b['tz']}), UTC {b['utc'][:16].replace('T', ' ')}.",
         f"Coordinates {b['lat']:.4f}, {b['lon']:.4f}.",
         f"{chart['system']['zodiac']} zodiac, Lahiri ayanamsa {chart['system']['ayanamsa_degrees']:.4f}°, whole sign houses, mean nodes, JPL DE421 ephemeris.",
-        "Birth time not known: calculated for 12:00 noon local time." if time_unknown else None], [
+        "Birth time not known: calculated for 12:00 noon local time." if time_unknown else "Birth time marked approximate." if approximate else "Birth time marked exact."], [
         "Daylight-saving time is applied automatically from the time-zone database for the birth date.",
-        "Lagna, houses, house lords, yogas based on houses and the Navamsa depend on the exact birth time and are unreliable when the time is unknown." if time_unknown else None])
+        "Lagna, houses, house lords, yogas based on houses and the Navamsa depend on the exact birth time and are unreliable when the time is unknown." if time_unknown else
+        "With an approximate time, the Lagna is reliable only if it is not near a sign edge" + (f" (yours is {asc['degree']:.1f}°, close to an edge, so treat Lagna-based sections with caution)." if asc["degree"] < 3 or asc["degree"] > 27 else f" (yours is {asc['degree']:.1f}°, comfortably inside the sign).") if approximate else None])
     sec("core", "Lagna, Rashi and Nakshatra", [
         None if time_unknown else f"Lagna: {asc['sign']} {asc['degree']:.2f}°, lord {lagna_lord}, nakshatra {asc['nakshatra']}.",
         f"Rashi (Moon sign): {moon['sign']} ({moon['rashi']}), nakshatra {moon['nakshatra']} pada {moon['pada']}, nakshatra lord {moon['nakshatra_lord']}.",
@@ -266,6 +367,8 @@ def report(chart, analysis, time_unknown=False):
         None if time_unknown else f"The Lagna lord {lagna_lord} placed in house {P[lagna_lord]['house']} directs attention to {HOUSE_THEME[P[lagna_lord]['house'] - 1]}.",
         f"The nakshatra lord {moon['nakshatra_lord']} colours your temperament with themes of {PLANET_THEME[moon['nakshatra_lord']]}.",
         "Your Moon is near a sign edge, so with an unknown birth time the Moon sign and nakshatra may differ." if time_unknown and moon_edge else None], True)
+    for sid, title, facts, text in _psy(chart, P, A, time_unknown):
+        sec(sid, title, facts, text, sid != "emotions", premium=sid != "personality")
     d10 = chart.get("dashamsa")
     sec("charts", "Birth charts", [f"D1 Rashi chart Lagna: {asc['sign']}.", f"D9 Navamsa chart Lagna: {chart['navamsa']['ascendant']['sign']}.",
         f"D10 Dashamsa (career) chart Lagna: {d10['ascendant']['sign']}; D10 10th house sign: {d10['houses'][9]['sign']}." if d10 else None],
@@ -274,6 +377,11 @@ def report(chart, analysis, time_unknown=False):
         unavailable=["Other divisional charts (D2, D3, D7, D12 and above)", "Shadbala and Ashtakavarga strength scores", "Bhava Chalit / unequal house systems"])
     CP = {p["name"]: p for p in chart["planets"]}
     conj = {n: [x for c in A["conjunctions"] if n in c["planets"] for x in c["planets"] if x != n] for n in P}
+    D9S = {p["name"]: SIGNS[p["sign_index"]] for p in chart["navamsa"]["planets"]}
+    varg = [n for n in D9S if D9S[n] == P[n]["sign"]]
+    S[-1]["text"].insert(1, f"D9 Navamsa Lagna {chart['navamsa']['ascendant']['sign']} (lord {LORD[chart['navamsa']['ascendant']['sign_index']]}) is read for inner strength and partnership quality. "
+                          + (f"Vargottama planets (same sign in D1 and D9): {', '.join(varg)}." if varg else "No planet is vargottama.")
+                          + (" With an approximate or unknown birth time, D9 and D10 Lagnas can change, so treat them as indicative." if time_unknown or approximate else ""))
     sec("planets", "Nine planets in detail", [pl(n) for n in P], [
         "Conjunctions: " + "; ".join(f"{', '.join(c['planets'])} in {c['sign']}" for c in A["conjunctions"]) + "." if A["conjunctions"] else "No two planets share a sign.",
         "Dignity uses exaltation, debilitation, moolatrikona, own sign and natural friendships. Combustion uses standard orbs from the Sun."],
@@ -281,6 +389,8 @@ def report(chart, analysis, time_unknown=False):
                      ["Nakshatra", f"{CP[n]['nakshatra']} pada {CP[n]['pada']} (lord {CP[n]['nakshatra_lord']})"], ["House", f"{r['house']}: {HOUSE_THEME[r['house'] - 1]}"],
                      ["Dignity", r["dignity"] + (", combust" if r["combust"] else "")], ["Rules houses", ", ".join(map(str, r["lord_of"])) or "—"],
                      ["Aspects houses", ", ".join(map(str, r["aspects_houses"]))], ["Conjunct with", ", ".join(conj[n]) or "—"],
+                     ["Dispositor", _disp(n, r, P)], ["D9 sign", D9S[n] + (" (vargottama: same sign in D1 and D9, traditionally steadying)" if D9S[n] == r["sign"] else "")],
+                     ["Dasha link", _dlink(n, chart["dasha"])],
                      ["Interpretation", _planet_text(n, r)]]} for n, r in P.items()])
     sec("houses", "Twelve houses (Bhavas)", [house_line(n) for n in range(1, 13)],
         ["Aspects follow classical graha drishti: every planet aspects the 7th house from itself; Mars also the 4th and 8th, Jupiter the 5th and 9th, Saturn the 3rd and 10th, Rahu and Ketu the 5th and 9th (a common view).",
@@ -318,6 +428,8 @@ def report(chart, analysis, time_unknown=False):
         f"The 4th lord {LH[4]} in house {P[LH[4]]['house']} relates home life to {HOUSE_THEME[P[LH[4]]['house'] - 1]}.",
         "Supportive habits: regular sleep, daily movement, time outdoors and honest conversations at home.",
         "This report does not assess health. For any health concern, consult a qualified doctor and never stop prescribed treatment."])
+    sf, st = _spirit(P, A, time_unknown)
+    sec("spirituality", "Spirituality and personal growth", sf, st, True, premium=True)
 
     dfacts, dtext = [], []
     m = next((x for x in chart["dasha"]["mahadashas"] if "antardashas" in x), None) if cur else None

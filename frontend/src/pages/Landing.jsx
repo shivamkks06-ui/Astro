@@ -17,6 +17,34 @@ const QUICK = [
   { to: "/discover", icon: Users, t: "Consult an astrologer", d: "Identity-checked astrologers with clear prices" },
 ];
 
+const STEPS = [
+  ["1", "Start free", "Read your daily horoscope or calculate your Kundli; no account is needed."],
+  ["2", "Choose an astrologer", "Compare identity-checked astrologers by language, expertise, experience and per-minute price."],
+  ["3", "Book with a clear price", "See the total before you pay, plus the cancellation window and refund terms."],
+  ["4", "Consult and keep control", "Chat in the app, then report, block or raise a dispute anytime. Your birth details stay private unless you share them."],
+];
+
+const HowItWorks = () => (
+  <section data-testid="how-it-works" className="max-w-7xl mx-auto px-5 sm:px-8 pb-10 sm:pb-16">
+    <p className="overline mb-2">How NakshatraVeda works</p>
+    <h2 className="text-[1.375rem] sm:text-3xl mb-6">Simple, transparent, private</h2>
+    <ol className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5">
+      {STEPS.map(([n, t, d]) => (
+        <li key={n} className="rounded-2xl border p-5 bg-card/50">
+          <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-amber-400/50 text-amber-200 font-semibold text-sm">{n}</span>
+          <h3 className="mt-3 text-lg">{t}</h3>
+          <p className="mt-1 text-sm text-muted-foreground leading-relaxed">{d}</p>
+        </li>
+      ))}
+    </ol>
+    <div className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+      <Link to="/legal/refunds" data-testid="home-refund-link" className="text-amber-200 underline underline-offset-4">Pricing & refund policy</Link>
+      <Link to="/legal/verification" data-testid="home-verification-link" className="text-amber-200 underline underline-offset-4">What our verification badges mean</Link>
+      <Link to="/legal/privacy" data-testid="home-privacy-link" className="text-amber-200 underline underline-offset-4">How we protect your data</Link>
+    </div>
+  </section>
+);
+
 const QuickAccess = () => (
   <section aria-label="Explore" className="max-w-7xl mx-auto px-5 sm:px-8 pt-2 sm:pt-10 grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-5">
     {QUICK.map(({ to, icon: I, t, d }) => (
@@ -62,6 +90,8 @@ export default function Landing() {
           </div>
         ))}
       </section>
+
+      <HowItWorks />
 
       <section className="max-w-7xl mx-auto px-5 sm:px-8">
         <div className="flex items-end justify-between gap-4 mb-5 sm:mb-8">

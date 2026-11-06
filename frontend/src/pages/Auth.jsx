@@ -72,8 +72,10 @@ export function LoginPage() {
   return (
     <Shell title="Welcome back" sub="Log in to manage your consultations.">
       <form onSubmit={submit} noValidate className="space-y-5">
+        {sp.get("reset") === "1" && <p data-testid="login-reset-success" role="status" className="text-sm text-emerald-200">Your password was changed. Log in with the new password.</p>}
         <Field id="login-email" label="Email" type="email" autoComplete="email" inputMode="email" required value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} />
         <Field id="login-password" label="Password" type="password" autoComplete="current-password" required value={f.password} onChange={(e) => setF({ ...f, password: e.target.value })} />
+        <Link to="/forgot-password" data-testid="login-forgot-link" className="block text-right text-sm text-amber-200 -mt-2">Forgot password?</Link>
         {err && <p data-testid="login-error" role="alert" className="text-sm text-red-300">{err}</p>}
         <Button data-testid="login-submit-button" className="w-full rounded-full h-12 text-base font-semibold" disabled={busy}>{busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{busy ? "Logging in…" : "Log in"}</Button>
         <p className="text-sm text-center text-muted-foreground">No account? <Link to="/register" className="text-amber-300">Register</Link></p>

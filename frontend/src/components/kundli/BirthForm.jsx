@@ -8,20 +8,21 @@ import { useLang } from "../../lib/i18n";
 
 export function BirthForm({ initial, busy, onSubmit, submitLabel = "Calculate Kundli" }) {
   const { t } = useLang();
-  const [f, setF] = useState({ name: initial?.name || "", date: initial?.date || "", time: initial?.time || "", unknown: !!initial?.time_unknown });
+  const [f, setF] = useState({ name: initial?.name || "", date: initial?.date || "", time: initial?.time || "", acc: initial?.time_accuracy || (initial?.time_unknown ? "unknown" : "exact") });
+  const unknown = f.acc === "unknown";
   const [place, setPlace] = useState(initial?.place ? { label: initial.place, lat: initial.lat, lon: initial.lon, tz: initial.tz } : null);
   const [err, setErr] = useState("");
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 
   const submit = (e) => {
     e.preventDefault();
-    if (!f.date || (!f.time && !f.unknown)) return setErr(t("Enter the birth date and time."));
+    if (!f.date || (!f.time && !unknown)) return setErr(t("Enter the birth date and time."));
     const y = Number(f.date.slice(0, 4));
     if (!(y >= 1900 && y <= 2049)) return setErr(t("Birth year must be between 1900 and 2049."));
     if (!place) return setErr(t("Choose the birthplace from the list."));
     if (busy) return;
     setErr("");
-    onSubmit({ name: f.name.trim() || null, date: f.date, time: f.unknown ? "12:00" : f.time, time_unknown: f.unknown, place: place.label, lat: place.lat, lon: place.lon, tz: place.tz });
+    onSubmit({ name: f.name.trim() || null, date: f.date, time: unknown ? "12:00" : f.time, time_unknown: unknown, time_accuracy: f.acc, place: place.label, lat: place.lat, lon: place.lon, tz: place.tz });
   };
 
   return (
@@ -37,12 +38,15 @@ export function BirthForm({ initial, busy, onSubmit, submitLabel = "Calculate Ku
         </div>
         <div className="space-y-1.5">
           <Label htmlFor="birth-time">{t("Time of birth (local)")}</Label>
-          <Input id="birth-time" type="time" required={!f.unknown} disabled={f.unknown} data-testid="kundli-time-input" value={f.unknown ? "12:00" : f.time} onChange={set("time")} className="h-12" />
-          <label className="flex items-center gap-2 min-h-10 text-sm text-muted-foreground cursor-pointer">
-            <input type="checkbox" data-testid="kundli-time-unknown" checked={f.unknown} onChange={(e) => setF({ ...f, unknown: e.target.checked })} className="h-4 w-4 accent-[#D4AF37]" />
-            {t("I don't know my exact birth time")}
-          </label>
-          {f.unknown && <p className="text-xs text-orange-200">{t("The chart will use 12:00 noon. Lagna, houses and dasha dates may be inaccurate.")}</p>}
+          <Input id="birth-time" type="time" required={!unknown} disabled={unknown} data-testid="kundli-time-input" value={unknown ? "12:00" : f.time} onChange={set("time")} className="h-12" />
+          <div role="radiogroup" aria-label={t("Birth time accuracy")} className="grid grid-cols-3 gap-1.5 pt-1">
+            {[["exact", "Exact"], ["approximate", "Approximate"], ["unknown", "Unknown"]].map(([v, l]) => (
+              <button key={v} type="button" role="radio" aria-checked={f.acc === v} data-testid={v === "unknown" ? "kundli-time-unknown" : `kundli-time-${v}`} onClick={() => setF({ ...f, acc: v })}
+                className={`min-h-10 rounded-lg border text-xs transition-colors ${f.acc === v ? "border-amber-300 bg-amber-400/15 text-amber-100 font-semibold" : "text-muted-foreground"}`}>{t(l)}</button>
+            ))}
+          </div>
+          {unknown && <p className="text-xs text-orange-200">{t("The chart will use 12:00 noon. Lagna, houses and dasha dates may be inaccurate.")}</p>}
+          {f.acc === "approximate" && <p className="text-xs text-orange-200">{t("Lagna, D9 and D10 can shift with a few minutes' difference; the report marks where this matters.")}</p>}
         </div>
       </div>
       <div className="space-y-1.5">

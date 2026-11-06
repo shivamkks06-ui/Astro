@@ -30,6 +30,21 @@ const DOCS = {
     "Audio/video sessions that never connect are not charged.",
     "You can raise a dispute within the dispute window shown at booking. Our team reviews it and may issue a full or partial refund.",
   ]],
+  verification: ["Astrologer Verification Policy", [
+    "Every astrologer applies through the in-app Studio with a government ID, qualification documents, experience, languages, expertise and per-minute prices.",
+    "Identity and credentials are reviewed separately by our admin team. \"Identity checked\" means the government ID matched the applicant. \"Credentials reviewed\" means the qualification documents were reviewed. Neither badge appears until that specific review is approved.",
+    "Only admin-approved astrologers with an active listing appear in Discover and can be booked. Applications can be approved, rejected with a reason, or sent back for resubmission.",
+    "Identity documents are stored privately. They are never shown to customers or other astrologers.",
+    "Ratings and reviews are shown only when they come from real completed consultations. We do not create or edit reviews.",
+    "Verification confirms identity and documents only. It does not guarantee the accuracy of any reading.",
+  ]],
+  support: ["Contact & Support", [
+    "For a problem with a consultation, open the booking from Account → Bookings and use Report or Dispute there, within the dispute window shown at booking. This links your request to the right session.",
+    "For a safety concern, use Report or Block on the astrologer's profile or in the chat. Safety reports are reviewed by our team.",
+    "To download or delete your data, go to Account → Privacy. Deletion requests are processed by our team, and the status is shown there.",
+    "How your birth details are used: they are used only to calculate charts and reports. They are stored only if you save a chart or a birth profile, and only you can see them. Astrologers see birth details only when you share them in a booking.",
+    "Payments: prices are shown per minute before you book, and refunds follow the Refund & Cancellation Policy.",
+  ]],
 };
 
 export default function Legal() {

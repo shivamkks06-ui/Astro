@@ -3,9 +3,10 @@ import { BookingsList } from "../components/BookingsList";
 import { BirthProfiles } from "../components/customer/BirthProfiles";
 import { Payments } from "../components/customer/Payments";
 import { Privacy, Blocks } from "../components/customer/Privacy";
+import { Saved } from "./Kundli";
 import { useAuth } from "../context/AuthContext";
 
-const TABS = [["bookings", "Bookings"], ["birth", "Birth profiles"], ["payments", "Payments"], ["safety", "Safety"], ["privacy", "Privacy"]];
+const TABS = [["bookings", "Bookings"], ["kundli", "Saved Kundli"], ["birth", "Birth profiles"], ["payments", "Payments"], ["safety", "Safety"], ["privacy", "Privacy"]];
 
 export default function CustomerDashboard() {
   const { user } = useAuth();
@@ -18,6 +19,7 @@ export default function CustomerDashboard() {
           {TABS.map(([v, l]) => <TabsTrigger key={v} value={v} data-testid={`tab-${v}`}>{l}</TabsTrigger>)}
         </TabsList>
         <TabsContent value="bookings"><BookingsList role="customer" /></TabsContent>
+        <TabsContent value="kundli"><Saved reloadKey={0} /></TabsContent>
         <TabsContent value="birth"><BirthProfiles /></TabsContent>
         <TabsContent value="payments"><Payments /></TabsContent>
         <TabsContent value="safety"><Blocks /></TabsContent>

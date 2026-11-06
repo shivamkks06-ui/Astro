@@ -84,11 +84,15 @@ class BirthIn(BaseModel):
     tz: str
     chart_style: Literal["north", "south"] = "north"
     time_unknown: bool = False
+    time_accuracy: Optional[Literal["exact", "approximate", "unknown"]] = None
 
     @model_validator(mode="after")
     def _noon(self):
+        if self.time_accuracy == "unknown":
+            self.time_unknown = True
         if self.time_unknown:
             self.time = "12:00"
+            self.time_accuracy = "unknown"
         return self
 
     @field_validator("tz")
@@ -111,7 +115,7 @@ def _full(b):
     c["panchang"] = astro_extras.panchang(c, datetime.fromisoformat(c["birth"]["local"]), b.lat, b.lon)
     c["manglik"] = astro_extras.manglik(c)
     c["analysis"] = astro_report.analyse(c)
-    c["report"] = astro_report.report(c, c["analysis"], b.time_unknown)
+    c["report"] = astro_report.report(c, c["analysis"], b.time_unknown, b.time_accuracy == "approximate")
     return c
 
 

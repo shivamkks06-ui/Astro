@@ -14,7 +14,7 @@ import { LangToggle } from "../components/LangToggle";
 
 const PENDING = "nv:pending-kundli";
 
-function Saved({ reloadKey, currentId }) {
+export function Saved({ reloadKey, currentId }) {
   const { t } = useLang();
   const nav = useNavigate();
   const { data, loading, error, reload } = useApi(`/kundlis?k=${reloadKey}`);

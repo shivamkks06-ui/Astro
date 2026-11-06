@@ -7,7 +7,7 @@ import { useAuth, homeFor } from "../context/AuthContext";
 
 export const BrandMark = ({ className = "" }) => <img src="/brand-mark.png" alt="" aria-hidden="true" width={64} height={64} className={`${className} rounded-full shrink-0`} />;
 
-const DISCLAIMER = "Astrology services are offered as interpretive guidance, not guaranteed outcomes. They are not a substitute for professional medical, legal or financial advice.";
+const DISCLAIMER = "Astrology services provide traditional interpretive guidance for personal reflection. They do not guarantee outcomes and are not a substitute for professional medical, legal or financial advice.";
 
 function NavLinks({ user, onNav, drawer }) {
   const links = [{ to: "/horoscope", label: "Horoscope" }, { to: "/kundli", label: "Kundli" }, { to: "/discover", label: "Find Astrologers" }, { to: "/legal/guidelines", label: "Safety & Guidelines" }];
@@ -82,7 +82,7 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8 sm:py-10 grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-[2fr_1fr]">
         <p data-testid="footer-disclaimer" className="text-sm text-muted-foreground leading-relaxed max-w-2xl">{DISCLAIMER}</p>
         <div className="flex flex-wrap gap-x-6 text-sm md:justify-end">
-          {[["terms", "Terms"], ["privacy", "Privacy"], ["guidelines", "Community Guidelines"], ["refunds", "Refund Policy"]].map(([s, l]) => (
+          {[["terms", "Terms"], ["privacy", "Privacy"], ["guidelines", "Community Guidelines"], ["refunds", "Refund Policy"], ["verification", "Astrologer Verification"], ["support", "Contact & Support"]].map(([s, l]) => (
             <Link key={s} to={`/legal/${s}`} data-testid={`footer-link-${s}`} className="py-2 text-slate-400 hover:text-amber-200">{l}</Link>
           ))}
         </div>
