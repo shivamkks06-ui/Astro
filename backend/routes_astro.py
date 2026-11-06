@@ -105,6 +105,7 @@ class BirthIn(BaseModel):
 def _full(b):
     c = astro_calc.kundli(b.date, b.time, b.lat, b.lon, b.tz)
     c["navamsa"] = astro_extras.navamsa(c)
+    c["dashamsa"] = astro_extras.dashamsa(c)
     c["panchang"] = astro_extras.panchang(c, datetime.fromisoformat(c["birth"]["local"]), b.lat, b.lon)
     c["manglik"] = astro_extras.manglik(c)
     c["analysis"] = astro_report.analyse(c)
@@ -193,11 +194,13 @@ async def ai_report(kid: str, user=Depends(current_user)):
     try:
         await rate_limit(f"kundli-ai:{user['_id']}", 5, 3600)
         c = await _calc(BirthIn(**r["input"]))
-        facts = {"time_unknown": r["input"].get("time_unknown", False), "summary": c["report"]["summary"],
+        facts = {"d10_lagna": c["dashamsa"]["ascendant"]["sign"], "d9_lagna": c["navamsa"]["ascendant"]["sign"], "time_unknown": r["input"].get("time_unknown", False), "summary": c["report"]["summary"],
                  "planets": c["analysis"]["planets"], "houses": [{k: h[k] for k in ("house", "sign", "lord", "lord_in_house", "occupants")} for h in c["analysis"]["houses"]],
                  "yogas": [y["name"] for y in c["analysis"]["yogas"]], "doshas": [d["name"] for d in c["analysis"]["doshas"]], "dasha_current": c["dasha"]["current"]}
         prompt = ("Calculated chart facts:\n" + json.dumps(facts, default=str) + "\nReturn JSON only: {" + ", ".join(f'\"{k}\": \"...\"' for k in AI_KEYS) +
-                  "}. Each value 3-5 sentences. If time_unknown is true, avoid Lagna and house-based claims and say so.")
+                  "}. Each value is 5-7 sentences in this order: (1) the actual chart evidence from the facts, (2) the traditional reasoning, "
+                  "(3) positive potential, (4) challenges and limits, (5) one or two practical recommendations. Be specific to these facts; avoid generic filler and repetition. "
+                  "If time_unknown is true, avoid Lagna and house-based claims and say so.")
         chat = LlmChat(api_key=os.environ["EMERGENT_LLM_KEY"], session_id=f"kundli-{kid}", system_message=AI_SYSTEM).with_model("anthropic", "claude-sonnet-4-5-20250929")
         text = ""
         async for ev in chat.stream_message(UserMessage(text=prompt)):

@@ -46,7 +46,7 @@ function PlanetTable({ chart }) {
 export function KundliResult({ input, chart, style, onStyle, actions, onEdit, savedId, aiReport }) {
   const [s, setS] = useState(style || "north");
   const [div, setDiv] = useState("d1");
-  const view = div === "d1" ? chart : chart.navamsa;
+  const view = div === "d1" ? chart : div === "d9" ? chart.navamsa : chart.dashamsa;
   const pick = (v) => { setS(v); onStyle?.(v); };
   const b = chart.birth;
   const { t } = useLang();
@@ -63,8 +63,8 @@ export function KundliResult({ input, chart, style, onStyle, actions, onEdit, sa
       <Summary chart={chart} />
       <div className="grid lg:grid-cols-[380px_1fr] gap-6 items-start">
         <div className="space-y-3">
-          <div role="tablist" aria-label="Divisional chart" className="grid grid-cols-2 rounded-full border p-1 print:hidden">
-            {[["d1", "Rashi (D1)"], ["d9", "Navamsa (D9)"]].map(([v, l]) => (
+          <div role="tablist" aria-label="Divisional chart" className="grid grid-cols-3 rounded-full border p-1 print:hidden">
+            {[["d1", "Rashi (D1)"], ["d9", "Navamsa (D9)"], ...(chart.dashamsa ? [["d10", "Dashamsa (D10)"]] : [])].map(([v, l]) => (
               <button key={v} role="tab" type="button" aria-selected={div === v} data-testid={`chart-div-${v}`} onClick={() => setDiv(v)}
                 className={`min-h-10 rounded-full text-sm transition-colors ${div === v ? "bg-amber-400/20 text-amber-100 font-semibold" : "text-muted-foreground"}`}>{t(l)}</button>
             ))}
@@ -75,12 +75,12 @@ export function KundliResult({ input, chart, style, onStyle, actions, onEdit, sa
                 className={`min-h-10 rounded-full text-sm transition-colors ${s === v ? "bg-primary text-primary-foreground font-semibold" : "text-muted-foreground"}`}>{t(l)}</button>
             ))}
           </div>
-          {s === "north" ? <NorthChart chart={view} testid={div === "d1" ? "chart-north" : "chart-north-d9"} /> : <SouthChart chart={view} label={div === "d1" ? "RASHI" : "NAVAMSA"} />}
-          <p className="text-[11px] text-muted-foreground text-center">{t(s === "north" ? "Numbers are sign numbers (1 = Aries); house 1 is the top diamond." : "Signs are fixed; Asc marks the Lagna.")} {t("(R) = retrograde.")}{div === "d9" && ` ${t("The table below shows Rashi (D1) positions.")}`}</p>
+          {s === "north" ? <NorthChart chart={view} testid={div === "d1" ? "chart-north" : `chart-north-${div}`} /> : <SouthChart chart={view} label={{ d1: "RASHI", d9: "NAVAMSA", d10: "DASHAMSA" }[div]} />}
+          <p className="text-[11px] text-muted-foreground text-center">{t(s === "north" ? "Numbers are sign numbers (1 = Aries); house 1 is the top diamond." : "Signs are fixed; Asc marks the Lagna.")} {t("(R) = retrograde.")}{div !== "d1" && ` ${t("The table below shows Rashi (D1) positions.")}`}</p>
         </div>
         <div className="space-y-6 min-w-0"><PlanetTable chart={chart} /><div className="grid sm:grid-cols-2 gap-4"><PanchangCard p={chart.panchang} /><ManglikCard m={chart.manglik} /></div><DashaPanel dasha={chart.dasha} /></div>
       </div>
-      {chart.report && <FullReport key={savedId || "new"} report={chart.report} savedId={savedId} aiReport={aiReport} />}
+      {chart.report && <FullReport key={savedId || "new"} report={chart.report} savedId={savedId} aiReport={aiReport} storeKey={`nv:routine:${chart.birth.utc}:${chart.birth.lat}:${chart.birth.lon}`} />}
       <p data-testid="kundli-method" className="text-xs text-muted-foreground">{t("Method")}: {t("Sidereal zodiac, Lahiri ayanamsa ({a}°), Whole sign houses, Mean node, JPL DE421 ephemeris.", { a: chart.system.ayanamsa_degrees.toFixed(2) })} {t("These are astronomical calculations; any reading of them is interpretive guidance, not a prediction.")}</p>
     </section>
   );

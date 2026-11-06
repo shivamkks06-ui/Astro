@@ -171,6 +171,51 @@ def _p(t):
     return [x for x in t if x]
 
 
+BENEFIC = {"Jupiter", "Venus", "Mercury", "Moon"}
+STRONG = {"exalted", "moolatrikona", "own sign"}
+WEAK = {"debilitated", "enemy sign"}
+DIGNITY_TEXT = {"exalted": "works at its best and expresses its themes with ease", "moolatrikona": "is very comfortable and reliable",
+                "own sign": "is at home and dependable", "friendly sign": "is supported and generally cooperative", "neutral sign": "gives moderate, mixed results", "neutral": "gives moderate, mixed results",
+                "enemy sign": "needs extra effort and patience to give its best", "debilitated": "is under strain; its themes grow through conscious effort",
+                "node": "acts through the sign lord and the planets it joins"}
+
+
+def _planet_text(n, r):
+    lords = f" As lord of house{'s' if len(r['lord_of']) > 1 else ''} {', '.join(map(str, r['lord_of']))}, it links those areas to house {r['house']}." if r["lord_of"] else ""
+    return (f"{n} signifies {PLANET_THEME[n]}. In house {r['house']} it focuses these on {HOUSE_THEME[r['house'] - 1]}, and in this sign it {DIGNITY_TEXT.get(r['dignity'], 'gives mixed results')}."
+            + lords + (" Being combust, its significations can feel overshadowed by ego or haste." if r["combust"] else ""))
+
+
+def _house_item(h, P):
+    n, lp = h["house"], P[h["lord"]]
+    near = h["occupants"] + [x for x in h["aspected_by"] if x not in h["occupants"]]
+    pos = [f"{x} (benefic)" for x in near if x in BENEFIC] + [f"{x} ({P[x]['dignity']})" for x in near if x not in BENEFIC and P[x]["dignity"] in STRONG]
+    if lp["dignity"] in STRONG or lp["dignity"] == "friendly sign": pos.append(f"lord {h['lord']} in {lp['dignity']}")
+    if lp["house"] in (1, 4, 5, 7, 9, 10): pos.append(f"lord in a kendra/trikona (house {lp['house']})")
+    neg = [x for x in near if x not in BENEFIC and P[x]["dignity"] not in STRONG]
+    if lp["dignity"] in WEAK or lp["combust"]: neg.append(f"lord {h['lord']} {'combust' if lp['combust'] else 'in ' + lp['dignity']}")
+    if lp["house"] in (6, 8, 12): neg.append(f"lord in a dusthana (house {lp['house']})")
+    tone = "well supported" if len(pos) > len(neg) else "asks for steady effort" if len(neg) > len(pos) else "balanced"
+    text = (f"House {n} covers {h['theme']}. Its lord {h['lord']} sits in house {lp['house']}, so these matters connect with {HOUSE_THEME[lp['house'] - 1]}."
+            + (f" {', '.join(h['occupants'])} placed here colour it directly." if h["occupants"] else " No planet occupies it, so the lord's condition matters most.")
+            + f" Overall this house is {tone} in your chart.")
+    return {"title": f"House {n}", "rows": [["Meaning", h["theme"]], ["Sign", h["sign"]], ["Lord", f"{h['lord']} (in house {lp['house']}, {lp['dignity']})"],
+            ["Planets", ", ".join(h["occupants"]) or "—"], ["Aspected by", ", ".join(h["aspected_by"]) or "—"],
+            ["Supportive", "; ".join(pos) or "—"], ["Challenging", "; ".join(neg) or "—"], ["Interpretation", text]]}
+
+
+def _routine(focus, l10):
+    days = []
+    for d in range(1, 31):
+        n = focus[(d - 1) % len(focus)]
+        dev, iast, simple, day, charity, habit, _ = REMEDY[n]
+        task = f"5 minutes: {simple} ({n}); then {habit.lower()}"
+        if d % 7 == 0: task += f"; weekly seva: {charity.lower()}"
+        if d % 10 == 0: task += f"; career step: {CAREER_ACT[l10].split(';')[0]}"
+        days.append({"day": d, "task": task})
+    return days
+
+
 def report(chart, analysis, time_unknown=False):
     A, P, LH = analysis, analysis["planets"], analysis["lord_house"]
     asc, lagna_lord = chart["ascendant"], LH[1]
@@ -221,18 +266,26 @@ def report(chart, analysis, time_unknown=False):
         None if time_unknown else f"The Lagna lord {lagna_lord} placed in house {P[lagna_lord]['house']} directs attention to {HOUSE_THEME[P[lagna_lord]['house'] - 1]}.",
         f"The nakshatra lord {moon['nakshatra_lord']} colours your temperament with themes of {PLANET_THEME[moon['nakshatra_lord']]}.",
         "Your Moon is near a sign edge, so with an unknown birth time the Moon sign and nakshatra may differ." if time_unknown and moon_edge else None], True)
-    sec("charts", "Birth charts", [f"D1 Rashi chart Lagna: {asc['sign']}.", f"D9 Navamsa chart Lagna: {chart['navamsa']['ascendant']['sign']}."],
-        ["Both charts are shown above; use the Rashi / Navamsa switch to change between them."], True,
-        unavailable=["Other divisional charts (D10 and above)", "Shadbala and Ashtakavarga strength scores", "Bhava Chalit / unequal house systems"])
-    sec("planets", "Planetary placements", [pl(n) for n in P], [
+    d10 = chart.get("dashamsa")
+    sec("charts", "Birth charts", [f"D1 Rashi chart Lagna: {asc['sign']}.", f"D9 Navamsa chart Lagna: {chart['navamsa']['ascendant']['sign']}.",
+        f"D10 Dashamsa (career) chart Lagna: {d10['ascendant']['sign']}; D10 10th house sign: {d10['houses'][9]['sign']}." if d10 else None],
+        ["All three charts are shown above; use the D1 / D9 / D10 switch.",
+         f"In the D10, the 10th house falls in {d10['houses'][9]['sign']}, ruled by {LORD[d10['houses'][9]['sign_index']]}, a traditional pointer to the style of work that suits you." if d10 else None], True,
+        unavailable=["Other divisional charts (D2, D3, D7, D12 and above)", "Shadbala and Ashtakavarga strength scores", "Bhava Chalit / unequal house systems"])
+    CP = {p["name"]: p for p in chart["planets"]}
+    conj = {n: [x for c in A["conjunctions"] if n in c["planets"] for x in c["planets"] if x != n] for n in P}
+    sec("planets", "Nine planets in detail", [pl(n) for n in P], [
         "Conjunctions: " + "; ".join(f"{', '.join(c['planets'])} in {c['sign']}" for c in A["conjunctions"]) + "." if A["conjunctions"] else "No two planets share a sign.",
         "Dignity uses exaltation, debilitation, moolatrikona, own sign and natural friendships. Combustion uses standard orbs from the Sun."],
-        True, items=[{"title": n, "rows": [["Sign", r["sign"]], ["House", r["house"]], ["Dignity", r["dignity"]], ["Combust", "yes" if r["combust"] else "no"],
-                                         ["Aspects houses", ", ".join(map(str, r["aspects_houses"]))], ["Rules houses", ", ".join(map(str, r["lord_of"])) or "—"]]} for n, r in P.items()])
+        True, items=[{"title": n, "rows": [["Sign and degree", f"{r['sign']} {CP[n]['degree']:.2f}°{' (R)' if r['retrograde'] and n not in ('Rahu', 'Ketu') else ''}"],
+                     ["Nakshatra", f"{CP[n]['nakshatra']} pada {CP[n]['pada']} (lord {CP[n]['nakshatra_lord']})"], ["House", f"{r['house']}: {HOUSE_THEME[r['house'] - 1]}"],
+                     ["Dignity", r["dignity"] + (", combust" if r["combust"] else "")], ["Rules houses", ", ".join(map(str, r["lord_of"])) or "—"],
+                     ["Aspects houses", ", ".join(map(str, r["aspects_houses"]))], ["Conjunct with", ", ".join(conj[n]) or "—"],
+                     ["Interpretation", _planet_text(n, r)]]} for n, r in P.items()])
     sec("houses", "Twelve houses (Bhavas)", [house_line(n) for n in range(1, 13)],
-        ["Aspects follow classical graha drishti: every planet aspects the 7th house from itself; Mars also the 4th and 8th, Jupiter the 5th and 9th, Saturn the 3rd and 10th, Rahu and Ketu the 5th and 9th (a common view)."],
-        True, items=[{"title": f"House {h['house']}", "rows": [["Sign", h["sign"]], ["Lord", f"{h['lord']} (in house {h['lord_in_house']})"],
-                      ["Planets", ", ".join(h["occupants"]) or "—"], ["Aspected by", ", ".join(h["aspected_by"]) or "—"], ["Theme", h["theme"]]]} for h in A["houses"]], premium=True)
+        ["Aspects follow classical graha drishti: every planet aspects the 7th house from itself; Mars also the 4th and 8th, Jupiter the 5th and 9th, Saturn the 3rd and 10th, Rahu and Ketu the 5th and 9th (a common view).",
+         "Natural benefics (Jupiter, Venus, Mercury, Moon) and strong lords support a house; natural malefics (Saturn, Mars, Sun, Rahu, Ketu) and weak or hidden lords add effort and lessons."],
+        True, items=[_house_item(h, P) for h in A["houses"]], premium=True)
     yd = [{"title": y["name"], "rows": [["Basis", y["basis"]], ["Meaning", y["meaning"]]] + ([["Note", "Depends on birth time"]] if y.get("time_sensitive") and time_unknown else [])} for y in yogas + doshas]
     sec("yogas", "Important yogas and doshas", [f"{len(yogas)} yoga(s) and {len(doshas)} dosha(s) found."] if yd else ["No listed yoga or dosha conditions are met in this chart."], [
         "Checked: Gajakesari, Budhaditya, Chandra-Mangal, Pancha Mahapurusha, Kemadruma, Raja, Yogakaraka, Dhana, Vipareeta Raja, Neecha Bhanga, Manglik, Kaal Sarp and current Sade Sati.",
@@ -308,6 +361,9 @@ def report(chart, analysis, time_unknown=False):
                       ["Stone", REMEDY[lagna_lord][6]], ["Note", "Entirely optional. Mantra, charity and habits are free alternatives. Get any stone checked by a qualified expert; never buy under pressure."]]})
     sec("remedies", "Personalized traditional remedies", [f"Remedies focus on: {', '.join(focus[:4])}."] if focus else [], [
         "These are traditional spiritual practices. They are optional and are not scientifically guaranteed; no costly ritual is needed."], items=items, premium=True)
+    sec("routine", "30-day remedy routine", [f"Built from: {', '.join(focus[:3])}."] if focus else [], [
+        "Tick each day as you go; progress is saved on this device. Skip or adapt anything that does not suit you; nothing here is compulsory."], premium=True)
+    S[-1]["checklist"] = _routine(focus[:3] or ["Moon"], L10)
     sec("plan", "Practical action plan", [], [
         f"Career: {CAREER_ACT[L10]}.", "Money: track spending weekly and save a fixed share of income first.",
         "Relationships: one honest, unhurried conversation each week with the people closest to you.",
@@ -315,6 +371,6 @@ def report(chart, analysis, time_unknown=False):
         f"Inner balance: {REMEDY[focus[0]][5] if focus else 'meditate 10 minutes daily'}."], premium=True)
     sec("disclaimer", "Disclaimer and calculation limitations", [], [
         "Planet positions, houses, dashas and yogas are calculated from your birth details; the explanations are traditional interpretations, not facts or predictions.",
-        "Not available: Shadbala, Ashtakavarga, divisional charts beyond D9 and future transit forecasts.",
+        "Not available: Shadbala, Ashtakavarga, divisional charts other than D1, D9 and D10, and future transit forecasts.",
         "Do not make medical, legal, financial or relationship decisions based only on astrology. Consult qualified professionals."])
     return {"summary": summary, "time_unknown": time_unknown, "sections": S}

@@ -103,6 +103,14 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - Not supported (shown as unavailable): Shadbala, Ashtakavarga, D10+, future transit forecasts
 - Tests: iteration_18 (backend 41/41, frontend all flows); minor follow-ups fixed afterwards
 
+## Implemented (2026-11-06), Expert Kundli upgrade
+- D10 Dashamsa chart (odd signs from self, even from the 9th) + D1/D9/D10 toggle; the D10 Lagna and 10th house go into the report and the AI facts
+- Nine-planet items: sign and degree, nakshatra/pada/lord, house and meaning, dignity/combust, rulerships, aspects, conjunctions, interpretation
+- 12-house items: meaning, sign, lord and condition, occupants, aspects, supportive and challenging factors, interpretation
+- New "routine" section: 30-day remedy checklist (progress saved per chart in localStorage)
+- AI prompt now requires evidence, reasoning, positives, challenges and advice per section (cached as before)
+- Self-tested (credit budget): pytest 40/40 (the LLM test was skipped), 390px screenshots; testing agent not run
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)

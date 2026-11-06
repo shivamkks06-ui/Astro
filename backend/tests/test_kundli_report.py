@@ -14,7 +14,7 @@ CUST = ("demo.customer@nakshatraveda.test", "DemoPass@123")
 OTHER = ("demo.astro1@nakshatraveda.test", "DemoPass@123")
 BIRTH = {"date": "1990-08-15", "time": "10:30", "place": "Varanasi", "lat": 25.3176, "lon": 82.9739, "tz": "Asia/Kolkata"}
 ORDER = ["overview", "birth", "core", "charts", "planets", "houses", "yogas", "career", "finance", "relationships",
-         "education", "family", "dasha", "remedies", "plan", "disclaimer"]
+         "education", "family", "dasha", "remedies", "routine", "plan", "disclaimer"]
 TS = ["core", "charts", "planets", "houses", "yogas", "career", "finance", "relationships", "education", "family"]
 GRAHAS = ["Sun", "Moon", "Mars", "Mercury", "Jupiter", "Venus", "Saturn"]
 OTHERS = [

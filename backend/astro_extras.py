@@ -16,8 +16,17 @@ VARAS = ["Somavara (Monday)", "Mangalavara (Tuesday)", "Budhavara (Wednesday)", 
          "Shanivara (Saturday)", "Ravivara (Sunday)"]
 
 
-def navamsa(chart):
-    d9 = lambda lon: int(lon * 9 / 30) % 12
+def _d10(lon):
+    s, part = int(lon // 30), int((lon % 30) // 3)
+    return ((s if s % 2 == 0 else s + 8) + part) % 12  # odd signs from self, even signs from the 9th
+
+
+def dashamsa(chart):
+    return navamsa(chart, _d10)
+
+
+def navamsa(chart, d9=None):
+    d9 = d9 or (lambda lon: int(lon * 9 / 30) % 12)
     asc = d9(chart["ascendant"]["lon"])
     planets = [{"name": p["name"], "sign_index": d9(p["lon"]), "sign": SIGNS[d9(p["lon"])], "retrograde": p["retrograde"],
                 "house": (d9(p["lon"]) - asc) % 12 + 1} for p in chart["planets"]]

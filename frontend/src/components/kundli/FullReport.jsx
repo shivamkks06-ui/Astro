@@ -22,7 +22,28 @@ function Items({ items }) {
   );
 }
 
-function Section({ s, ai, open, onToggle }) {
+function Checklist({ days, storeKey }) {
+  const { t } = useLang();
+  const [done, setDone] = useState(() => { try { return JSON.parse(localStorage.getItem(storeKey) || "[]"); } catch { return []; } });
+  const flip = (d) => { const n = done.includes(d) ? done.filter((x) => x !== d) : [...done, d]; setDone(n); localStorage.setItem(storeKey, JSON.stringify(n)); };
+  return (
+    <div data-testid="report-routine" className="space-y-2">
+      <p data-testid="report-routine-progress" className="text-xs text-amber-200">{done.length} / {days.length} {t("days done")}</p>
+      <ol className="space-y-1.5">
+        {days.map(({ day, task }) => (
+          <li key={day}>
+            <label className="flex items-start gap-3 rounded-lg border border-border/60 px-3 py-2.5 cursor-pointer min-h-11">
+              <input type="checkbox" data-testid={`routine-day-${day}`} checked={done.includes(day)} onChange={() => flip(day)} className="mt-0.5 h-4 w-4 shrink-0 accent-[#D4AF37]" />
+              <span className={`text-sm ${done.includes(day) ? "line-through text-muted-foreground" : ""}`}><strong className="text-amber-100">{t("Day")} {day}:</strong> {task}</span>
+            </label>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+function Section({ s, ai, open, onToggle, storeKey }) {
   const { t } = useLang();
   const locked = PREMIUM_LOCK && s.premium;
   return (
@@ -42,6 +63,7 @@ function Section({ s, ai, open, onToggle }) {
             {s.text.map((x) => <p key={x} className="text-sm text-slate-300 leading-relaxed">{x}</p>)}</div>}
           {ai && <div data-testid={`report-ai-${s.id}`} className="space-y-1.5 rounded-xl border border-amber-400/25 bg-amber-400/5 p-3"><p className="inline-flex items-center gap-1 text-[11px] uppercase tracking-wider text-amber-300"><Sparkles className="h-3 w-3" />{t("AI interpretation")}</p><p className="text-sm leading-relaxed">{ai}</p></div>}
           {s.items.length > 0 && <Items items={s.items} />}
+          {s.checklist && <Checklist days={s.checklist} storeKey={storeKey} />}
           {s.unavailable.length > 0 && <p className="text-xs text-muted-foreground">{t("Not available")}: {s.unavailable.join(", ")}.</p>}
         </div>
       ))}
@@ -67,7 +89,7 @@ function AiBar({ savedId, ai, setAi }) {
   );
 }
 
-export function FullReport({ report, savedId, aiReport }) {
+export function FullReport({ report, savedId, aiReport, storeKey }) {
   const { t } = useLang();
   const [full, setFull] = useState(false);
   const [open, setOpen] = useState({ overview: true });
@@ -81,7 +103,7 @@ export function FullReport({ report, savedId, aiReport }) {
       </div>
       {report.time_unknown && <p data-testid="report-time-warning" className="rounded-xl border border-orange-400/40 bg-orange-400/10 p-3 text-sm text-orange-100">{t("Birth time is unknown, so the chart uses 12:00 noon. Sections marked 'Depends on birth time' may be inaccurate.")}</p>}
       <div className="space-y-3">
-        {all.map((s) => <Section key={s.id} s={s} ai={ai?.sections?.[AI_FOR[s.id]]} open={!!open[s.id]} onToggle={() => setOpen({ ...open, [s.id]: !open[s.id] })} />)}
+        {all.map((s) => <Section key={s.id} s={s} ai={ai?.sections?.[AI_FOR[s.id]]} open={!!open[s.id]} storeKey={storeKey} onToggle={() => setOpen({ ...open, [s.id]: !open[s.id] })} />)}
       </div>
       <Button type="button" data-testid="report-read-full" onClick={() => setFull(!full)} className="w-full sm:w-auto rounded-full h-12 px-8 font-semibold">
         {t(full ? "Show summary only" : "Read full report")}
