@@ -80,7 +80,7 @@ export function KundliResult({ input, chart, style, onStyle, actions, onEdit, sa
         </div>
         <div className="space-y-6 min-w-0"><PlanetTable chart={chart} /><div className="grid sm:grid-cols-2 gap-4"><PanchangCard p={chart.panchang} /><ManglikCard m={chart.manglik} /></div><DashaPanel dasha={chart.dasha} /></div>
       </div>
-      {chart.report && <FullReport key={savedId || "new"} report={chart.report} savedId={savedId} aiReport={aiReport} storeKey={`nv:routine:${chart.birth.utc}:${chart.birth.lat}:${chart.birth.lon}`} />}
+      {chart.report && <FullReport key={savedId || "new"} report={chart.report} savedId={savedId} aiReport={aiReport} input={input} storeKey={`nv:routine:${chart.birth.utc}:${chart.birth.lat}:${chart.birth.lon}`} />}
       <p data-testid="kundli-method" className="text-xs text-muted-foreground">{t("Method")}: {t("Sidereal zodiac, Lahiri ayanamsa ({a}°), Whole sign houses, Mean node, JPL DE421 ephemeris.", { a: chart.system.ayanamsa_degrees.toFixed(2) })} {t("These are astronomical calculations; any reading of them is interpretive guidance, not a prediction.")}</p>
     </section>
   );

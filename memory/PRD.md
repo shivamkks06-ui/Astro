@@ -111,6 +111,11 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - AI prompt now requires evidence, reasoning, positives, challenges and advice per section (cached as before)
 - Self-tested (credit budget): pytest 40/40 (the LLM test was skipped), 390px screenshots; testing agent not run
 
+## Implemented (2026-11-06), Kundli PDF
+- kundli_pdf.py (fpdf2 + bundled Cinzel/Jakarta fonts): branded A4 PDF with every report section, the 30-day checklist, and the AI text for saved charts; Devanagari is left out (IAST mantras kept)
+- POST /api/kundli/pdf (rate-limited) and GET /api/kundlis/{id}/pdf (owner only); "Download PDF" button opens the phone's share menu where supported, otherwise downloads
+- Self-checked: 9-page PDF rendered and viewed, browser download works at 390px
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)

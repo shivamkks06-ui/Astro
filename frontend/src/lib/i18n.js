@@ -59,7 +59,7 @@ const HI = {
   "Sidereal positions calculated from NASA JPL ephemeris data, with Lagna, houses, nakshatras and Vimshottari dasha.": "NASA JPL एफेमेरिस से गणना की गई निरयण स्थितियाँ: लग्न, भाव, नक्षत्र और विंशोत्तरी दशा।",
   "Kundli matching (36 Guna Milan)": "कुंडली मिलान (36 गुण)", "Calculated chart": "गणना की गई कुंडली", "Birth chart": "जन्म कुंडली",
   "Detailed Kundli report": "विस्तृत कुंडली रिपोर्ट", "Dashamsa (D10)": "दशमांश (D10)", "DASHAMSA": "दशमांश", "Nine planets in detail": "नौ ग्रहों का विस्तृत विश्लेषण",
-  "30-day remedy routine": "30 दिन की उपाय दिनचर्या", "days done": "दिन पूरे", "Day": "दिन", "Your full report": "आपकी पूरी रिपोर्ट", "Read full report": "पूरी रिपोर्ट पढ़ें", "Show summary only": "केवल सारांश दिखाएँ",
+  "30-day remedy routine": "30 दिन की उपाय दिनचर्या", "Download PDF": "PDF डाउनलोड करें", "days done": "दिन पूरे", "Day": "दिन", "Your full report": "आपकी पूरी रिपोर्ट", "Read full report": "पूरी रिपोर्ट पढ़ें", "Show summary only": "केवल सारांश दिखाएँ",
   "Personalized overview": "व्यक्तिगत सारांश", "Birth details and calculation settings": "जन्म विवरण और गणना सेटिंग", "Lagna, Rashi and Nakshatra": "लग्न, राशि और नक्षत्र",
   "Birth charts": "जन्म कुंडलियाँ", "Planetary placements": "ग्रह स्थिति", "Twelve houses (Bhavas)": "बारह भाव", "Important yogas and doshas": "प्रमुख योग और दोष",
   "Career and profession": "करियर और व्यवसाय", "Finance and wealth": "धन और वित्त", "Marriage and relationships": "विवाह और संबंध", "Education and personal growth": "शिक्षा और व्यक्तिगत विकास",

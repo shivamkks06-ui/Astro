@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ChevronDown, Calculator, BookOpen, Sparkles, Clock, Loader2, Lock } from "lucide-react";
+import { ChevronDown, Calculator, BookOpen, Sparkles, Clock, Loader2, Lock, FileDown } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { api, errMsg } from "../../lib/api";
@@ -89,7 +89,30 @@ function AiBar({ savedId, ai, setAi }) {
   );
 }
 
-export function FullReport({ report, savedId, aiReport, storeKey }) {
+function PdfButton({ input, savedId }) {
+  const { t } = useLang();
+  const [busy, setBusy] = useState(false);
+  const run = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const { data } = savedId ? await api.get(`/kundlis/${savedId}/pdf`, { responseType: "blob", timeout: 60000 }) : await api.post("/kundli/pdf", input, { responseType: "blob", timeout: 60000 });
+      const file = new File([data], "NakshatraVeda-Kundli.pdf", { type: "application/pdf" });
+      if (navigator.canShare?.({ files: [file] })) { await navigator.share({ files: [file], title: "My Kundli report" }).catch(() => {}); return; }
+      const url = URL.createObjectURL(file);
+      const a = Object.assign(document.createElement("a"), { href: url, download: file.name });
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
+  };
+  return (
+    <Button type="button" data-testid="report-pdf-button" onClick={run} disabled={busy} className="rounded-full h-11 font-semibold">
+      {busy ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <FileDown className="h-4 w-4 mr-2" />}{t("Download PDF")}
+    </Button>
+  );
+}
+
+export function FullReport({ report, savedId, aiReport, storeKey, input }) {
   const { t } = useLang();
   const [full, setFull] = useState(false);
   const [open, setOpen] = useState({ overview: true });
@@ -99,7 +122,7 @@ export function FullReport({ report, savedId, aiReport, storeKey }) {
     <section data-testid="kundli-report" className="space-y-4">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div><p className="overline mb-1">{t("Detailed Kundli report")}</p><h3 className="text-2xl">{t("Your full report")}</h3></div>
-        <AiBar savedId={savedId} ai={ai} setAi={setAi} />
+        <div className="flex flex-wrap gap-2"><PdfButton input={input} savedId={savedId} /><AiBar savedId={savedId} ai={ai} setAi={setAi} /></div>
       </div>
       {report.time_unknown && <p data-testid="report-time-warning" className="rounded-xl border border-orange-400/40 bg-orange-400/10 p-3 text-sm text-orange-100">{t("Birth time is unknown, so the chart uses 12:00 noon. Sections marked 'Depends on birth time' may be inaccurate.")}</p>}
       <div className="space-y-3">

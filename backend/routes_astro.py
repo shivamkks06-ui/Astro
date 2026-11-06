@@ -17,6 +17,8 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, Strea
 import astro_calc
 import astro_extras
 import astro_report
+import kundli_pdf as kundli_pdf_mod
+from fastapi import Response
 import horoscope
 from core import db, now, new_id, current_user, rate_limit, client_ip, logger
 
@@ -118,6 +120,20 @@ async def _calc(b: BirthIn):
         return await run_in_threadpool(_full, b)
     except ValueError as e:
         raise HTTPException(422, str(e) if "year" in str(e) else "Invalid birth date or time")
+
+
+@router.post("/kundli/pdf")
+async def kundli_pdf(b: BirthIn, request: Request):
+    await rate_limit(f"kundli:{client_ip(request)}", 30, 60)
+    pdf = await run_in_threadpool(kundli_pdf_mod.build, b.model_dump(), await _calc(b))
+    return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": 'attachment; filename="NakshatraVeda-Kundli.pdf"'})
+
+
+@router.get("/kundlis/{kid}/pdf")
+async def saved_pdf(kid: str, user=Depends(current_user)):
+    r = await _own(kid, user)
+    pdf = await run_in_threadpool(kundli_pdf_mod.build, r["input"], await _calc(BirthIn(**r["input"])), r.get("ai_report"))
+    return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": 'attachment; filename="NakshatraVeda-Kundli.pdf"'})
 
 
 @router.post("/kundli/calculate")
