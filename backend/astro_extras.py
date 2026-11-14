@@ -50,7 +50,10 @@ def muhurta(local, lat, lon):
         return None
     rise, sset = (x[0].utc_datetime().astimezone(local.tzinfo) for x in (r, s))
     noon, f = rise + (sset - rise) / 2, "%H:%M"
+    part = (sset - rise) / 8
+    seg = [2, 7, 5, 6, 4, 3, 8][local.weekday()] - 1
     return {"sunrise": rise.strftime(f), "sunset": sset.strftime(f),
+            "rahu": [(rise + part * seg).strftime(f), (rise + part * (seg + 1)).strftime(f)],
             "abhijit": [(noon - timedelta(minutes=24)).strftime(f), (noon + timedelta(minutes=24)).strftime(f)],
             "brahma": [(rise - timedelta(minutes=96)).strftime(f), (rise - timedelta(minutes=48)).strftime(f)]}
 

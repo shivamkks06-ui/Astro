@@ -155,5 +155,7 @@ Connect a real payment gateway, then the Capacitor Android shell.
 ## 2026-11-14 — Shubh Din card
 - GET /api/panchang/today (New Delhi, IST; cached hourly): tithi, paksha, nakshatra, yoga, vara, sunrise/sunset, Abhijit (solar midday ±24 min) and Brahma (sunrise −96 to −48 min) muhurat.
 - components/ShubhDin.jsx on Landing below hero; English/Hindi. Verified via curl + screenshots at 390px (Hindi) and 1920px.
+- City + Rahu Kaal: /api/panchang/today now takes lat, lon, tz, place (validated; cache per hour+place). Rahu Kaal = daytime/8, segment by weekday (Mon2 Tue7 Wed5 Thu6 Fri4 Sat3 Sun8). Card has "Change city" (GeoNames PlaceSearch), saved in localStorage nv:shubh-place. Verified Mumbai/London via curl and city switch + persistence in browser.
+
 
 

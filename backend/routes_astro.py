@@ -313,16 +313,19 @@ _TODAY = {}
 
 
 @router.get("/panchang/today")
-async def panchang_today():
-    lat, lon, tz = 28.6139, 77.2090, "Asia/Kolkata"
+async def panchang_today(lat: float = Query(28.6139, ge=-66.5, le=66.5), lon: float = Query(77.2090, ge=-180, le=180),
+                         tz: str = "Asia/Kolkata", place: str = Query("New Delhi", max_length=120)):
+    if tz not in TZS:
+        raise HTTPException(422, "Unknown time zone")
     local = datetime.now(ZoneInfo(tz)).replace(second=0, microsecond=0)
-    key = local.strftime("%Y-%m-%d %H")
+    key = f"{local:%Y-%m-%d %H}|{lat:.3f}|{lon:.3f}|{tz}"
     if key not in _TODAY:
         def work():
             c = astro_calc.kundli(local.strftime("%Y-%m-%d"), local.strftime("%H:%M"), lat, lon, tz)
             p = astro_extras.panchang(c, local, lat, lon)
-            return {"date": local.strftime("%Y-%m-%d"), "place": "New Delhi", "tz": tz, "tithi": p["tithi"], "paksha": p["paksha"],
+            return {"date": local.strftime("%Y-%m-%d"), "tz": tz, "tithi": p["tithi"], "paksha": p["paksha"],
                     "nakshatra": p["nakshatra"], "yoga": p["yoga"], "vara": p["vara"], "muhurta": astro_extras.muhurta(local, lat, lon)}
-        _TODAY.clear()
+        if len(_TODAY) > 500:
+            _TODAY.clear()
         _TODAY[key] = await run_in_threadpool(work)
-    return _TODAY[key]
+    return {**_TODAY[key], "place": place}
