@@ -146,3 +146,9 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 
 ## Next tasks
 Connect a real payment gateway, then the Capacitor Android shell.
+
+## 2026-11-14 — Premium look + full Hindi report
+- Global theme layer (index.css): starfield + slow gold mandala background, gold-foil H1/H2, gold buttons, card hairlines, bottom-nav glow. Layout unchanged.
+- POST /api/kundlis/{kid}/hindi: Claude translates every report string (sections, facts, items, routine, AI text) to Hindi, cached as hi_pairs on the saved kundli. FullReport shows "पूरी रिपोर्ट हिंदी में पढ़ें" when language is Hindi.
+- Tested: endpoint (363 strings, 0 missing, ~55s first time, cached after); home/kundli screens at 390px & 1920px. In-app Hindi button click not browser-tested.
+

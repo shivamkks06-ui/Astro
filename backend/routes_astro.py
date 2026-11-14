@@ -246,6 +246,53 @@ async def ai_report(kid: str, user=Depends(current_user)):
         await db.kundlis.update_one({"_id": kid}, {"$unset": {"ai_pending": ""}})
 
 
+HI_SYSTEM = ("You translate Vedic astrology report text from English to natural, respectful Hindi (Devanagari). Keep numbers, degrees, dates and "
+             "symbols unchanged. Use standard Hindi astrology terms (lagna, bhava, rashi, nakshatra, dasha, yoga). Do not add or remove meaning.")
+
+
+def _hi_strings(rep, ai):
+    out = []
+    for s in rep["sections"]:
+        out += [s["title"], *s["facts"], *s["text"], *s["unavailable"]]
+        for it in s.get("items", []):
+            out += [it["title"]] + [str(x) for row in it["rows"] for x in row]
+        out += [d["task"] for d in (s.get("checklist") or [])]
+    out += list(((ai or {}).get("sections") or {}).values())
+    return [x for x in dict.fromkeys(out) if isinstance(x, str) and re.search("[A-Za-z]{2}", x)]
+
+
+async def _hi_batch(kid, i, chunk):
+    chat = LlmChat(api_key=os.environ["EMERGENT_LLM_KEY"], session_id=f"hi-{kid}-{i}", system_message=HI_SYSTEM).with_model("anthropic", "claude-sonnet-4-5-20250929")
+    text = ""
+    async for ev in chat.stream_message(UserMessage(text="Translate each string. Return a JSON array of the same length and order only.\n" + json.dumps(chunk, ensure_ascii=False))):
+        if isinstance(ev, TextDelta):
+            text += ev.content
+        elif isinstance(ev, StreamDone):
+            break
+    arr = json.loads(re.search(r"\[.*\]", text, re.S).group(0))
+    return [[a, str(b)] for a, b in zip(chunk, arr) if b] if len(arr) == len(chunk) else []
+
+
+@router.post("/kundlis/{kid}/hindi")
+async def hindi_report(kid: str, user=Depends(current_user)):
+    r = await _own(kid, user)
+    c = await _calc(BirthIn(**r["input"]))
+    have = {a: b for a, b in r.get("hi_pairs", [])}
+    todo = [x for x in _hi_strings(c["report"], r.get("ai_report")) if x not in have]
+    if todo:
+        await rate_limit(f"kundli-hi:{user['_id']}", 6, 3600)
+        import asyncio
+        try:
+            res = await asyncio.gather(*[_hi_batch(kid, i, todo[i:i + 60]) for i in range(0, len(todo), 60)])
+        except Exception:
+            logger.exception("hindi report failed")
+            raise HTTPException(502, "Hindi report could not be prepared right now. Please try again.")
+        for part in res:
+            have.update({a: b for a, b in part})
+        await db.kundlis.update_one({"_id": kid}, {"$set": {"hi_pairs": [[a, b] for a, b in have.items()]}})
+    return {"map": have, "missing": len([x for x in todo if x not in have])}
+
+
 @router.delete("/kundlis/{kid}")
 async def delete_kundli(kid: str, user=Depends(current_user)):
     await _own(kid, user)
