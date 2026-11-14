@@ -8,6 +8,14 @@ import { Loading, ErrorState, StatusPill } from "../components/States";
 import { useApi } from "../lib/useApi";
 import { api, errMsg, inr } from "../lib/api";
 
+const loadRzp = () => new Promise((ok, bad) => {
+  if (window.Razorpay) { ok(); return; }
+  const s = document.createElement("script");
+  s.src = "https://checkout.razorpay.com/v1/checkout.js";
+  s.onload = ok; s.onerror = () => bad(new Error("Could not load the payment window. Check your internet."));
+  document.body.appendChild(s);
+});
+
 export default function PayPage() {
   const { id } = useParams();
   const { data: p, loading, error, reload } = useApi(`/payments/${id}`);
@@ -27,19 +35,41 @@ export default function PayPage() {
       reload();
     } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); }
   };
+  const payRzp = async () => {
+    setBusy(true);
+    try {
+      await loadRzp();
+      const rzp = new window.Razorpay({
+        key: p.checkout_key, order_id: p.provider_order_id, amount: p.amount_paise, currency: "INR",
+        name: "NakshatraVeda", description: `${p.purpose} payment`, theme: { color: "#D4AF37" },
+        handler: async (res) => {
+          try {
+            const { data } = await api.post(`/payments/${id}/razorpay-verify`, res);
+            haptic(data.status === "captured" ? "success" : "error");
+            toast[data.status === "captured" ? "success" : "message"](data.status === "captured" ? "Payment confirmed." : "Payment received, confirming shortly.");
+          } catch (e) { toast.error(errMsg(e)); } finally { setBusy(false); reload(); }
+        },
+        modal: { ondismiss: () => setBusy(false) },
+      });
+      rzp.on("payment.failed", () => { toast.error("Payment failed. You can try again."); setBusy(false); });
+      rzp.open();
+    } catch (e) { toast.error(errMsg(e)); setBusy(false); }
+  };
   return (
     <div className="max-w-lg mx-auto px-4 py-8 sm:py-16">
       <div className="glass rounded-2xl p-5 sm:p-8 space-y-6">
         {p.provider_test_mode && (
           <div data-testid="mock-payment-banner" className="rounded-lg border border-sky-500/40 bg-sky-500/10 p-3 text-xs text-sky-200 flex gap-2">
-            <FlaskConical className="h-4 w-4 shrink-0" />TEST MODE (MOCKED payment simulator). No real money moves. A real gateway such as Razorpay connects at this same point.
+            <FlaskConical className="h-4 w-4 shrink-0" />TEST MODE: no real money moves.
           </div>
         )}
         <h1 className="text-2xl">Checkout</h1>
         <div className="flex justify-between"><span className="text-muted-foreground capitalize">{p.purpose} payment</span><b data-testid="payment-amount" className="text-amber-300">{inr(p.amount_paise)}</b></div>
         <div className="flex justify-between text-sm"><span className="text-muted-foreground">Status</span><StatusPill status={p.status} testid="payment-status" /></div>
         <p className="text-xs text-muted-foreground">Order ref: <span className="font-mono">{p.provider_order_id}</span></p>
-        {p.status === "created" ? (
+        {p.status === "created" && p.checkout_key ? (
+          <Button data-testid="razorpay-pay-button" disabled={busy} onClick={payRzp} className="w-full h-12 rounded-full">{busy ? "Opening…" : `Pay ${inr(p.amount_paise)} securely`}</Button>
+        ) : p.status === "created" ? (
           <div className="grid grid-cols-2 gap-3">
             <Button data-testid="mock-pay-success" disabled={busy} onClick={() => run("success")}>Simulate success</Button>
             <Button data-testid="mock-pay-failure" disabled={busy} variant="outline" onClick={() => run("failure")}>Simulate failure</Button>

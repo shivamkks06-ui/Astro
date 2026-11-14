@@ -8,7 +8,7 @@ from pymongo.errors import DuplicateKeyError
 
 from core import db, now, new_id, out, current_user, require_roles, audit, rate_limit, get_settings, public_filter
 from finance import (TRANSITIONS, move, settle_cancellation, complete_booking, create_payment, process_webhook, get_provider,
-                     call_provider_status, MockSandboxProvider)
+                     call_provider_status, MockSandboxProvider, RazorpayProvider, on_payment_captured)
 
 router = APIRouter(prefix="/api")
 customer = require_roles("customer")
@@ -336,7 +336,31 @@ async def get_payment(pid: str, user=Depends(current_user)):
     p = await db.payments.find_one({"_id": pid, "user_id": user["_id"]})
     if not p:
         raise HTTPException(404, "Payment not found")
-    return {**out(p, "idempotency_key"), "provider_test_mode": get_provider().test_mode}
+    prov = get_provider()
+    extra = {"checkout_key": prov.key_id} if isinstance(prov, RazorpayProvider) and p["provider"] == "razorpay" else {}
+    return {**out(p, "idempotency_key"), "provider_test_mode": prov.test_mode, **extra}
+
+
+class RzpVerifyIn(BaseModel):
+    razorpay_order_id: str = Field(max_length=64)
+    razorpay_payment_id: str = Field(max_length=64)
+    razorpay_signature: str = Field(max_length=200)
+
+
+@router.post("/payments/{pid}/razorpay-verify")
+async def razorpay_verify(pid: str, body: RzpVerifyIn, user=Depends(current_user)):
+    prov = get_provider()
+    if not isinstance(prov, RazorpayProvider):
+        raise HTTPException(404, "Not available")
+    p = await db.payments.find_one({"_id": pid, "user_id": user["_id"]})
+    if not p or p["provider_order_id"] != body.razorpay_order_id:
+        raise HTTPException(404, "Payment not found")
+    if not prov.verify_checkout(body.razorpay_order_id, body.razorpay_payment_id, body.razorpay_signature):
+        raise HTTPException(400, "Payment signature invalid")
+    rec = await prov.fetch_payment(body.razorpay_payment_id)
+    if rec.get("order_id") == p["provider_order_id"] and rec.get("status") == "captured":
+        await on_payment_captured({"order_id": rec["order_id"], "payment_id": rec["id"], "amount": rec["amount"], "currency": rec.get("currency", "INR"), "fee": rec.get("fee") or 0})
+    return {"status": (await db.payments.find_one({"_id": pid}))["status"]}
 
 
 class MockCheckoutIn(BaseModel):
@@ -368,4 +392,4 @@ async def mock_checkout(pid: str, body: MockCheckoutIn, user=Depends(current_use
 @router.post("/payments/webhook")
 async def payment_webhook(request: Request, x_signature: str = Header("", alias="X-Webhook-Signature")):
     raw = await request.body()
-    return await process_webhook(raw, x_signature)
+    return await process_webhook(raw, x_signature or request.headers.get("x-razorpay-signature", ""), request.headers.get("x-razorpay-event-id", ""))

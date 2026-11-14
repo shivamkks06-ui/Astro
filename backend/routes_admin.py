@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from pymongo.errors import DuplicateKeyError
 
 from core import db, now, new_id, out, require_roles, audit, get_settings, rx, make_token, decode_token, hash_password, SETTINGS_LIMITS
-from finance import move, settle_cancellation, resolve_dispute, issue_refund, get_provider, MockSandboxProvider, process_webhook, call_provider_status
+from finance import move, settle_cancellation, resolve_dispute, issue_refund, get_provider, MockSandboxProvider, process_webhook, call_provider_status, on_payout_event
 from ledger import post_journal, astrologer_balances, payable, PAYOUTS_PROCESSING, LISTING
 from storage import get_object
 from routes_bookings import recompute_rating
@@ -318,19 +318,25 @@ async def reject_payout(pid: str, body: ReasonIn, request: Request, user=Depends
 
 class SettleIn(BaseModel):
     outcome: Literal["processed", "failed"]
+    utr: Optional[str] = Field(None, max_length=40)
 
 
 @router.post("/admin/payouts/{pid}/mock-settlement")
 async def mock_settlement(pid: str, body: SettleIn, request: Request, user=Depends(admin)):
     provider = get_provider()
-    if not isinstance(provider, MockSandboxProvider):
-        raise HTTPException(404, "Not available")
     po = await db.payouts.find_one({"_id": pid, "status": "processing"})
+    manual = bool(po) and str(po.get("provider_payout_id", "")).startswith("manual_")
+    if not isinstance(provider, MockSandboxProvider) and not manual:
+        raise HTTPException(404, "Not available")
     if not po:
         raise HTTPException(409, "Payout is not processing")
-    data = {"payout_id": po["provider_payout_id"], "utr": "MOCKUTR" + secrets.token_hex(5).upper()} if body.outcome == "processed" else {"payout_id": po["provider_payout_id"], "reason": "simulated_bank_failure"}
-    raw = json.dumps({"id": "evt_" + new_id(), "type": f"payout.{body.outcome}", "data": data}).encode()
-    await process_webhook(raw, provider.sign(raw))
+    if manual:
+        data = {"payout_id": po["provider_payout_id"], "utr": (body.utr or "MANUAL")[:40]} if body.outcome == "processed" else {"payout_id": po["provider_payout_id"], "reason": "bank_transfer_failed"}
+        await on_payout_event(f"payout.{body.outcome}", data)
+    else:
+        data = {"payout_id": po["provider_payout_id"], "utr": "MOCKUTR" + secrets.token_hex(5).upper()} if body.outcome == "processed" else {"payout_id": po["provider_payout_id"], "reason": "simulated_bank_failure"}
+        raw = json.dumps({"id": "evt_" + new_id(), "type": f"payout.{body.outcome}", "data": data}).encode()
+        await process_webhook(raw, provider.sign(raw))
     await audit(user, "payout_mock_settlement", "payout", pid, {"outcome": body.outcome}, request)
     return {"ok": True}
 

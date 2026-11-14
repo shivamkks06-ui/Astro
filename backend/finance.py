@@ -61,7 +61,62 @@ class MockSandboxProvider(PaymentProvider):
         return await db.mock_provider_records.find_one({"_id": provider_payment_id})
 
 
+class RazorpayProvider(PaymentProvider):
+    name = "razorpay"
+    operational = True
+
+    def __init__(self):
+        import razorpay
+        self.key_id = os.environ["RAZORPAY_KEY_ID"]
+        self.secret = os.environ["RAZORPAY_KEY_SECRET"]
+        self.webhook_secret = os.environ.get("RAZORPAY_WEBHOOK_SECRET", "")
+        self.test_mode = self.key_id.startswith("rzp_test_")
+        self.client = razorpay.Client(auth=(self.key_id, self.secret))
+
+    def _call(self, fn, *a):
+        try:
+            return fn(*a)
+        except Exception as e:
+            logger.exception("razorpay call failed")
+            raise HTTPException(502, "Payment gateway error. Please try again.") from e
+
+    def create_order(self, amount, receipt):
+        o = self._call(self.client.order.create, {"amount": int(amount), "currency": "INR", "receipt": str(receipt)[:40], "payment_capture": 1})
+        return {"order_id": o["id"]}
+
+    def verify_webhook(self, body, signature):
+        if not self.webhook_secret:
+            return False
+        good = hmac.new(self.webhook_secret.encode(), body, hashlib.sha256).hexdigest()
+        return bool(signature) and hmac.compare_digest(good, signature)
+
+    def verify_checkout(self, order_id, payment_id, signature):
+        good = hmac.new(self.secret.encode(), f"{order_id}|{payment_id}".encode(), hashlib.sha256).hexdigest()
+        return bool(signature) and hmac.compare_digest(good, signature)
+
+    def normalize(self, raw, event_id):
+        e = raw.get("payload", {}).get("payment", {}).get("entity", {})
+        return {"id": event_id or f"rzp:{raw.get('event')}:{e.get('id')}", "type": raw.get("event", ""),
+                "data": {"order_id": e.get("order_id"), "payment_id": e.get("id"), "amount": e.get("amount", 0), "currency": e.get("currency", "INR"),
+                         "fee": e.get("fee") or 0, "reason": e.get("error_description") or "failed"}}
+
+    async def create_refund(self, provider_payment_id, amount):
+        from starlette.concurrency import run_in_threadpool
+        r = await run_in_threadpool(self._call, self.client.payment.refund, provider_payment_id, {"amount": int(amount)})
+        return {"refund_id": r["id"], "status": r.get("status", "pending")}
+
+    async def create_payout(self, amount, account):
+        # astrologer payouts are paid manually by bank transfer; admin marks them settled
+        return {"payout_id": "manual_" + new_id()[:16], "status": "processing"}
+
+    async def fetch_payment(self, provider_payment_id):
+        from starlette.concurrency import run_in_threadpool
+        return await run_in_threadpool(self._call, self.client.payment.fetch, provider_payment_id)
+
+
 def get_provider() -> PaymentProvider:
+    if os.environ.get("PAYMENT_PROVIDER") == "razorpay" or os.environ.get("RAZORPAY_KEY_ID"):
+        return RazorpayProvider()
     if os.environ.get("PAYMENT_PROVIDER") == "mock":
         return MockSandboxProvider(os.environ["PAYMENT_WEBHOOK_SECRET"])
     return PaymentProvider()
@@ -94,11 +149,15 @@ async def create_payment(user, purpose, amount, target_id, astrologer_id, idem_k
     return doc
 
 
-async def process_webhook(body: bytes, signature: str):
+async def process_webhook(body: bytes, signature: str, event_id: str = ""):
     provider = get_provider()
     if not provider.verify_webhook(body, signature):
         raise HTTPException(401, "Invalid webhook signature")
     evt = json.loads(body)
+    if isinstance(provider, RazorpayProvider):
+        evt = provider.normalize(evt, event_id)
+        if evt["type"] not in ("payment.captured", "payment.failed") or not evt["data"]["order_id"]:
+            return {"status": "ignored"}
     try:
         await db.webhook_events.insert_one({"_id": evt["id"], "type": evt["type"], "provider": provider.name, "received_at": now(), "status": "processing"})
     except DuplicateKeyError:

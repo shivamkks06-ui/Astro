@@ -4,7 +4,6 @@ import os
 import re
 import secrets
 from html import escape
-from urllib.parse import urlparse
 from typing import Literal, Optional
 
 import jwt
@@ -46,8 +45,8 @@ class ResetIn(BaseModel):
 
 def _reset_base(request: Request) -> str:
     origin = (request.headers.get("origin") or "").rstrip("/")
-    host = urlparse(origin).hostname or ""
-    if origin.startswith("https://") and (host.endswith(".emergentagent.com") or host.endswith(".emergent.host")):
+    allowed = {o.strip().rstrip("/") for o in os.environ["CORS_ORIGINS"].split(",")}
+    if origin.startswith("https://") and "localhost" not in origin and origin in allowed:
         return origin
     return os.environ["FRONTEND_URL"].rstrip("/")
 
