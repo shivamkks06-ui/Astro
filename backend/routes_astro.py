@@ -208,6 +208,71 @@ AI_SYSTEM = ("You are a careful Vedic astrology writer for NakshatraVeda. Use ON
 AI_KEYS = ["personality", "career", "finance", "relationships", "education", "wellbeing", "dasha"]
 
 
+def _facts(c, r):
+    return {"d10_lagna": c["dashamsa"]["ascendant"]["sign"], "d9_lagna": c["navamsa"]["ascendant"]["sign"], "time_unknown": r["input"].get("time_unknown", False), "summary": c["report"]["summary"],
+            "planets": c["analysis"]["planets"], "houses": [{k: h[k] for k in ("house", "sign", "lord", "lord_in_house", "occupants")} for h in c["analysis"]["houses"]],
+            "yogas": [y["name"] for y in c["analysis"]["yogas"]], "doshas": [d["name"] for d in c["analysis"]["doshas"]], "dasha_current": c["dasha"]["current"]}
+
+
+CHAT_LIMIT = 5
+
+
+class ChatIn(BaseModel):
+    text: str = Field(min_length=2, max_length=500)
+    lang: Literal["en", "hi"] = "en"
+
+
+def _today_key(uid):
+    return f"{uid}:{datetime.now(ZoneInfo('Asia/Kolkata')):%Y-%m-%d}"
+
+
+@router.get("/kundlis/{kid}/chat")
+async def chat_history(kid: str, user=Depends(current_user)):
+    await _own(kid, user)
+    msgs = await db.kundli_chats.find({"kundli_id": kid, "user_id": user["_id"]}, {"_id": 0, "role": 1, "text": 1}).sort("at", 1).to_list(100)
+    u = await db.astro_ai_usage.find_one({"_id": _today_key(user["_id"])})
+    return {"messages": msgs, "left": max(0, CHAT_LIMIT - (u or {}).get("n", 0)), "limit": CHAT_LIMIT}
+
+
+@router.post("/kundlis/{kid}/chat")
+async def chat_send(kid: str, m: ChatIn, user=Depends(current_user)):
+    r = await _own(kid, user)
+    key = _today_key(user["_id"])
+    u = await db.astro_ai_usage.find_one_and_update({"_id": key, "n": {"$lt": CHAT_LIMIT}}, {"$inc": {"n": 1}}, upsert=False, return_document=True)
+    if not u:
+        try:
+            await db.astro_ai_usage.insert_one({"_id": key, "n": 1})
+        except Exception:
+            raise HTTPException(429, "You have used today's 5 Astro AI questions. Come back tomorrow.")
+    try:
+        c = await _calc(BirthIn(**r["input"]))
+        hist = await db.kundli_chats.find({"kundli_id": kid, "user_id": user["_id"]}, {"_id": 0, "role": 1, "text": 1}).sort("at", -1).to_list(6)
+        convo = "\n".join(f"{h['role']}: {h['text']}" for h in reversed(hist))
+        lang = "simple Hindi (Devanagari)" if m.lang == "hi" else "simple English"
+        prompt = ("Calculated chart facts:\n" + json.dumps(_facts(c, r), default=str) + "\nEarlier conversation:\n" + (convo or "none") +
+                  f"\nUser question: {m.text}\nAnswer in {lang}, 4-8 sentences, citing the specific placements or dasha you rely on. "
+                  "If the question is not about this chart or astrology, politely decline. If time_unknown is true, avoid Lagna/house claims.")
+        chat = LlmChat(api_key=os.environ["EMERGENT_LLM_KEY"], session_id=f"astroai-{kid}-{new_id()}", system_message=AI_SYSTEM.replace("Plain English, warm", "Warm")).with_model("anthropic", "claude-sonnet-4-5-20250929")
+        text = ""
+        async for ev in chat.stream_message(UserMessage(text=prompt)):
+            if isinstance(ev, TextDelta):
+                text += ev.content
+            elif isinstance(ev, StreamDone):
+                break
+        text = text.strip()[:3000]
+        if not text:
+            raise ValueError("empty")
+    except Exception:
+        logger.exception("astro ai chat failed")
+        await db.astro_ai_usage.update_one({"_id": key}, {"$inc": {"n": -1}})
+        raise HTTPException(502, "Astro AI could not answer right now. Your question was not counted.")
+    t0 = now()
+    await db.kundli_chats.insert_many([{"kundli_id": kid, "user_id": user["_id"], "role": "user", "text": m.text, "at": t0},
+                                       {"kundli_id": kid, "user_id": user["_id"], "role": "ai", "text": text, "at": now()}])
+    got = await db.astro_ai_usage.find_one({"_id": key})
+    return {"reply": text, "left": max(0, CHAT_LIMIT - got["n"])}
+
+
 @router.post("/kundlis/{kid}/ai-report")
 async def ai_report(kid: str, user=Depends(current_user)):
     r = await _own(kid, user)
@@ -219,9 +284,7 @@ async def ai_report(kid: str, user=Depends(current_user)):
     try:
         await rate_limit(f"kundli-ai:{user['_id']}", 5, 3600)
         c = await _calc(BirthIn(**r["input"]))
-        facts = {"d10_lagna": c["dashamsa"]["ascendant"]["sign"], "d9_lagna": c["navamsa"]["ascendant"]["sign"], "time_unknown": r["input"].get("time_unknown", False), "summary": c["report"]["summary"],
-                 "planets": c["analysis"]["planets"], "houses": [{k: h[k] for k in ("house", "sign", "lord", "lord_in_house", "occupants")} for h in c["analysis"]["houses"]],
-                 "yogas": [y["name"] for y in c["analysis"]["yogas"]], "doshas": [d["name"] for d in c["analysis"]["doshas"]], "dasha_current": c["dasha"]["current"]}
+        facts = _facts(c, r)
         prompt = ("Calculated chart facts:\n" + json.dumps(facts, default=str) + "\nReturn JSON only: {" + ", ".join(f'\"{k}\": \"...\"' for k in AI_KEYS) +
                   "}. Each value is 5-7 sentences in this order: (1) the actual chart evidence from the facts, (2) the traditional reasoning, "
                   "(3) positive potential, (4) challenges and limits, (5) one or two practical recommendations. Be specific to these facts; avoid generic filler and repetition. "

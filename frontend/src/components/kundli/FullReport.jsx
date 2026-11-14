@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { Button } from "../ui/button";
 import { api, errMsg } from "../../lib/api";
 import { useLang } from "../../lib/i18n";
+import { AstroChat } from "./AstroChat";
 
 // flip to true once real payments exist; premium sections then show a lock
 const PREMIUM_LOCK = false;
@@ -152,6 +153,7 @@ export function FullReport({ report, savedId, aiReport, storeKey, input }) {
       <Button type="button" data-testid="report-read-full" onClick={() => setFull(!full)} className="w-full sm:w-auto rounded-full h-12 px-8 font-semibold">
         {t(full ? "Show summary only" : "Read full report")}
       </Button>
+      {savedId && <AstroChat savedId={savedId} />}
     </section>
   );
 }

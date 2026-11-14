@@ -157,5 +157,11 @@ Connect a real payment gateway, then the Capacitor Android shell.
 - components/ShubhDin.jsx on Landing below hero; English/Hindi. Verified via curl + screenshots at 390px (Hindi) and 1920px.
 - City + Rahu Kaal: /api/panchang/today now takes lat, lon, tz, place (validated; cache per hour+place). Rahu Kaal = daytime/8, segment by weekday (Mon2 Tue7 Wed5 Thu6 Fri4 Sat3 Sun8). Card has "Change city" (GeoNames PlaceSearch), saved in localStorage nv:shubh-place. Verified Mumbai/London via curl and city switch + persistence in browser.
 
+## 2026-11-14 — Astro AI chatbot
+- GET/POST /api/kundlis/{kid}/chat (login + own saved kundli only). Claude Sonnet 4.5 answers from that chart's calculated facts (_facts helper shared with ai-report), last 6 messages as context, Hindi or English per app language. Limit 5 questions/user/day (IST) in db.astro_ai_usage; failed answers are not counted. History in db.kundli_chats.
+- components/kundli/AstroChat.jsx under the full report of a saved chart: gold orbit avatar, suggestion chips, bubbles, "x/5 left". Verified: Hindi answer via API, 429 at limit, UI with history at 390px.
+- Languages: Hindi + English only (user choice).
+
+
 
 
