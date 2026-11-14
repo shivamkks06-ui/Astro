@@ -164,6 +164,13 @@ Connect a real payment gateway, then the Capacitor Android shell.
 - Astro AI animation: glowing gold orb avatar with counter-rotating dashed ring (faster while thinking), bouncing typing dots, pop-in bubbles, typewriter reveal for new answers; respects reduced-motion. Header wraps on mobile.
 - Astro AI Awaaz: "सुनें/Listen" button under each AI answer; hi-IN if Devanagari else en-IN. Web uses browser speechSynthesis; Android app uses @capacitor-community/text-to-speech (native TTS, free). Toggle to stop, animated sound bars while speaking; stops when leaving the page. Verified in browser (hi-IN utterance queued, toggle). Not tested on a real Android device.
 
+## 2026-11-14 — Production hardening (partial, testing skipped at user request)
+- Security audit: fixed password-reset link host (only exact CORS_ORIGINS https origins, else FRONTEND_URL); Android allowBackup=false.
+- Deployment readiness check: PASS.
+- Razorpay: finance.RazorpayProvider (orders, checkout signature verify POST /api/payments/{pid}/razorpay-verify, webhook X-Razorpay-Signature + event-id idempotency, refunds, reconcile fetch). Auto-selected when RAZORPAY_KEY_ID is set. Payouts manual (admin "Mark settled/failed"). PayPage opens Razorpay Checkout. Test keys verified (order created). RAZORPAY_WEBHOOK_SECRET not set yet -> webhooks rejected; checkout verify path still confirms payments.
+- NOT tested end-to-end (user stopped to save credits). Open hardening items: SameSite=none CSRF reliance, account-lockout DoS, admin KYC link token single-use.
+
+
 
 
 
