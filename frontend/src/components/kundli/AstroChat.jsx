@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Orbit, Send, Sparkles } from "lucide-react";
+import { Orbit, Send, Sparkles, Volume2, Square } from "lucide-react";
+import { TextToSpeech } from "@capacitor-community/text-to-speech";
+import { isNative } from "../../lib/native";
 import { toast } from "sonner";
 import { api, errMsg } from "../../lib/api";
 import { useLang } from "../../lib/i18n";
@@ -29,12 +31,48 @@ function Avatar({ size = "h-8 w-8", icon = "h-4 w-4", live }) {
   );
 }
 
-function Bubble({ m, i, onTick }) {
+const isHi = (s) => /[\u0900-\u097F]/.test(s);
+const stopVoice = () => { if (isNative) TextToSpeech.stop().catch(() => {}); else window.speechSynthesis?.cancel(); };
+async function speak(text, onEnd) {
+  const lang = isHi(text) ? "hi-IN" : "en-IN";
+  if (isNative) { await TextToSpeech.speak({ text, lang, rate: 0.95 }); onEnd(); return; }
+  const s = window.speechSynthesis;
+  if (!s) throw new Error("no-voice");
+  s.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = lang; u.rate = 0.95;
+  u.voice = s.getVoices().find((v) => v.lang === lang) || s.getVoices().find((v) => v.lang.startsWith(lang.slice(0, 2))) || null;
+  u.onend = onEnd; u.onerror = onEnd;
+  s.speak(u);
+}
+
+function SpeakBtn({ text, i, playing, setPlaying }) {
+  const on = playing === i;
+  const click = async () => {
+    stopVoice();
+    if (on) { setPlaying(null); return; }
+    setPlaying(i);
+    try { await speak(text, () => setPlaying((p) => (p === i ? null : p))); }
+    catch { setPlaying(null); toast.error(isHi(text) ? "इस डिवाइस पर आवाज़ उपलब्ध नहीं है।" : "Voice is not available on this device."); }
+  };
+  return (
+    <button type="button" data-testid={`astro-ai-speak-${i}`} onClick={click} aria-label={on ? "Stop" : "Listen"}
+      className={`mt-1 inline-flex items-center gap-1.5 rounded-full border px-3 min-h-9 text-xs transition-colors ${on ? "border-amber-300 bg-amber-400/20 text-amber-100" : "border-amber-400/30 text-amber-300 hover:bg-amber-400/10"}`}>
+      {on ? <><Square className="h-3 w-3 fill-current" /><span className="flex items-end gap-0.5 h-3">{[0, 1, 2, 3].map((d) => <span key={d} className="astro-bar w-0.5 bg-amber-200" style={{ animationDelay: `${d * 0.12}s` }} />)}</span></> : <Volume2 className="h-3.5 w-3.5" />}
+      {on ? (isHi(text) ? "रोकें" : "Stop") : (isHi(text) ? "सुनें" : "Listen")}
+    </button>
+  );
+}
+
+function Bubble({ m, i, onTick, playing, setPlaying }) {
   const me = m.role === "user";
   return (
     <div data-testid={`astro-ai-msg-${i}`} className={`astro-pop flex ${me ? "justify-end" : "justify-start"} gap-2`}>
       {!me && <Avatar />}
-      <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${me ? "bg-amber-400 text-[#0B1225] rounded-br-sm" : "border border-amber-400/25 bg-[#101a33] text-slate-100 rounded-bl-sm"}`}>{m.fresh ? <Typer text={m.text} onTick={onTick} /> : m.text}</p>
+      <div className={`max-w-[85%] ${me ? "" : "flex flex-col items-start"}`}>
+        <p className={`whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${me ? "bg-amber-400 text-[#0B1225] rounded-br-sm" : "border border-amber-400/25 bg-[#101a33] text-slate-100 rounded-bl-sm"}`}>{m.fresh ? <Typer text={m.text} onTick={onTick} /> : m.text}</p>
+        {!me && <SpeakBtn text={m.text} i={i} playing={playing} setPlaying={setPlaying} />}
+      </div>
     </div>
   );
 }
@@ -46,6 +84,8 @@ export function AstroChat({ savedId }) {
   const [left, setLeft] = useState(null);
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
+  const [playing, setPlaying] = useState(null);
+  useEffect(() => stopVoice, []);
   const end = useRef(null);
   useEffect(() => { api.get(`/kundlis/${savedId}/chat`).then(({ data }) => { setMsgs(data.messages); setLeft(data.left); }).catch(() => {}); }, [savedId]);
   const tick = useCallback(() => { end.current?.scrollIntoView({ block: "nearest" }); }, []);
@@ -66,7 +106,7 @@ export function AstroChat({ savedId }) {
       </div>
       <div className="max-h-[420px] overflow-y-auto px-4 sm:px-5 py-4 space-y-3">
         {msgs.length === 0 && <div className="flex flex-wrap gap-2">{T.chips.map((c, i) => <button key={c} type="button" data-testid={`astro-ai-chip-${i}`} onClick={() => send(c)} disabled={busy || left === 0} className="rounded-full border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-xs text-amber-100 hover:bg-amber-400/15 min-h-9 text-left"><Sparkles className="inline h-3 w-3 mr-1 text-amber-300" />{c}</button>)}</div>}
-        {msgs.map((m, i) => <Bubble key={i} m={m} i={i} onTick={tick} />)}
+        {msgs.map((m, i) => <Bubble key={i} m={m} i={i} onTick={tick} playing={playing} setPlaying={setPlaying} />)}
         {busy && <div data-testid="astro-ai-typing" className="astro-pop flex items-center gap-2"><Avatar live /><span className="flex gap-1 rounded-2xl rounded-bl-sm border border-amber-400/25 bg-[#101a33] px-4 py-3">{[0, 1, 2].map((d) => <span key={d} className="astro-dot h-2 w-2 rounded-full bg-amber-300" style={{ animationDelay: `${d * 0.18}s` }} />)}</span></div>}
         <div ref={end} />
       </div>

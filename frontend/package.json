@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@capacitor-community/text-to-speech": "^6",
     "@capacitor/android": "^7",
     "@capacitor/app": "^7",
     "@capacitor/core": "^7",

@@ -162,6 +162,8 @@ Connect a real payment gateway, then the Capacitor Android shell.
 - components/kundli/AstroChat.jsx under the full report of a saved chart: gold orbit avatar, suggestion chips, bubbles, "x/5 left". Verified: Hindi answer via API, 429 at limit, UI with history at 390px.
 - Languages: Hindi + English only (user choice).
 - Astro AI animation: glowing gold orb avatar with counter-rotating dashed ring (faster while thinking), bouncing typing dots, pop-in bubbles, typewriter reveal for new answers; respects reduced-motion. Header wraps on mobile.
+- Astro AI Awaaz: "सुनें/Listen" button under each AI answer; hi-IN if Devanagari else en-IN. Web uses browser speechSynthesis; Android app uses @capacitor-community/text-to-speech (native TTS, free). Toggle to stop, animated sound bars while speaking; stops when leaving the page. Verified in browser (hi-IN utterance queued, toggle). Not tested on a real Android device.
+
 
 
 
