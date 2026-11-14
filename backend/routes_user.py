@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, Literal
 
 from fastapi import APIRouter, Request, HTTPException, Depends, Query, Response
@@ -68,7 +68,31 @@ async def list_astrologers(language: Optional[str] = None, expertise: Optional[s
     nxt = {r["_id"]: r["at"] async for r in db.slots.aggregate([
         {"$match": {"astrologer_id": {"$in": [p["_id"] for p in items]}, "status": "open", "start_at": {"$gt": now()}}},
         {"$group": {"_id": "$astrologer_id", "at": {"$min": "$start_at"}}}])}
-    return {"items": [{**public_profile(p), "next_slot_at": nxt.get(p["_id"])} for p in items], "total": total, "page": page}
+    live = await live_stats(items)
+    return {"items": [{**public_profile(p), "next_slot_at": nxt.get(p["_id"]), **live[p["_id"]]} for p in items], "total": total, "page": page}
+
+
+ONLINE_TTL = timedelta(hours=3)
+
+
+async def live_stats(profiles):
+    ids, t = [p["_id"] for p in profiles], now()
+    q = {i: {"queue": 0, "wait_min": 0, "completed": 0} for i in ids}
+    async for b in db.bookings.find({"astrologer_id": {"$in": ids}, "status": {"$in": ["accepted", "payment_pending", "confirmed", "in_progress"]},
+                                     "slot_end": {"$gt": t}, "slot_start": {"$lt": t + timedelta(hours=2)}}, {"astrologer_id": 1, "status": 1, "slot_end": 1}):
+        s = q[b["astrologer_id"]]
+        s["queue"] += 1
+        if b["status"] == "in_progress":
+            s["wait_min"] = max(s["wait_min"], int((b["slot_end"] - t).total_seconds() // 60))
+    async for r in db.bookings.aggregate([{"$match": {"astrologer_id": {"$in": ids}, "status": "completed"}}, {"$group": {"_id": "$astrologer_id", "n": {"$sum": 1}}}]):
+        q[r["_id"]]["completed"] = r["n"]
+    sat = {r["_id"]: r async for r in db.reviews.aggregate([{"$match": {"astrologer_id": {"$in": ids}, "hidden": False}},
+                                                           {"$group": {"_id": "$astrologer_id", "n": {"$sum": 1}, "good": {"$sum": {"$cond": [{"$gte": ["$rating", 4]}, 1, 0]}}}}])}
+    for p in profiles:
+        s, r = q[p["_id"]], sat.get(p["_id"])
+        s["online"] = bool(p.get("online")) and bool(p.get("online_at")) and p["online_at"] > t - ONLINE_TTL
+        s["satisfaction_pct"] = round(100 * r["good"] / r["n"]) if r and r["n"] else None
+    return q
 
 
 @router.get("/astrologers/{aid}")
@@ -78,7 +102,7 @@ async def get_astrologer(aid: str):
         raise HTTPException(404, "Astrologer not found or not currently listed")
     slots = await db.slots.find({"astrologer_id": aid, "status": "open", "start_at": {"$gt": now()}}).sort("start_at", 1).limit(60).to_list(60)
     reviews = await db.reviews.find({"astrologer_id": aid, "hidden": False}).sort("created_at", -1).limit(20).to_list(20)
-    return {**public_profile(p),
+    return {**public_profile(p), **(await live_stats([p]))[aid],
             "slots": [{"id": s["_id"], "start_at": s["start_at"], "duration_min": s["duration_min"]} for s in slots],
             "reviews": [{"id": r["_id"], "rating": r["rating"], "comment": r["comment"], "customer_name": r["customer_name"], "created_at": r["created_at"]} for r in reviews]}
 

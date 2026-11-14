@@ -170,6 +170,12 @@ Connect a real payment gateway, then the Capacitor Android shell.
 - Razorpay: finance.RazorpayProvider (orders, checkout signature verify POST /api/payments/{pid}/razorpay-verify, webhook X-Razorpay-Signature + event-id idempotency, refunds, reconcile fetch). Auto-selected when RAZORPAY_KEY_ID is set. Payouts manual (admin "Mark settled/failed"). PayPage opens Razorpay Checkout. Test keys verified (order created). RAZORPAY_WEBHOOK_SECRET not set yet -> webhooks rejected; checkout verify path still confirms payments.
 - NOT tested end-to-end (user stopped to save credits). Open hardening items: SameSite=none CSRF reliance, account-lockout DoS, admin KYC link token single-use.
 
+## 2026-11-14 — Slots, live status, trust stats
+- Astrologer slot form: separate Date + Start time (30-min steps) instead of datetime-local (unreliable on Android WebView).
+- GET/POST /api/astrologer/online: online toggle (auto-expires after 3h). Public astrologer list/detail now include online, queue (active bookings within next 2h), wait_min (remaining time of in-progress session), completed consultations, satisfaction_pct (% visible reviews rated ≥4, shown as "Accuracy*" with footnote).
+- Verified in preview via curl + mobile screenshots. Production slot issue not diagnosed directly (no prod access).
+
+
 
 
 

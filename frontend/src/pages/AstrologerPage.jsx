@@ -3,7 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { MessageCircle, Phone, Video, Star, Flag, Ban, Briefcase, CalendarClock, IndianRupee } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "../components/ui/button";
-import { Badges, Avatar } from "../components/AstroCard";
+import { Badges, Avatar, LiveLine, TrustLine } from "../components/AstroCard";
 import { ProfileSkeleton, ErrorState, Empty } from "../components/States";
 import { Disclaimer } from "../components/Layout";
 import { BookDialog } from "../components/BookDialog";
@@ -114,6 +114,7 @@ export default function AstrologerPage() {
           </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+          <div className="col-span-full space-y-3"><LiveLine a={a} /><TrustLine a={a} /><p className="text-[11px] text-muted-foreground">*Accuracy = share of customer reviews rated 4 stars or more.</p></div>
           <Stat icon={Briefcase} label="Experience" value={`${a.experience_years} years`} testid="stat-experience" />
           <Stat icon={Star} label="Rating" value={a.rating_count ? `${a.rating_avg} · ${a.rating_count} reviews` : "No reviews yet"} testid="stat-rating" />
           <Stat icon={CalendarClock} label="Next slot" value={a.slots[0] ? fmtDate(a.slots[0].start_at) : "None open"} testid="stat-next-slot" />

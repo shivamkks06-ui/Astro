@@ -30,6 +30,22 @@ export function Avatar({ a, className = "h-14 w-14 text-lg" }) {
   return <img src={`${process.env.REACT_APP_BACKEND_URL}${a.photo_url}`} alt={a.display_name} width={112} height={112} loading="lazy" decoding="async" onError={() => setBroken(true)} data-testid="astrologer-photo" className={`rounded-full object-cover bg-muted border border-amber-500/30 shrink-0 ${className}`} />;
 }
 
+export const LiveLine = ({ a }) => (
+  <p data-testid={`astrologer-live-${a.id}`} className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[13px]">
+    {a.online ? <span className="inline-flex items-center gap-1.5 text-emerald-300"><span className="relative flex h-2.5 w-2.5"><span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-70" /><span className="relative h-2.5 w-2.5 rounded-full bg-emerald-400" /></span>Online now</span>
+      : <span className="inline-flex items-center gap-1.5 text-slate-400"><span className="h-2.5 w-2.5 rounded-full bg-slate-500" />Offline</span>}
+    {a.online && <span className="text-slate-300">· {a.queue ? `${a.queue} in queue` : "No queue"}{a.wait_min ? ` · ~${a.wait_min} min wait` : ""}</span>}
+  </p>
+);
+
+export const TrustLine = ({ a }) => (
+  <div data-testid={`astrologer-trust-${a.id}`} className="grid grid-cols-3 gap-2 text-center">
+    {[[`${a.experience_years}+ yrs`, "Experience"], [a.completed ?? 0, "Consultations"], [a.satisfaction_pct != null ? `${a.satisfaction_pct}%` : "New", "Accuracy*"]].map(([v, k]) => (
+      <div key={k} className="rounded-lg border border-amber-400/15 bg-black/20 px-1 py-1.5"><p className="text-sm text-amber-200 font-semibold">{v}</p><p className="text-[10px] text-muted-foreground">{k}</p></div>
+    ))}
+  </div>
+);
+
 export function AstroCard({ a, i = 0 }) {
   return (
     <Link to={`/astrologers/${a.id}`} data-testid={`astrologer-card-${a.id}`} style={{ animationDelay: `${i * 60}ms` }}
@@ -42,6 +58,8 @@ export function AstroCard({ a, i = 0 }) {
         </div>
       </div>
       <Badges a={a} />
+      <LiveLine a={a} />
+      <TrustLine a={a} />
       <p className="text-sm text-slate-300 line-clamp-2">{a.expertise.join(" · ")}</p>
       <p data-testid={`astrologer-card-availability-${a.id}`} className="flex items-center gap-1.5 text-[13px] text-slate-400">
         <CalendarClock className="h-4 w-4 text-amber-400/80" />{a.next_slot_at ? `Next slot ${fmtDate(a.next_slot_at)}` : "No open slots right now"}

@@ -204,6 +204,23 @@ class SlotIn(BaseModel):
     duration_min: int
 
 
+class OnlineIn(BaseModel):
+    online: bool
+
+
+@router.get("/online")
+async def get_online(user=Depends(astro)):
+    p = await db.astrologer_profiles.find_one({"_id": user["_id"]}, {"online": 1, "online_at": 1})
+    on = bool(p and p.get("online") and p.get("online_at") and p["online_at"] > now() - timedelta(hours=3))
+    return {"online": on}
+
+
+@router.post("/online")
+async def set_online(body: OnlineIn, user=Depends(astro)):
+    await db.astrologer_profiles.update_one({"_id": user["_id"]}, {"$set": {"online": body.online, "online_at": now()}})
+    return {"online": body.online}
+
+
 @router.get("/slots")
 async def my_slots(user=Depends(astro)):
     slots = await db.slots.find({"astrologer_id": user["_id"], "start_at": {"$gt": now() - timedelta(days=1)}}).sort("start_at", 1).to_list(300)
