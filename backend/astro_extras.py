@@ -40,6 +40,21 @@ def _sunrise(local, lat, lon):
     return t[0].utc_datetime().astimezone(local.tzinfo) if len(t) and up[0] else None
 
 
+def muhurta(local, lat, lon):
+    start = datetime.combine(local.date(), time(0), tzinfo=local.tzinfo)
+    obs = EARTH + wgs84.latlon(lat, lon)
+    t0, t1 = TS.from_datetime(start), TS.from_datetime(start + timedelta(days=1))
+    r, up = almanac.find_risings(obs, EPH["sun"], t0, t1)
+    s, dn = almanac.find_settings(obs, EPH["sun"], t0, t1)
+    if not (len(r) and up[0] and len(s) and dn[0]):
+        return None
+    rise, sset = (x[0].utc_datetime().astimezone(local.tzinfo) for x in (r, s))
+    noon, f = rise + (sset - rise) / 2, "%H:%M"
+    return {"sunrise": rise.strftime(f), "sunset": sset.strftime(f),
+            "abhijit": [(noon - timedelta(minutes=24)).strftime(f), (noon + timedelta(minutes=24)).strftime(f)],
+            "brahma": [(rise - timedelta(minutes=96)).strftime(f), (rise - timedelta(minutes=48)).strftime(f)]}
+
+
 def panchang(chart, local, lat, lon):
     sun = next(p["lon"] for p in chart["planets"] if p["name"] == "Sun")
     moon = next(p["lon"] for p in chart["planets"] if p["name"] == "Moon")

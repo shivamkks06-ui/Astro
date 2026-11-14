@@ -306,3 +306,23 @@ async def daily(date: Optional[str] = None):
         return await horoscope.daily(date)
     except ValueError as e:
         raise HTTPException(422, str(e))
+
+
+
+_TODAY = {}
+
+
+@router.get("/panchang/today")
+async def panchang_today():
+    lat, lon, tz = 28.6139, 77.2090, "Asia/Kolkata"
+    local = datetime.now(ZoneInfo(tz)).replace(second=0, microsecond=0)
+    key = local.strftime("%Y-%m-%d %H")
+    if key not in _TODAY:
+        def work():
+            c = astro_calc.kundli(local.strftime("%Y-%m-%d"), local.strftime("%H:%M"), lat, lon, tz)
+            p = astro_extras.panchang(c, local, lat, lon)
+            return {"date": local.strftime("%Y-%m-%d"), "place": "New Delhi", "tz": tz, "tithi": p["tithi"], "paksha": p["paksha"],
+                    "nakshatra": p["nakshatra"], "yoga": p["yoga"], "vara": p["vara"], "muhurta": astro_extras.muhurta(local, lat, lon)}
+        _TODAY.clear()
+        _TODAY[key] = await run_in_threadpool(work)
+    return _TODAY[key]

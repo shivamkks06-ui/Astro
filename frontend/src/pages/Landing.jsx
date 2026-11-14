@@ -4,6 +4,7 @@ import { Button } from "../components/ui/button";
 import { AstroCard } from "../components/AstroCard";
 import { CardSkeletons, ErrorState, Empty } from "../components/States";
 import { useApi } from "../lib/useApi";
+import { ShubhDin } from "../components/ShubhDin";
 
 const PILLARS = [
   { icon: ShieldCheck, t: "Identity checks", d: "Every listed astrologer's government ID is reviewed by our team before they can appear publicly." },
@@ -77,6 +78,7 @@ export default function Landing() {
         </div>
       </section>
 
+      <ShubhDin />
       <QuickAccess />
 
       <section className="max-w-7xl mx-auto px-5 sm:px-8 pt-2 pb-10 sm:py-20 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">

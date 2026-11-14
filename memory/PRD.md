@@ -152,3 +152,8 @@ Connect a real payment gateway, then the Capacitor Android shell.
 - POST /api/kundlis/{kid}/hindi: Claude translates every report string (sections, facts, items, routine, AI text) to Hindi, cached as hi_pairs on the saved kundli. FullReport shows "पूरी रिपोर्ट हिंदी में पढ़ें" when language is Hindi.
 - Tested: endpoint (363 strings, 0 missing, ~55s first time, cached after); home/kundli screens at 390px & 1920px. In-app Hindi button click not browser-tested.
 
+## 2026-11-14 — Shubh Din card
+- GET /api/panchang/today (New Delhi, IST; cached hourly): tithi, paksha, nakshatra, yoga, vara, sunrise/sunset, Abhijit (solar midday ±24 min) and Brahma (sunrise −96 to −48 min) muhurat.
+- components/ShubhDin.jsx on Landing below hero; English/Hindi. Verified via curl + screenshots at 390px (Hindi) and 1920px.
+
+
