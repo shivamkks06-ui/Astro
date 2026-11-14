@@ -161,6 +161,8 @@ Connect a real payment gateway, then the Capacitor Android shell.
 - GET/POST /api/kundlis/{kid}/chat (login + own saved kundli only). Claude Sonnet 4.5 answers from that chart's calculated facts (_facts helper shared with ai-report), last 6 messages as context, Hindi or English per app language. Limit 5 questions/user/day (IST) in db.astro_ai_usage; failed answers are not counted. History in db.kundli_chats.
 - components/kundli/AstroChat.jsx under the full report of a saved chart: gold orbit avatar, suggestion chips, bubbles, "x/5 left". Verified: Hindi answer via API, 429 at limit, UI with history at 390px.
 - Languages: Hindi + English only (user choice).
+- Astro AI animation: glowing gold orb avatar with counter-rotating dashed ring (faster while thinking), bouncing typing dots, pop-in bubbles, typewriter reveal for new answers; respects reduced-motion. Header wraps on mobile.
+
 
 
 

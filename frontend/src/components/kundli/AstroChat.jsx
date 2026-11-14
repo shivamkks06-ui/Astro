@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { Orbit, Send, Loader2, Sparkles } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Orbit, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { api, errMsg } from "../../lib/api";
 import { useLang } from "../../lib/i18n";
@@ -11,12 +11,30 @@ const TXT = {
     chips: ["इस दशा में मेरा करियर कैसा रहेगा?", "मेरी कुंडली विवाह के बारे में क्या कहती है?", "मेरी कुंडली में सबसे मज़बूत ग्रह कौन है?"] },
 };
 
-function Bubble({ m, i }) {
+function Typer({ text, onTick }) {
+  const [n, setN] = useState(0);
+  useEffect(() => {
+    if (n >= text.length) return undefined;
+    const id = setTimeout(() => { setN((x) => Math.min(text.length, x + 3)); onTick?.(); }, 18);
+    return () => clearTimeout(id);
+  }, [n, text, onTick]);
+  return <>{text.slice(0, n)}{n < text.length && <span className="ml-0.5 inline-block h-4 w-1.5 translate-y-0.5 bg-amber-300 animate-pulse" />}</>;
+}
+
+function Avatar({ size = "h-8 w-8", icon = "h-4 w-4", live }) {
+  return (
+    <span className={`astro-orb relative ${size} shrink-0 rounded-full grid place-items-center ${live ? "astro-orb-live" : ""}`}>
+      <Orbit className={`${icon} text-amber-200 animate-[spin_8s_linear_infinite]`} />
+    </span>
+  );
+}
+
+function Bubble({ m, i, onTick }) {
   const me = m.role === "user";
   return (
-    <div data-testid={`astro-ai-msg-${i}`} className={`flex ${me ? "justify-end" : "justify-start"} gap-2`}>
-      {!me && <span className="h-8 w-8 shrink-0 rounded-full border border-amber-400/50 bg-amber-400/10 grid place-items-center"><Orbit className="h-4 w-4 text-amber-300" /></span>}
-      <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${me ? "bg-amber-400 text-[#0B1225] rounded-br-sm" : "border border-amber-400/25 bg-[#101a33] text-slate-100 rounded-bl-sm"}`}>{m.text}</p>
+    <div data-testid={`astro-ai-msg-${i}`} className={`astro-pop flex ${me ? "justify-end" : "justify-start"} gap-2`}>
+      {!me && <Avatar />}
+      <p className={`max-w-[85%] whitespace-pre-wrap rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${me ? "bg-amber-400 text-[#0B1225] rounded-br-sm" : "border border-amber-400/25 bg-[#101a33] text-slate-100 rounded-bl-sm"}`}>{m.fresh ? <Typer text={m.text} onTick={onTick} /> : m.text}</p>
     </div>
   );
 }
@@ -30,25 +48,26 @@ export function AstroChat({ savedId }) {
   const [busy, setBusy] = useState(false);
   const end = useRef(null);
   useEffect(() => { api.get(`/kundlis/${savedId}/chat`).then(({ data }) => { setMsgs(data.messages); setLeft(data.left); }).catch(() => {}); }, [savedId]);
-  useEffect(() => { end.current?.scrollIntoView({ block: "nearest" }); }, [msgs, busy]);
+  const tick = useCallback(() => { end.current?.scrollIntoView({ block: "nearest" }); }, []);
+  useEffect(() => { tick(); }, [msgs, busy, tick]);
   const send = async (text) => {
     const v = (text || q).trim();
     if (busy || v.length < 2 || left === 0) return;
     setBusy(true); setQ(""); setMsgs((x) => [...x, { role: "user", text: v }]);
-    try { const { data } = await api.post(`/kundlis/${savedId}/chat`, { text: v, lang: lang === "hi" ? "hi" : "en" }, { timeout: 120000 }); setMsgs((x) => [...x, { role: "ai", text: data.reply }]); setLeft(data.left); }
+    try { const { data } = await api.post(`/kundlis/${savedId}/chat`, { text: v, lang: lang === "hi" ? "hi" : "en" }, { timeout: 120000 }); setMsgs((x) => [...x, { role: "ai", text: data.reply, fresh: true }]); setLeft(data.left); }
     catch (e) { setMsgs((x) => x.slice(0, -1)); setQ(v); toast.error(errMsg(e)); } finally { setBusy(false); }
   };
   return (
     <section data-testid="astro-ai-chat" className="relative overflow-hidden rounded-2xl border border-amber-400/40 bg-gradient-to-b from-[#1b1630] to-[#0B1225]">
-      <div className="flex items-center gap-3 border-b border-amber-400/20 px-4 sm:px-5 py-4">
-        <span className="h-11 w-11 rounded-full border-2 border-amber-400/60 grid place-items-center bg-amber-400/10"><Orbit className="h-5 w-5 text-amber-300 animate-[spin_12s_linear_infinite]" /></span>
-        <div className="flex-1 min-w-0"><p className="font-display text-lg text-amber-200 tracking-wide">{T.title}</p><p className="text-xs text-muted-foreground">{T.sub}</p></div>
-        {left !== null && <span data-testid="astro-ai-left" className="shrink-0 rounded-full border border-amber-400/40 px-3 py-1 text-xs text-amber-200">{left}/5 {T.left}</span>}
+      <div className="flex flex-wrap items-center gap-3 border-b border-amber-400/20 px-4 sm:px-5 py-4">
+        <Avatar size="h-12 w-12" icon="h-6 w-6" live={busy} />
+        <div className="flex-1 min-w-[180px]"><p className="font-display text-lg text-amber-200 tracking-wide">{T.title}</p><p className="text-xs text-muted-foreground">{T.sub}</p></div>
+        {left !== null && <span data-testid="astro-ai-left" className="shrink-0 ml-[60px] sm:ml-0 rounded-full border border-amber-400/40 px-3 py-1 text-xs text-amber-200">{left}/5 {T.left}</span>}
       </div>
       <div className="max-h-[420px] overflow-y-auto px-4 sm:px-5 py-4 space-y-3">
         {msgs.length === 0 && <div className="flex flex-wrap gap-2">{T.chips.map((c, i) => <button key={c} type="button" data-testid={`astro-ai-chip-${i}`} onClick={() => send(c)} disabled={busy || left === 0} className="rounded-full border border-amber-400/30 bg-amber-400/5 px-3 py-2 text-xs text-amber-100 hover:bg-amber-400/15 min-h-9 text-left"><Sparkles className="inline h-3 w-3 mr-1 text-amber-300" />{c}</button>)}</div>}
-        {msgs.map((m, i) => <Bubble key={i} m={m} i={i} />)}
-        {busy && <div data-testid="astro-ai-typing" className="flex items-center gap-2 text-xs text-amber-200"><Loader2 className="h-4 w-4 animate-spin" />…</div>}
+        {msgs.map((m, i) => <Bubble key={i} m={m} i={i} onTick={tick} />)}
+        {busy && <div data-testid="astro-ai-typing" className="astro-pop flex items-center gap-2"><Avatar live /><span className="flex gap-1 rounded-2xl rounded-bl-sm border border-amber-400/25 bg-[#101a33] px-4 py-3">{[0, 1, 2].map((d) => <span key={d} className="astro-dot h-2 w-2 rounded-full bg-amber-300" style={{ animationDelay: `${d * 0.18}s` }} />)}</span></div>}
         <div ref={end} />
       </div>
       {left === 0 ? <p data-testid="astro-ai-limit" className="border-t border-amber-400/20 px-5 py-4 text-sm text-amber-100">{T.none}</p> : (
