@@ -12,6 +12,7 @@ from starlette.middleware.cors import CORSMiddleware
 
 from core import client, logger
 from migrations import run_migrations, seed_admin
+import geo
 from finance import sweep
 from storage import init_storage
 import routes_auth
@@ -70,6 +71,7 @@ async def startup():
     except Exception as e:
         logger.error(f"Storage init failed: {e}")
     app.state.sweeper = asyncio.create_task(sweeper())
+    app.state.places = asyncio.create_task(geo.ensure_places())
 
 
 @app.on_event("shutdown")

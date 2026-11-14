@@ -22,7 +22,7 @@ export function BirthForm({ initial, busy, onSubmit, submitLabel = "Calculate Ku
     if (!place) return setErr(t("Choose the birthplace from the list."));
     if (busy) return;
     setErr("");
-    onSubmit({ name: f.name.trim() || null, date: f.date, time: unknown ? "12:00" : f.time, time_unknown: unknown, time_accuracy: f.acc, place: place.label, lat: place.lat, lon: place.lon, tz: place.tz });
+    onSubmit({ name: f.name.trim() || null, date: f.date, time: unknown ? "12:00" : f.time, time_unknown: unknown, time_accuracy: f.acc, place: place.label, lat: place.lat, lon: place.lon, tz: place.tz, coords_source: place.source });
   };
 
   return (

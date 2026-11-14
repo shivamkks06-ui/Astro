@@ -125,6 +125,13 @@ Customer seeking guidance; independent astrologer; platform admin/finance/safety
 - Checked: backend reset flow (email 202, short password 422, token reuse rejected, old password 401, new password 200), report tests 11/11. UI testing skipped at the user's request
 - Not done: revoking existing sessions after a reset (tokens are stateless and expire on their own), real payments (MOCKED), audio/video provider
 
+## Implemented (2026-11-14), GeoNames city search
+- data/places.jsonl.gz (17.6 MB): 712,033 places = GeoNames cities1000 worldwide + all populated places in India (IN.txt, class P, excluding PPLX/H/Q/W), with ASCII alternate spellings (up to 12 keys), state, Indian district, country, lat/lon, tz
+- geo.py: background loader at startup (versioned in db.meta, upsert by GeoNames ID, ~20 s), indexes on k and (m, k); prefix search on name and alternates; "City, State" filtering after a comma; ranking weights population, India x3, exact match x5; queries under 4 letters only search major places; 10 per page with has_more; in-process cache of 2,000 queries; the old offline list is the fallback until the data is ready
+- /api/places keeps the same response shape (+ page, has_more, district, attribution); OSM search kept
+- PlaceSearch: district line, "Show more places", manual entry (name, lat, lon, IANA tz) marked "unverified coordinates"; coords_source passed to BirthIn; GeoNames CC BY 4.0 attribution in the results list
+- Checked: Varanasi/Banaras/Kashi, Bombay to Mumbai, Bangalore to Bengaluru, Gurgaon to Gurugram, Pune with Maharashtra, Ranikhet, Mcleodganj, London, New York City, Kathmandu, Sydney, Dubai, no match, paging, Kundli calculation with GeoNames and manual coordinates, 390px UI
+
 ## Known limitations
 - Payments are MOCKED (mock_sandbox). A real provider (e.g. Razorpay with Route for marketplace splits) must be confirmed and plugged into finance.PaymentProvider
 - Audio/video NOT operational (no SDK credentials)

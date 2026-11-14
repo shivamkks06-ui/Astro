@@ -17,6 +17,7 @@ from emergentintegrations.llm.chat import LlmChat, UserMessage, TextDelta, Strea
 import astro_calc
 import astro_extras
 import astro_report
+import geo
 import kundli_pdf as kundli_pdf_mod
 from fastapi import Response
 import horoscope
@@ -43,8 +44,11 @@ def _place(c, source):
 
 
 @router.get("/places")
-async def places(request: Request, q: str = Query(..., min_length=2, max_length=80), online: bool = False):
+async def places(request: Request, q: str = Query(..., min_length=2, max_length=80), online: bool = False, page: int = Query(0, ge=0, le=20)):
     k = _fold(q.strip())
+    if not online and geo.state["ready"]:
+        await rate_limit(f"places:{client_ip(request)}", 120, 60)
+        return await geo.search(q, page)
     if not online:
         hits = [c for c in CITIES if c["_k"].startswith(k)]
         if len(hits) < 10:
@@ -85,6 +89,7 @@ class BirthIn(BaseModel):
     chart_style: Literal["north", "south"] = "north"
     time_unknown: bool = False
     time_accuracy: Optional[Literal["exact", "approximate", "unknown"]] = None
+    coords_source: Optional[Literal["geonames", "offline", "openstreetmap", "manual"]] = None
 
     @model_validator(mode="after")
     def _noon(self):
