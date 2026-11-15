@@ -88,11 +88,13 @@ export function AstroChat({ savedId }) {
   useEffect(() => stopVoice, []);
   const end = useRef(null);
   useEffect(() => { api.get(`/kundlis/${savedId}/chat`).then(({ data }) => { setMsgs(data.messages); setLeft(data.left); }).catch(() => {}); }, [savedId]);
-  const tick = useCallback(() => { end.current?.scrollIntoView({ block: "nearest" }); }, []);
+  const live = useRef(false);
+  const tick = useCallback(() => { if (live.current) end.current?.scrollIntoView({ block: "nearest" }); }, []);
   useEffect(() => { tick(); }, [msgs, busy, tick]);
   const send = async (text) => {
     const v = (text || q).trim();
     if (busy || v.length < 2 || left === 0) return;
+    live.current = true;
     setBusy(true); setQ(""); setMsgs((x) => [...x, { role: "user", text: v }]);
     try { const { data } = await api.post(`/kundlis/${savedId}/chat`, { text: v, lang: lang === "hi" ? "hi" : "en" }, { timeout: 120000 }); setMsgs((x) => [...x, { role: "ai", text: data.reply, fresh: true }]); setLeft(data.left); }
     catch (e) { setMsgs((x) => x.slice(0, -1)); setQ(v); toast.error(errMsg(e)); } finally { setBusy(false); }

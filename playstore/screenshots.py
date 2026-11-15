@@ -9,6 +9,7 @@ ROOT = Path(__file__).parent
 RAW, OUT = ROOT / "output" / "raw", ROOT / "output" / "store"
 BASE = sys.argv[1].rstrip("/")
 ASTRO = "9406cb50672f439488f811596dcd39d7"
+KUNDLI = sys.argv[2] if len(sys.argv) > 2 else ""
 NAVY, GOLD, WHITE, MUTED = (11, 15, 25), (230, 179, 37), (248, 250, 252), (148, 163, 184)
 CUSTOMER = ("demo.customer@nakshatraveda.test", "DemoPass@123")
 ASTROLOGER = ("demo.astro1@nakshatraveda.test", "DemoPass@123")
@@ -21,12 +22,14 @@ DEVICES = {
 }
 
 SHOTS = [
-    ("01_home", "Consult verified Vedic astrologers", "Interpretive guidance, never guaranteed outcomes", None, "/", None),
-    ("02_discover", "Find the right astrologer", "Filter by language, expertise, experience and price", None, "/discover", None),
-    ("03_profile", "Identity checks you can see", "Separate badges for identity and credentials", None, f"/astrologers/{ASTRO}", None),
-    ("04_booking", "Clear price before you book", "Price, duration and refund terms shown upfront", CUSTOMER, f"/astrologers/{ASTRO}", "book"),
-    ("05_account", "Your bookings, payments and privacy", "Receipts, birth profiles, data export and deletion", CUSTOMER, "/account", None),
-    ("06_studio", "Astrologers: a studio to grow", "Verification, listing plans, slots and earnings", ASTROLOGER, "/studio", None),
+    ("01_home", "Vedic astrology, made clear", "Daily Shubh Din: tithi, nakshatra, muhurat, Rahu Kaal", None, "/", None),
+    ("02_kundli", "Your detailed Kundli", "Real chart calculations, D1, D9, D10, dasha and remedies", CUSTOMER, f"/kundli/{KUNDLI}", None),
+    ("03_astro_ai", "Ask Astro AI about your chart", "Answers in Hindi or English, read aloud on tap", CUSTOMER, f"/kundli/{KUNDLI}", "chat"),
+    ("04_discover", "Find the right astrologer", "See who is online, experience and customer ratings", None, "/discover", None),
+    ("05_profile", "Identity checks you can see", "Separate badges for identity and credentials", None, f"/astrologers/{ASTRO}", None),
+    ("06_booking", "Clear price before you book", "Price, duration and refund terms shown upfront", CUSTOMER, f"/astrologers/{ASTRO}", "book"),
+    ("07_account", "Your bookings, payments and privacy", "Receipts, birth profiles, data export and deletion", CUSTOMER, "/account", None),
+    ("08_studio", "Astrologers: a studio to grow", "Go online, add slots, track earnings", ASTROLOGER, "/studio", None),
 ]
 
 CLEAN_JS = """() => {
@@ -54,6 +57,9 @@ async def capture(pw):
                 await login(page, creds)
             await page.goto(f"{BASE}{path}", wait_until="networkidle")
             await page.wait_for_timeout(1800)
+            if extra == "chat":
+                await page.locator("[data-testid=astro-ai-chat]").evaluate("e => e.scrollIntoView({block: 'start'})")
+                await page.wait_for_timeout(600)
             if extra == "book":
                 await page.locator("[data-testid^=slot-]").first.click()
                 await page.wait_for_timeout(400)
