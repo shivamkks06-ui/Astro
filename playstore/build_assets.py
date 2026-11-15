@@ -90,12 +90,16 @@ fg.save(APP_ASSETS / "icon-foreground.png")
 radial_bg(1024, 1024).save(APP_ASSETS / "icon-background.png")
 
 # splash (2732 square; Capacitor crops it per screen, so content stays central)
+sp = Image.open(SRC / "splash_mandala.jpg").convert("RGB").resize((1500, 1500), Image.LANCZOS)
+mask = Image.new("L", (1500, 1500), 0)
+ImageDraw.Draw(mask).ellipse((90, 90, 1410, 1410), fill=255)
+mask = mask.filter(ImageFilter.GaussianBlur(70))
 for name in ("splash.png", "splash-dark.png"):
     s = radial_bg(2732, 2732)
-    place(s, m, 820, (1366, 1220))
+    s.paste(sp, (1366 - 750, 1180 - 750), mask)
     d = ImageDraw.Draw(s)
-    centered(d, "NAKSHATRAVEDA", 1700, font("Cinzel", 120, 600), GOLD, 2732)
-    centered(d, "Verified Vedic astrologers", 1860, font("Jakarta", 56, 400), MUTED, 2732)
+    centered(d, "NAKSHATRAVEDA", 2010, font("Cinzel", 120, 600), GOLD, 2732)
+    centered(d, "Kundli · Panchang · Verified astrologers", 2170, font("Jakarta", 56, 400), MUTED, 2732)
     s.save(APP_ASSETS / name)
 
 # feature graphic 1024x500

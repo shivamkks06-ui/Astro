@@ -58,7 +58,12 @@ export function GoogleButton({ role = "customer", acceptTerms = true, onDone, te
     if (busy) return;
     setBusy(true); setErr("");
     try { await send(await getIdToken(clientId)); }
-    catch (e) { setErr(/cancel/i.test(e?.message || "") ? "Google sign-in was cancelled." : errMsg(e)); }
+    catch (e) {
+      const m = e?.message || "";
+      setErr(/cancel/i.test(m) ? "Google sign-in was cancelled."
+        : /\[(10|16)\]|reauth|DEVELOPER_ERROR/i.test(m) ? "Google sign-in isn't set up for this app build yet. Please use email login for now."
+        : /network|\[7\]/i.test(m) ? "No internet connection. Please try again." : errMsg(e));
+    }
     finally { setBusy(false); }
   };
   const confirmLink = async (e) => {
