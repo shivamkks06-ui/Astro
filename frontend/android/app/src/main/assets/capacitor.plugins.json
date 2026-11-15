@@ -18,5 +18,9 @@
 	{
 		"pkg": "@capacitor/preferences",
 		"classpath": "com.capacitorjs.plugins.preferences.PreferencesPlugin"
+	},
+	{
+		"pkg": "@capgo/capacitor-social-login",
+		"classpath": "ee.forgr.capacitor.social.login.SocialLoginPlugin"
 	}
 ]

@@ -176,6 +176,12 @@ Connect a real payment gateway, then the Capacitor Android shell.
 - Verified in preview via curl + mobile screenshots. Production slot issue not diagnosed directly (no prod access).
 
 
+## 2026-11-14 — Google Sign-In (code done, needs Google Console setup)
+- POST /api/auth/google: verifies Google ID token (google-auth, audience = GOOGLE_WEB_CLIENT_ID, verified email), issues the existing JWT session. Matches by google_sub then email; existing password account requires its password once to link (409 link_required). New users need accepted terms; role from register page.
+- /api/public/config exposes google_client_id (button hidden when unset). components/GoogleButton.jsx on Login/Register: web uses Google Identity Services, Android uses @capgo/capacitor-social-login native picker.
+- Tested: email login still 200; Google endpoint returns 503 when not configured. Real Google flow NOT tested (no client ID yet); Android not tested.
+
+
 
 
 

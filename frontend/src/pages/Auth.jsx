@@ -7,6 +7,7 @@ import { Label } from "../components/ui/label";
 import { Checkbox } from "../components/ui/checkbox";
 import { errMsg } from "../lib/api";
 import { useAuth, homeFor } from "../context/AuthContext";
+import { GoogleButton } from "../components/GoogleButton";
 
 const Shell = ({ title, sub, children }) => (
   <div className="max-w-md mx-auto px-4 py-16">
@@ -80,6 +81,10 @@ export function LoginPage() {
         <Button data-testid="login-submit-button" className="w-full rounded-full h-12 text-base font-semibold" disabled={busy}>{busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{busy ? "Logging in…" : "Log in"}</Button>
         <p className="text-sm text-center text-muted-foreground">No account? <Link to="/register" className="text-amber-300">Register</Link></p>
       </form>
+      <div className="mt-5">
+        <GoogleButton testid="login-google-button" onDone={(u) => nav(sp.get("next") || homeFor(u), { replace: true })} />
+        <p className="mt-2 text-[11px] text-center text-muted-foreground">New here? Continuing with Google creates a customer account and accepts our <Link className="text-amber-300" to="/legal/terms">Terms</Link> and <Link className="text-amber-300" to="/legal/privacy">Privacy Policy</Link>.</p>
+      </div>
     </Shell>
   );
 }
@@ -128,6 +133,10 @@ export function RegisterPage() {
         {err && <p data-testid="register-error" role="alert" className="text-sm text-red-300">{err}</p>}
         <Button data-testid="register-submit-button" className="w-full rounded-full h-12 text-base font-semibold" disabled={busy || !f.accept_terms}>{busy && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}{busy ? "Creating…" : "Create account"}</Button>
       </form>
+      <div className="mt-5">
+        <GoogleButton testid="register-google-button" role={f.role} acceptTerms={f.accept_terms} onDone={(u) => nav(homeFor(u), { replace: true })} />
+        {!f.accept_terms && <p className="mt-2 text-[11px] text-center text-muted-foreground">Tick the Terms box above before continuing with Google.</p>}
+      </div>
     </Shell>
   );
 }

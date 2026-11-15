@@ -151,6 +151,67 @@ async def login(body: LoginIn, request: Request, response: Response):
     return session_body(request, user, access, refresh_tok)
 
 
+class GoogleIn(BaseModel):
+    id_token: str = Field(min_length=20, max_length=4096)
+    role: Literal["customer", "astrologer"] = "customer"
+    accept_terms: bool = False
+    password: Optional[str] = Field(None, max_length=128)
+
+
+def _google_claims(token):
+    from google.oauth2 import id_token as gid
+    from google.auth.transport import requests as greq
+    cid = os.environ.get("GOOGLE_WEB_CLIENT_ID")
+    if not cid:
+        raise HTTPException(503, "Google sign-in is not set up yet")
+    try:
+        c = gid.verify_oauth2_token(token, greq.Request(), cid)
+    except ValueError:
+        raise HTTPException(401, "Google sign-in failed. Please try again.")
+    if c.get("iss") not in ("accounts.google.com", "https://accounts.google.com") or not c.get("email_verified"):
+        raise HTTPException(401, "Google account email is not verified")
+    return c
+
+
+@router.post("/google")
+async def google_login(body: GoogleIn, request: Request, response: Response):
+    await rate_limit(f"google:{client_ip(request)}", 20, 900)
+    from starlette.concurrency import run_in_threadpool
+    c = await run_in_threadpool(_google_claims, body.id_token)
+    email, sub = c["email"].lower(), c["sub"]
+    user = await db.users.find_one({"google_sub": sub}) or await db.users.find_one({"email": email})
+    if user and user.get("google_sub") not in (None, sub):
+        raise HTTPException(409, "This email is linked to a different Google account")
+    if user and not user.get("google_sub"):
+        # existing password account: link only after the owner proves they know the password
+        if not body.password:
+            raise HTTPException(409, "link_required")
+        await rate_limit(f"google-link:{email}", 5, 900)
+        if not verify_password(body.password, user["password_hash"]):
+            raise HTTPException(401, "Wrong password. Your Google account was not linked.")
+        await db.users.update_one({"_id": user["_id"]}, {"$set": {"google_sub": sub, "google_linked_at": now()}})
+    if not user:
+        if not body.accept_terms:
+            raise HTTPException(400, "You must accept the Terms, Privacy Policy and Community Guidelines")
+        user = {"_id": new_id(), "email": email, "name": (c.get("name") or email.split("@")[0])[:80], "role": body.role, "status": "active",
+                "password_hash": hash_password(secrets.token_urlsafe(32)), "google_sub": sub, "terms_version": TERMS_VERSION, "terms_accepted_at": now(),
+                "privacy": {"share_birth_details": True, "marketing_opt_in": False}, "created_at": now()}
+        try:
+            await db.users.insert_one(user)
+        except DuplicateKeyError:
+            raise HTTPException(409, "link_required")
+        if body.role == "astrologer":
+            await db.astrologer_profiles.insert_one({
+                "_id": user["_id"], "display_name": user["name"], "bio": "", "languages": [], "expertise": [], "experience_years": 0,
+                "rates": {"chat": 0, "audio": 0, "video": 0}, "modes_enabled": ["chat"], "payout_account": None,
+                "identity_status": "not_submitted", "credential_status": "not_submitted", "listing_expires_at": None,
+                "account_status": "active", "rating_avg": 0, "rating_count": 0, "created_at": now(), "updated_at": now()})
+    if user["status"] != "active":
+        raise HTTPException(403, f"Account is {user['status']}")
+    access, refresh_tok = set_session(response, user["_id"])
+    return session_body(request, user, access, refresh_tok)
+
+
 @router.post("/refresh")
 async def refresh(request: Request, response: Response, body: Optional[RefreshIn] = None):
     token = request.cookies.get("refresh_token") or (body.refresh_token if body else None)

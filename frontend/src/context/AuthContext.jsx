@@ -33,10 +33,16 @@ export function AuthProvider({ children }) {
     setUser(data.user);
     return data.user;
   };
+  const googleLogin = async (payload) => {
+    const { data } = await api.post("/auth/google", payload);
+    await tokens.save(data);
+    setUser(data.user);
+    return data.user;
+  };
   const logout = async () => {
     try { await api.post("/auth/logout"); } finally { await tokens.clear(); setUser(false); }
   };
-  return <AuthCtx.Provider value={{ user, login, register, logout, refreshMe }}>{children}</AuthCtx.Provider>;
+  return <AuthCtx.Provider value={{ user, login, register, googleLogin, logout, refreshMe }}>{children}</AuthCtx.Provider>;
 }
 
 export const useAuth = () => useContext(AuthCtx);

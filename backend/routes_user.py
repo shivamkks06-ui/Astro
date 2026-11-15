@@ -1,3 +1,4 @@
+import os
 from datetime import datetime, timedelta
 from typing import Optional, Literal
 
@@ -37,6 +38,7 @@ async def public_config():
     prov = get_provider()
     plans = await db.listing_plans.find({"active": True}).sort("price_paise", 1).to_list(20)
     return {"languages": LANGUAGES, "expertise": EXPERTISE, "modes": MODES, "slot_durations": SLOT_DURATIONS,
+            "google_client_id": os.environ.get("GOOGLE_WEB_CLIENT_ID") or None,
             "payments": {"provider": prov.name, "operational": prov.operational, "test_mode": prov.test_mode},
             "calls": call_provider_status(),
             "policy": {k: s[k] for k in ("cancellation_window_hours", "late_cancel_refund_pct", "dispute_window_hours", "session_grace_minutes")},
