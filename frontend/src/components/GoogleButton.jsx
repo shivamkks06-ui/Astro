@@ -24,7 +24,7 @@ const loadGis = () => gisLoaded || (gisLoaded = new Promise((ok, bad) => {
 async function getIdToken(clientId) {
   if (isNative) {
     await SocialLogin.initialize({ google: { webClientId: clientId } });
-    const res = await SocialLogin.login({ provider: "google", options: {} });
+    const res = await SocialLogin.login({ provider: "google", options: { style: "standard", filterByAuthorizedAccounts: false, autoSelectEnabled: false } });
     const tok = res?.result?.idToken;
     if (!tok) throw new Error("Google sign-in was cancelled.");
     return tok;
